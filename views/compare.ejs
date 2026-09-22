@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Compare classes — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'compare' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">Compare classes</h1>
+    </div>
+    <div class="content">
+      <% if (batches.length === 0) { %>
+        <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">Create at least one class to see comparisons here.</div>
+      <% } else { %>
+        <div class="card" style="overflow: hidden;">
+          <table class="plain">
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Students</th>
+                <th>Tests</th>
+                <th>Avg score</th>
+                <th>Avg attendance</th>
+                <th>Weakest chapter</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% batches.forEach(function(b) { %>
+                <tr>
+                  <td><a href="/batches/<%= b.id %>" style="font-weight: 600;"><%= b.name %></a></td>
+                  <td><%= b.subject || '—' %></td>
+                  <td><%= b.studentCount %></td>
+                  <td><%= b.testCount %></td>
+                  <td>
+                    <% if (b.avgScorePct === null) { %><span style="color: var(--faint);">—</span>
+                    <% } else { %><span style="font-weight: 700; color: <%= b.avgScorePct < 50 ? '#B4501C' : b.avgScorePct < 75 ? '#D8A24A' : '#6B8F71' %>;"><%= b.avgScorePct %>%</span><% } %>
+                  </td>
+                  <td>
+                    <% if (b.avgAttendancePct === null) { %><span style="color: var(--faint);">—</span>
+                    <% } else { %><%= b.avgAttendancePct %>%<% } %>
+                  </td>
+                  <td>
+                    <% if (b.weakestChapter) { %><%= b.weakestChapter.chapter %> (<%= b.weakestChapter.pct %>%)
+                    <% } else { %><span style="color: var(--faint);">—</span><% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size: 12px; color: var(--faint);">Averages are computed across every graded test attempt and every attendance record in each class — the same numbers shown on each class's own page, side by side.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

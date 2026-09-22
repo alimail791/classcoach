@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Students — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'students' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">Students</h1>
+      <span style="font-size: 13px; color: var(--faint);"><%= students.length %> total</span>
+    </div>
+    <div class="content">
+      <% if (students.length === 0) { %>
+        <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">No students yet — add them from a class page.</div>
+      <% } else { %>
+        <div class="card" style="overflow: hidden;">
+          <table class="plain">
+            <thead><tr><th>Name</th><th>Class</th><th>Roll no.</th><th>Parent contact</th><th></th></tr></thead>
+            <tbody>
+              <% students.forEach(function(s) { %>
+                <tr>
+                  <td><a href="/batches/<%= s.batch_id %>/students/<%= s.id %>" style="font-weight: 600;"><%= s.name %></a></td>
+                  <td><%= s.batch_name %></td>
+                  <td><%= s.roll_no %></td>
+                  <td style="color: var(--faint);"><%= s.parent_contact || '—' %></td>
+                  <td><a href="/batches/<%= s.batch_id %>/students/<%= s.id %>" style="font-size: 13px; font-weight: 600;">Profile →</a></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

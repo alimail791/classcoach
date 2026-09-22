@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Edit ' + student.name }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/batches/<%= batch.id %>/students/<%= student.id %>" style="font-size: 14px; color: var(--faint);">← <%= student.name %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;">Edit student</h1>
+      </div>
+    </div>
+    <div class="content" style="align-items: center;">
+      <div class="card" style="max-width: 480px; width: 100%; padding: 28px;">
+        <% if (error) { %><div class="flash flash-error" style="margin-bottom: 16px;"><%= error %></div><% } %>
+        <form method="POST" action="/batches/<%= batch.id %>/students/<%= student.id %>/edit" style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="field"><label>Roll number</label><input name="roll_no" value="<%= student.roll_no %>" required></div>
+          <div class="field"><label>Name</label><input name="name" value="<%= student.name %>" required></div>
+          <div class="field"><label>Student phone</label><input name="phone" type="tel" value="<%= student.phone %>" required></div>
+          <div class="field"><label>Parent name (optional)</label><input name="parent_name" value="<%= student.parent_name %>"></div>
+          <div class="field"><label>Parent phone</label><input name="parent_phone" type="tel" value="<%= student.parent_phone %>" required></div>
+          <div class="field"><label>Parent email</label><input name="parent_contact" type="email" value="<%= student.parent_contact %>" required></div>
+          <label style="font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" name="digest_opt_in" value="1" <%= student.digest_opt_in ? 'checked' : '' %>>
+            Send this parent a weekly email update (scores, attendance, weak topics)
+          </label>
+          <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Save changes</button>
+        </form>
+        <p style="font-size: 12px; color: var(--faint); margin-top: 12px;">Login PINs can't be changed here — they stay the same for the student and parent.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Tests & Worksheets — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'tests' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">Tests &amp; Worksheets</h1>
+      <span style="font-size: 13px; color: var(--faint);"><%= tests.length %> total</span>
+    </div>
+    <div class="content">
+      <form method="GET" action="/tests" style="display: flex; gap: 10px; max-width: 420px;">
+        <input type="text" name="q" value="<%= q %>" placeholder="Search by title or chapter..." style="flex: 1; padding: 11px 14px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px;">
+        <button type="submit" class="btn btn-ghost">Search</button>
+        <% if (q) { %><a href="/tests" class="btn btn-ghost">Clear</a><% } %>
+      </form>
+
+      <% if (tests.length === 0) { %>
+        <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">
+          <% if (q) { %>No tests match "<%= q %>".<% } else { %>No tests yet — create one from a class page.<% } %>
+        </div>
+      <% } else { %>
+        <div class="card" style="overflow: hidden;">
+          <table class="plain">
+            <thead><tr><th>Title</th><th>Class</th><th>Questions</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <% tests.forEach(function(t) { %>
+                <tr>
+                  <td><%= t.title %></td>
+                  <td><%= t.batch_name %></td>
+                  <td><%= t.questionCount %></td>
+                  <td>
+                    <% if (t.status === 'draft' && t.scheduled_at) { %><span class="badge badge-warm">Scheduled</span>
+                    <% } else if (t.status === 'draft') { %><span class="badge badge-neutral">Draft</span>
+                    <% } else if (t.pendingCount > 0) { %><span class="badge badge-warm"><%= t.pendingCount %> to grade</span>
+                    <% } else { %><span class="badge badge-good">Published</span><% } %>
+                  </td>
+                  <td>
+                    <% if (t.status === 'draft') { %>
+                      <a href="/tests/<%= t.id %>/edit" style="font-size: 13px; font-weight: 600;">Continue editing →</a>
+                    <% } else { %>
+                      <a href="/tests/<%= t.id %>/results" style="font-size: 13px; font-weight: 600;">Results →</a>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

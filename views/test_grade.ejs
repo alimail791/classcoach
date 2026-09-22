@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Grade — ' + attempt.student_name }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/tests/<%= test.id %>/results" style="font-size: 14px; color: var(--faint);">← Results</a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;">Grading <%= attempt.student_name %> · <%= test.title %></h1>
+      </div>
+    </div>
+    <div class="content" style="align-items: center;">
+      <div style="width: 100%; max-width: 700px;">
+        <form method="POST" action="/tests/<%= test.id %>/attempts/<%= attempt.id %>/grade" style="display: flex; flex-direction: column; gap: 16px;">
+          <% answers.forEach(function(a, idx) { %>
+            <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <span style="font-size: 14px; font-weight: 600;"><%= idx + 1 %>. <%= a.question_text %></span>
+
+              <% if (a.type === 'mcq') { %>
+                <div style="font-size: 13px; color: var(--faint);">
+                  Auto-graded — answered "<%= a.options[a.selected_index] !== undefined ? a.options[a.selected_index] : '(no answer)' %>",
+                  <%= a.selected_index === a.correct_index ? 'correct.' : ('correct answer was "' + a.options[a.correct_index] + '".') %>
+                </div>
+              <% } else { %>
+                <div style="padding: 12px 14px; background: var(--bg); border-radius: 6px; font-size: 14px; color: var(--muted); white-space: pre-wrap;"><%= a.text_answer || '(no answer given)' %></div>
+                <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                  <div class="field" style="max-width: 160px;">
+                    <label>Marks (out of <%= a.max_marks %>)</label>
+                    <input type="number" id="marks_<%= a.id %>" name="marks_<%= a.id %>" min="0" max="<%= a.max_marks %>" step="0.5" value="<%= a.marks_awarded === null ? '' : a.marks_awarded %>">
+                  </div>
+                  <button type="button" class="btn btn-ghost" style="padding: 9px 14px; font-size: 13px;" onclick="classcoachSuggestGrade(<%= a.id %>, <%= a.max_marks %>, this)">✨ Suggest grade with AI</button>
+                </div>
+                <div id="rationale_<%= a.id %>" style="font-size: 13px; color: var(--accent-deep); background: var(--accent-tint); padding: 10px 12px; border-radius: 6px; display: none;"></div>
+              <% } %>
+            </div>
+          <% }); %>
+          <button type="submit" class="btn btn-primary" style="align-self: flex-end;">Save marks</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function classcoachSuggestGrade(answerId, maxMarks, button) {
+  var originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Thinking…';
+
+  var pathParts = window.location.pathname.split('/'); // /tests/:id/attempts/:attemptId/grade
+  var testId = pathParts[2];
+  var attemptId = pathParts[4];
+
+  fetch('/tests/' + testId + '/attempts/' + attemptId + '/answers/' + answerId + '/suggest-grade', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      button.disabled = false;
+      button.textContent = originalText;
+      var rationaleBox = document.getElementById('rationale_' + answerId);
+      if (data.error) {
+        rationaleBox.textContent = data.error;
+        rationaleBox.style.display = 'block';
+        return;
+      }
+      document.getElementById('marks_' + answerId).value = data.suggestedMarks;
+      rationaleBox.textContent = 'AI suggests ' + data.suggestedMarks + '/' + maxMarks + ': ' + data.rationale + ' — review and adjust before saving.';
+      rationaleBox.style.display = 'block';
+    })
+    .catch(function () {
+      button.disabled = false;
+      button.textContent = originalText;
+      var rationaleBox = document.getElementById('rationale_' + answerId);
+      rationaleBox.textContent = 'Could not reach the server — check your connection and try again.';
+      rationaleBox.style.display = 'block';
+    });
+}
+</script>
+</body>
+</html>

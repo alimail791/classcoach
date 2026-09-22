@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Admin login — ClassCoach' }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Admin login</h1>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <form method="POST" action="/admin/login" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="field"><label>Admin email</label><input type="email" name="email" required></div>
+        <div class="field"><label>Admin password</label><input type="password" name="password" required></div>
+        <button type="submit" class="btn btn-primary">Log in</button>
+      </form>
+      <a href="/login" style="font-size: 13px; color: var(--faint);">Teacher? Log in here →</a>
+    </div>
+  </div>
+</body>
+</html>

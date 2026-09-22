@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'New slides/notes — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/batches/<%= batch.id %>" style="font-size: 14px; color: var(--faint);">← <%= batch.name %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;">Create slides &amp; notes</h1>
+      </div>
+    </div>
+    <div class="content" style="align-items: center;">
+      <div class="card" style="max-width: 560px; width: 100%; padding: 28px;">
+        <% if (error) { %><div class="flash flash-error" style="margin-bottom: 16px;"><%= error %></div><% } %>
+        <form method="POST" action="/batches/<%= batch.id %>/materials" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
+
+          <div style="display: inline-flex; gap: 4px; padding: 4px; background: #EFE6D8; border-radius: 8px; width: fit-content;">
+            <label style="padding: 9px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
+              <input type="radio" name="type" value="slides" checked style="margin-right: 6px;">🖥️ Slides
+            </label>
+            <label style="padding: 9px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
+              <input type="radio" name="type" value="notes" style="margin-right: 6px;">📝 Notes
+            </label>
+          </div>
+
+          <div class="field"><label>Title</label><input name="title" placeholder="Gravitation — Chapter 8" required></div>
+          <div class="field"><label>Chapter / topic</label><input name="chapter" placeholder="Gravitation"></div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--bg); border-radius: 8px;">
+            <label style="font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+              <input type="radio" name="mode" value="ai" checked> Generate with AI
+            </label>
+            <div class="field"><label>Source text</label><textarea name="source_text" rows="4" placeholder="Paste the chapter content..."></textarea></div>
+            <div class="field"><label>Or upload a PDF</label><input type="file" name="source_pdf" accept="application/pdf"></div>
+            <div class="field"><label>Or upload a photo of the page (OCR)</label><input type="file" name="source_image" accept="image/jpeg,image/png"></div>
+          </div>
+
+          <label style="font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <input type="radio" name="mode" value="blank"> Start blank — I'll write it myself
+          </label>
+
+          <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Continue →</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

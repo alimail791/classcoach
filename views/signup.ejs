@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Sign up — ClassCoach' }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Create your account</h1>
+      <% if (refCode) { %><div class="flash flash-ok">Referred by a friend — you're both in line for a reward once you sign up and pick a plan.</div><% } %>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <form method="POST" action="/signup" style="display: flex; flex-direction: column; gap: 16px;">
+        <input type="hidden" name="ref" value="<%= refCode %>">
+        <div class="field"><label>Your name</label><input name="name" required></div>
+        <div class="field"><label>Email</label><input type="email" name="email" required></div>
+        <div class="field"><label>Phone number</label><input type="tel" name="phone" placeholder="+91 9xxxxxxxxx" required></div>
+        <div class="field"><label>Password</label><input type="password" name="password" required minlength="6"></div>
+        <button type="submit" class="btn btn-primary">Create account</button>
+      </form>
+      <span style="font-size: 13px; color: var(--faint);">Already have an account? <a href="/login">Log in</a></span>
+    </div>
+  </div>
+</body>
+</html>

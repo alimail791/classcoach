@@ -1,0 +1,29 @@
+{
+  "name": "classcoach",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ClassCoach — AI test creation, auto-grading, and weak-chapter tracking for individual teachers.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "dev": "node --no-warnings server.js",
+    "start": "node --no-warnings server.js",
+    "seed": "node --no-warnings seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.0",
+    "express-session": "^1.18.0",
+    "multer": "^2.0.1",
+    "nodemailer": "^10.0.1",
+    "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.20.2",
+    "razorpay": "^2.9.8",
+    "tesseract.js": "^7.0.0"
+  }
+}

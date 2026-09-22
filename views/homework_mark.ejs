@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: homework.title }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/batches/<%= batch.id %>/homework" style="font-size: 14px; color: var(--faint);">← Homework</a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;"><%= homework.title %></h1>
+      </div>
+    </div>
+    <div class="content" style="align-items: center;">
+      <div style="width: 100%; max-width: 500px;">
+        <% if (rows.length === 0) { %>
+          <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">No students in this class yet.</div>
+        <% } else { %>
+          <form method="POST" action="/homework/<%= homework.id %>/mark" style="display: flex; flex-direction: column; gap: 10px;">
+            <% rows.forEach(function(s) { %>
+              <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #FFFFFF; border: 1px solid var(--line); border-radius: 8px; cursor: pointer;">
+                <span style="font-size: 14px; color: var(--ink);"><%= s.roll_no %> · <%= s.name %></span>
+                <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted);">
+                  Done
+                  <input type="checkbox" name="done_<%= s.id %>" <%= s.completed ? 'checked' : '' %> style="width: 18px; height: 18px;">
+                </span>
+              </label>
+            <% }); %>
+            <button type="submit" class="btn btn-primary" style="align-self: flex-start; margin-top: 8px;">Save</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

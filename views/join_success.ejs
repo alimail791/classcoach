@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Welcome to ' + batch.name }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>You're in, <%= name %>!</h1>
+      <p style="font-size: 14px; color: var(--muted); margin: 0;">Save these — you'll need them to log in:</p>
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 10px; background: var(--bg);">
+        <div style="display: flex; justify-content: space-between;"><span style="font-size: 13px; color: var(--faint);">Roll number</span><span style="font-family: monospace; font-weight: 700;"><%= rollNo %></span></div>
+        <div style="display: flex; justify-content: space-between;"><span style="font-size: 13px; color: var(--faint);">Your PIN</span><span style="font-family: monospace; font-weight: 700;"><%= pin %></span></div>
+        <div style="display: flex; justify-content: space-between;"><span style="font-size: 13px; color: var(--faint);">Parent PIN</span><span style="font-family: monospace; font-weight: 700;"><%= parentPin %></span></div>
+      </div>
+      <a href="/student/login" class="btn btn-primary">Log in now →</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Help — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'help' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">Help &amp; Guide</h1>
+    </div>
+    <div class="content" style="max-width: 760px; display: flex; flex-direction: column; gap: 28px;">
+
+      <div class="card" style="padding: 24px;">
+        <h2 style="font-size: 17px; margin-bottom: 10px;">Getting started</h2>
+        <ol style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); line-height: 1.9;">
+          <li>Create a class from your Dashboard — give it a name and subject.</li>
+          <li>Add students one at a time, or click <strong>Import from a spreadsheet</strong> on the class page to upload a .csv or .xlsx of your whole roster at once.</li>
+          <li>Every class also gets a <strong>class code</strong> (top of the class page) — share it and students can join themselves at <code>/join</code> instead of you entering them by hand.</li>
+          <li>Each student and each parent gets their own separate login (a roll number + a 4-digit PIN) — both are shown in the class roster.</li>
+        </ol>
+      </div>
+
+      <div class="card" style="padding: 24px;">
+        <h2 style="font-size: 17px; margin-bottom: 10px;">Tests &amp; worksheets</h2>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); line-height: 1.9;">
+          <li>From a class page, create a test, then use <strong>Generate with AI</strong> — paste a syllabus, upload a PDF, or upload a photo of a page, and it drafts multiple-choice questions for you to review.</li>
+          <li>Add descriptive (long-answer) questions manually — objective answers grade themselves instantly; descriptive ones you grade on a simple marking screen once submitted.</li>
+          <li><strong>Publish now</strong> makes a test visible to students immediately; <strong>Schedule</strong> sets a future date/time and it publishes itself automatically.</li>
+          <li>Download any test as a <strong>question paper PDF</strong> (no answers, for printing) or an <strong>answer key</strong> (for yourself) — useful if a student can't take it online.</li>
+        </ul>
+      </div>
+
+      <div class="card" style="padding: 24px;">
+        <h2 style="font-size: 17px; margin-bottom: 10px;">Slides, notes &amp; recommended practice</h2>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); line-height: 1.9;">
+          <li>Create slide decks or class notes the same way as tests — manually or with AI — and share them with a class from the material's page.</li>
+          <li>On a student's profile, if they have a weak chapter (below 50%), a <strong>Generate practice set with AI</strong> button appears — it makes a short personal practice set that shows up only on that student's own dashboard, not the whole class.</li>
+        </ul>
+      </div>
+
+      <div class="card" style="padding: 24px;">
+        <h2 style="font-size: 17px; margin-bottom: 10px;">Attendance &amp; homework</h2>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); line-height: 1.9;">
+          <li><strong>Attendance</strong> on a class page lets you mark a date — everyone defaults present, uncheck who's absent.</li>
+          <li><strong>Homework</strong> lets you assign work with a due date and tick off who's completed it — students see their own homework list on their dashboard.</li>
+        </ul>
+      </div>
+
+      <div class="card" style="padding: 24px;">
+        <h2 style="font-size: 17px; margin-bottom: 10px;">Reports &amp; parent communication</h2>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); line-height: 1.9;">
+          <li>On a test's Results page, generate a report for one student or <strong>Generate reports for all →</strong> at once.</li>
+          <li>Share a report via <strong>Copy link</strong>, <strong>WhatsApp</strong> (opens WhatsApp pre-filled — no business account needed), or <strong>Email parent</strong> (needs SMTP set up in <code>.env</code>).</li>
+          <li>Parents can also log in directly (roll number + their own parent PIN) to see every report you've shared, plus attendance, scores, and chapter-wise weak spots automatically.</li>
+          <li>A <strong>weekly digest email</strong> goes out to each parent automatically (recent scores, attendance, weakest topic) — no action needed from you. A parent can be opted out from that student's edit page.</li>
+          <li>Use <strong>Send a notification</strong> on a class page to message all students and/or parents in that class at once — it shows up in their in-app notifications the next time they log in (not SMS/push).</li>
+        </ul>
+      </div>
+
+      <div class="card" style="padding: 24px;">
+        <h2 style="font-size: 17px; margin-bottom: 10px;">Your plan &amp; referrals</h2>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); line-height: 1.9;">
+          <li><strong>Upgrade</strong> in the sidebar lets you pay for a plan directly (cards, UPI, netbanking) if online payment is set up — otherwise ask your admin to assign one.</li>
+          <li><strong>Settings</strong> shows your personal referral link — refer 2 teachers, and once both have purchased a plan, you get 6 months added to your own subscription free.</li>
+          <li><strong>Compare Classes</strong> shows every class you teach side by side — average score, attendance, and weakest chapter for each.</li>
+        </ul>
+      </div>
+
+      <div class="card" style="padding: 24px;">
+        <h2 style="font-size: 17px; margin-bottom: 10px;">Common questions</h2>
+        <div style="display: flex; flex-direction: column; gap: 14px; font-size: 14px;">
+          <div>
+            <strong style="color: var(--ink);">AI generation says "not configured" — what do I do?</strong>
+            <p style="margin: 4px 0 0; color: var(--muted);">Your admin needs to add an AI key (<code>ANTHROPIC_API_KEY</code> or <code>OPENAI_API_KEY</code>) to the app's <code>.env</code> file.</p>
+          </div>
+          <div>
+            <strong style="color: var(--ink);">I forgot my password.</strong>
+            <p style="margin: 4px 0 0; color: var(--muted);">Use "Forgot your password?" on the login page. Students and parents don't have passwords to forget — they use a roll number + PIN instead, shown on the class roster.</p>
+          </div>
+          <div>
+            <strong style="color: var(--ink);">A student can't log in.</strong>
+            <p style="margin: 4px 0 0; color: var(--muted);">Check the class roster for their exact roll number and PIN — both are visible to you there any time.</p>
+          </div>
+          <div>
+            <strong style="color: var(--ink);">How do I remove a student?</strong>
+            <p style="margin: 4px 0 0; color: var(--muted);">"Remove" next to their name on the class roster. This deletes their test attempts, attendance, and homework records too, so use it only when you mean to.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

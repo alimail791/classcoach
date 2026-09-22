@@ -1,0 +1,12 @@
+{
+  "name": "ClassCoach",
+  "short_name": "ClassCoach",
+  "description": "AI test creation, grading, and parent reporting for teachers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF6EE",
+  "theme_color": "#B4501C",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

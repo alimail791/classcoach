@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'My tests — ClassCoach' }) %></head>
+<body>
+  <div class="topbar">
+    <div class="crumbs">
+      <h1 style="font-size: 17px;">Hi, <%= student.name %></h1>
+      <span class="badge badge-warm"><%= batch.name %></span>
+    </div>
+    <form method="POST" action="/student/logout">
+      <button type="submit" class="btn btn-ghost">Log out</button>
+    </form>
+  </div>
+  <div style="max-width: 720px; margin: 0 auto; padding: 32px;">
+
+    <div style="margin-bottom: 28px;">
+      <%- include('partials/notifications', { notifications: notifications, unreadCount: unreadCount, markReadAction: '/student/notifications/mark-read' }) %>
+    </div>
+
+    <% if (chapterBreakdown.length > 0) { %>
+      <div class="card" style="padding: 20px; margin-bottom: 28px; display: flex; flex-direction: column; gap: 14px;">
+        <span style="font-size: 14px; font-weight: 700;">Your chapter-wise performance</span>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <% chapterBreakdown.forEach(function(c) { %>
+            <div class="bar-row">
+              <span class="name"><%= c.chapter %></span>
+              <div class="bar-track"><div class="bar-fill" style="width: <%= c.pct === null ? 0 : c.pct %>%; background: <%= c.pct === null ? '#D8CBB0' : (c.pct < 50 ? '#B4501C' : c.pct < 75 ? '#D8A24A' : '#6B8F71') %>;"></div></div>
+              <span class="pct"><%= c.pct === null ? '—' : c.pct + '%' %></span>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (practiceRecommendations.length > 0) { %>
+      <div class="card" style="padding: 20px; margin-bottom: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-size: 14px; font-weight: 700;">📚 Recommended practice for you</span>
+        <% practiceRecommendations.forEach(function(p) { %>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg); border-radius: 6px;">
+            <div style="display: flex; flex-direction: column;">
+              <span style="font-size: 13px; font-weight: 600;"><%= p.material_title %></span>
+              <span style="font-size: 11px; color: var(--faint);"><%= p.chapter %></span>
+            </div>
+            <a href="/student/materials/<%= p.material_id %>" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">Open →</a>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <h2 style="font-size: 20px; margin-bottom: 20px;">Your tests</h2>
+    <% if (tests.length === 0) { %>
+      <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">No tests published yet — check back soon.</div>
+    <% } else { %>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <% tests.forEach(function(t) { %>
+          <div class="card" style="padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-size: 15px; font-weight: 600;"><%= t.title %></span>
+              <span style="font-size: 12px; color: var(--faint);"><%= t.chapter || 'General' %> · <%= t.duration_minutes %> min</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <a href="/student/tests/<%= t.id %>/download" class="btn btn-ghost" style="padding: 8px 12px; font-size: 13px;">⬇</a>
+              <% if (t.attempt) { %>
+                <% if (t.attempt.status === 'pending') { %>
+                  <a href="/student/tests/<%= t.id %>/result" class="btn btn-ghost">Pending grading</a>
+                <% } else { %>
+                  <a href="/student/tests/<%= t.id %>/result" class="btn btn-ghost">View result: <%= t.attempt.score %>/<%= t.attempt.total %></a>
+                <% } %>
+              <% } else { %>
+                <a href="/student/tests/<%= t.id %>" class="btn btn-primary">Start test →</a>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <% if (homework.length > 0) { %>
+      <h2 style="font-size: 20px; margin: 32px 0 20px;">Homework</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <% homework.forEach(function(h) { %>
+          <div class="card" style="padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-size: 15px; font-weight: 600;"><%= h.title %></span>
+              <span style="font-size: 12px; color: var(--faint);"><% if (h.chapter) { %><%= h.chapter %> · <% } %>Due <%= h.due_date || 'no date set' %></span>
+            </div>
+            <% if (h.completed) { %><span class="badge badge-good">Done</span><% } else { %><span class="badge badge-neutral">Not done</span><% } %>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <% if (materials.length > 0) { %>
+      <h2 style="font-size: 20px; margin: 32px 0 20px;">Class materials</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <% materials.forEach(function(m) { %>
+          <div class="card" style="padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-size: 15px; font-weight: 600;"><%= m.title %></span>
+              <span style="font-size: 12px; color: var(--faint);"><%= m.type === 'slides' ? '🖥️ Slides' : '📝 Notes' %><% if (m.chapter) { %> · <%= m.chapter %><% } %></span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <a href="/student/materials/<%= m.id %>/download" class="btn btn-ghost" style="padding: 8px 12px; font-size: 13px;">⬇</a>
+              <a href="/student/materials/<%= m.id %>" class="btn btn-ghost">Open →</a>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

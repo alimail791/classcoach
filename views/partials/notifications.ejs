@@ -1,0 +1,18 @@
+<% if (notifications && notifications.length > 0) { %>
+  <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; <%= unreadCount > 0 ? 'border-color: #D8A87C;' : '' %>">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <span style="font-size: 14px; font-weight: 700;">🔔 Notifications<% if (unreadCount > 0) { %> <span class="badge badge-warm"><%= unreadCount %> new</span><% } %></span>
+      <% if (unreadCount > 0) { %>
+        <form method="POST" action="<%= markReadAction %>"><button type="submit" style="background: none; border: none; padding: 0; font-size: 12px; font-weight: 600; color: var(--accent); cursor: pointer;">Mark all read</button></form>
+      <% } %>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <% notifications.forEach(function(n) { %>
+        <div style="padding: 10px 12px; background: <%= n.read_at ? 'transparent' : 'var(--accent-tint)' %>; border-radius: 6px;">
+          <p style="margin: 0; font-size: 13px; color: var(--ink); line-height: 1.5;"><%= n.message %></p>
+          <span style="font-size: 11px; color: var(--faint);"><% if (n.sender_label) { %><%= n.sender_label %> · <% } %><%= n.created_at.slice(0, 16).replace('T', ' ') %></span>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+<% } %>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: test.title + ' — Result' }) %></head>
+<body>
+  <div class="topbar">
+    <div class="crumbs">
+      <a href="/student/dashboard" style="font-size: 14px; color: var(--faint);">← My tests</a>
+      <div class="divider-v"></div>
+      <h1 style="font-size: 17px;"><%= test.title %></h1>
+    </div>
+  </div>
+  <div style="max-width: 720px; margin: 0 auto; padding: 32px; display: flex; flex-direction: column; gap: 24px;">
+    <div class="card" style="padding: 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+      <% if (attempt.status === 'pending') { %>
+        <span style="font-size: 13px; color: var(--faint);">Your teacher is still grading this one</span>
+        <span class="badge badge-neutral" style="margin-top: 6px;">Pending grading</span>
+      <% } else { %>
+        <span style="font-size: 13px; color: var(--faint);">Your score</span>
+        <span style="font-family: 'Newsreader', serif; font-size: 40px;"><%= attempt.score %> / <%= attempt.total %></span>
+      <% } %>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <% rows.forEach(function(r, idx) { %>
+        <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+            <span style="font-size: 14px; font-weight: 600;"><%= idx + 1 %>. <%= r.text %></span>
+            <% if (r.type === 'descriptive') { %>
+              <span class="badge badge-neutral" style="white-space: nowrap;"><%= r.marks_awarded === null ? 'Not graded yet' : r.marks_awarded + ' / ' + r.max_marks %></span>
+            <% } %>
+          </div>
+
+          <% if (r.type === 'descriptive') { %>
+            <div style="padding: 12px 14px; background: var(--bg); border-radius: 6px; font-size: 14px; color: var(--muted); white-space: pre-wrap;"><%= r.text_answer || '(no answer given)' %></div>
+          <% } else { %>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <% r.options.forEach(function(opt, oi) { %>
+                <%
+                  var isCorrect = oi === r.correct_index;
+                  var isSelected = oi === r.selected_index;
+                  var color = isCorrect ? '#34502E' : (isSelected ? '#8C3C13' : '#4A4032');
+                  var bg = isCorrect ? '#EAF1E7' : (isSelected ? '#F7E3DD' : 'transparent');
+                %>
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 8px 10px; border-radius: 6px; background: <%= bg %>; color: <%= color %>;">
+                  <%= opt %>
+                  <% if (isCorrect) { %><span style="margin-left: auto; font-size: 11px; font-weight: 700;">Correct</span><% } %>
+                  <% if (isSelected && !isCorrect) { %><span style="margin-left: auto; font-size: 11px; font-weight: 700;">Your answer</span><% } %>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</body>
+</html>

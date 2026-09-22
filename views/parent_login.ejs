@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Parent login — ClassCoach' }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Parent login</h1>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <form method="POST" action="/parent/login" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="field"><label>Child's roll number</label><input name="roll_no" required></div>
+        <div class="field"><label>Parent PIN</label><input name="parent_pin" required inputmode="numeric"></div>
+        <button type="submit" class="btn btn-primary">Log in</button>
+      </form>
+      <span style="font-size: 13px; color: var(--faint);">Ask your child's teacher for the roll number and parent PIN.</span>
+      <a href="/login" style="font-size: 13px; color: var(--faint);">Teacher? Log in here →</a>
+    </div>
+  </div>
+</body>
+</html>

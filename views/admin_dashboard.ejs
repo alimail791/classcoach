@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Admin — ClassCoach' }) %></head>
+<body>
+<div style="min-height: 100vh; display: flex; flex-direction: column;">
+  <div class="topbar">
+    <div class="crumbs">
+      <span style="font-family: 'Newsreader', serif; font-size: 18px;">ClassCoach Admin</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="/admin/export" class="btn btn-ghost">⬇ Export full backup</a>
+      <form method="POST" action="/admin/logout"><button type="submit" class="btn btn-ghost">Log out</button></form>
+    </div>
+  </div>
+  <div class="content" style="max-width: 1180px; margin: 0 auto; width: 100%;">
+
+      <% if (notifySent) { %><div class="flash flash-ok">Notification sent to <%= notifySent %>.</div><% } %>
+      <% if (notifyEmailError) { %><div class="flash flash-error"><%= notifyEmailError %></div><% } %>
+      <% if (resetSent) { %><div class="flash flash-ok">Password reset email sent to <%= resetSent %>.</div><% } %>
+      <% if (resetLink) { %>
+        <div class="flash" style="background: #F0E6D6; border: 1px solid #D8CBB0; color: var(--muted); word-break: break-all;">
+          Email isn't configured — here's the reset link for <strong><%= resetFor %></strong> to send them yourself: <%= resetLink %>
+        </div>
+      <% } %>
+      <% if (deleteError) { %><div class="flash flash-error">Name didn't match — account not deleted.</div><% } %>
+
+      <div class="grid-4">
+        <div class="card stat-card">
+          <span class="label">Teachers</span>
+          <span class="value"><%= totals.teachers %></span>
+          <span class="sub"><%= totals.activeTeachers %> active</span>
+        </div>
+        <div class="card stat-card">
+          <span class="label">Students</span>
+          <span class="value"><%= totals.students %></span>
+          <span class="sub">Across all teachers</span>
+        </div>
+        <div class="card stat-card">
+          <span class="label">Tests created</span>
+          <span class="value"><%= totals.tests %></span>
+        </div>
+        <div class="card stat-card">
+          <span class="label">AI generations</span>
+          <span class="value"><%= totals.aiUsedThisMonth %></span>
+          <span class="sub">This month (<%= month %>)</span>
+        </div>
+      </div>
+
+      <form method="GET" action="/admin" style="display: flex; gap: 10px; max-width: 400px;">
+        <input type="text" name="q" value="<%= q %>" placeholder="Search by name or email..." style="flex: 1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px;">
+        <button type="submit" class="btn btn-ghost">Search</button>
+        <% if (q) { %><a href="/admin" class="btn btn-ghost">Clear</a><% } %>
+      </form>
+
+      <div class="card" style="overflow: hidden;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8;">
+          <span style="font-size: 14px; font-weight: 700;">All teacher accounts (<%= teachers.length %>)</span>
+        </div>
+        <table class="plain">
+          <thead><tr><th>Teacher</th><th>Plan</th><th>Students</th><th>AI usage</th><th>Expiry</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <% teachers.forEach(function(t) { %>
+              <tr>
+                <td>
+                  <span style="font-weight: 600;"><%= t.name %></span><br>
+                  <span style="font-size: 12px; color: var(--faint);"><%= t.email %></span><br>
+                  <span style="font-size: 12px; color: var(--faint);"><%= t.phone || '—' %></span>
+                  <% if (t.email_verified) { %><span class="badge badge-good" style="margin-left: 4px;">Verified</span>
+                  <% } else { %><span class="badge badge-neutral" style="margin-left: 4px;">Unverified</span><% } %>
+                </td>
+                <td>
+                  <form method="POST" action="/admin/teachers/<%= t.id %>/plan" style="display: flex; flex-direction: column; gap: 6px; max-width: 190px;">
+                    <select name="plan_id" style="padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px;">
+                      <% plans.forEach(function(p) { %>
+                        <option value="<%= p.id %>" <%= t.plan === p.id ? 'selected' : '' %>><%= p.name %> (₹<%= p.price %>/<%= p.duration_months %>mo, <%= p.max_students %> students)</option>
+                      <% }); %>
+                    </select>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      <select name="extend_months" style="padding: 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px;">
+                        <option value="">Don't change expiry</option>
+                        <option value="1">Extend 1 month</option>
+                        <option value="6">Extend 6 months</option>
+                        <option value="12">Extend 12 months</option>
+                      </select>
+                    </div>
+                    <label style="font-size: 11px; color: var(--faint); display: flex; align-items: center; gap: 4px;">
+                      <input type="checkbox" name="clear_expiry" value="1"> No expiry (never lock)
+                    </label>
+                    <button type="submit" class="btn btn-ghost" style="padding: 5px 10px; font-size: 11px; align-self: flex-start;">Save</button>
+                  </form>
+                </td>
+                <td><%= t.studentCount %> / <%= t.max_students %></td>
+                <td><%= t.aiUsed %> / <%= t.ai_limit_monthly %></td>
+                <td>
+                  <% if (t.plan_expires_at === null) { %>
+                    <span style="font-size: 12px; color: var(--faint);">No expiry</span>
+                  <% } else if (t.expiryDays < 0) { %>
+                    <span class="badge badge-warm">Expired <%= Math.abs(t.expiryDays) %>d ago</span>
+                  <% } else { %>
+                    <span style="font-size: 12px; color: var(--muted);"><%= t.expiryDays %>d left</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (t.active) { %><span class="badge badge-good">Active</span><% } else { %><span class="badge badge-neutral">Deactivated</span><% } %>
+                </td>
+                <td>
+                  <div style="display: flex; flex-direction: column; gap: 6px; min-width: 150px;">
+                    <form method="POST" action="/admin/teachers/<%= t.id %>/notify" style="display: flex; flex-direction: column; gap: 4px;">
+                      <textarea name="message" rows="2" placeholder="Message to this teacher..." style="padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 11px;" required></textarea>
+                      <label style="font-size: 10px; color: var(--faint); display: flex; align-items: center; gap: 4px;">
+                        <input type="checkbox" name="also_email" value="1"> Also email
+                      </label>
+                      <button type="submit" class="btn btn-ghost" style="padding: 5px 10px; font-size: 11px;">Send</button>
+                    </form>
+                    <form method="POST" action="/admin/teachers/<%= t.id %>/toggle-active">
+                      <button type="submit" class="btn btn-ghost" style="padding: 5px 10px; font-size: 11px; width: 100%;"><%= t.active ? 'Deactivate' : 'Reactivate' %></button>
+                    </form>
+                    <form method="POST" action="/admin/teachers/<%= t.id %>/reset-password">
+                      <button type="submit" class="btn btn-ghost" style="padding: 5px 10px; font-size: 11px; width: 100%;">Reset password</button>
+                    </form>
+                    <% if (!t.email_verified) { %>
+                      <form method="POST" action="/admin/teachers/<%= t.id %>/verify-email">
+                        <button type="submit" class="btn btn-ghost" style="padding: 5px 10px; font-size: 11px; width: 100%;">Mark verified</button>
+                      </form>
+                    <% } %>
+                    <form method="POST" action="/admin/teachers/<%= t.id %>/delete" data-teacher-name="<%= t.name %>" onsubmit="return classcoachConfirmDelete(this);">
+                      <input type="hidden" name="confirm_name" value="">
+                      <button type="submit" style="background: none; border: 1px solid #E3A98F; color: var(--accent); padding: 5px 10px; font-size: 11px; border-radius: 6px; width: 100%; cursor: pointer;">Delete account</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="font-size: 12px; color: var(--faint);">
+        Choosing a plan sets its student/AI limits immediately. Once a teacher's expiry date passes, their account freezes at its current student count and AI generation is blocked — nothing already there is deleted or hidden. "No expiry" exempts an account from this entirely.
+      </p>
+
+    </div>
+  </div>
+<script>
+function classcoachConfirmDelete(form) {
+  var name = form.getAttribute('data-teacher-name');
+  var ok = confirm('This permanently deletes ' + name + ' and every class, student, and test they own. This cannot be undone.\n\nClick OK, then type their name exactly to confirm.');
+  if (!ok) return false;
+  var typed = prompt('Type "' + name + '" to confirm:');
+  if (typed !== name) {
+    alert('Name did not match — cancelled, nothing was deleted.');
+    return false;
+  }
+  form.querySelector('input[name="confirm_name"]').value = typed;
+  return true;
+}
+</script>
+</body>
+</html>

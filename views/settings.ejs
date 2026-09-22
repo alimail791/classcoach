@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Settings — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'settings' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">Settings</h1>
+    </div>
+    <div class="content" style="align-items: center;">
+      <div style="width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 24px;">
+
+        <% if (saved === 'profile') { %><div class="flash flash-ok">Profile updated.</div><% } %>
+        <% if (saved === 'password') { %><div class="flash flash-ok">Password changed.</div><% } %>
+        <% if (verificationSent) { %><div class="flash flash-ok">Verification email sent — check your inbox.</div><% } %>
+        <% if (verificationError) { %><div class="flash flash-error"><%= verificationError %></div><% } %>
+        <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+
+        <% if (!teacher.email_verified) { %>
+          <div class="flash" style="background: #F5E6D3; border: 1px solid #D8A87C; color: var(--accent-deep); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <span>Your email isn't verified yet.</span>
+            <form method="POST" action="/settings/resend-verification">
+              <button type="submit" class="btn btn-ghost" style="padding: 6px 14px; font-size: 13px;">Send verification email</button>
+            </form>
+          </div>
+        <% } %>
+
+        <div class="card" style="padding: 24px;">
+          <h2 style="font-size: 16px; margin-bottom: 16px;">Profile</h2>
+          <form method="POST" action="/settings" style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="field"><label>Name</label><input name="name" value="<%= teacher.name %>" required></div>
+            <div class="field">
+              <label>Email <% if (teacher.email_verified) { %><span class="badge badge-good" style="margin-left: 6px;">Verified</span><% } else { %><span class="badge badge-neutral" style="margin-left: 6px;">Unverified</span><% } %></label>
+              <input type="email" name="email" value="<%= teacher.email %>" required>
+            </div>
+            <div class="field"><label>Phone number</label><input name="phone" value="<%= teacher.phone %>" placeholder="+91 9xxxxxxxxx"></div>
+            <button type="submit" class="btn btn-dark" style="align-self: flex-start;">Save profile</button>
+          </form>
+          <p style="font-size: 12px; color: var(--faint); margin-top: 10px;">Changing your email will require re-verifying it.</p>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+          <h2 style="font-size: 16px; margin-bottom: 16px;">Change password</h2>
+          <form method="POST" action="/settings/password" style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="field"><label>Current password</label><input type="password" name="current_password" required></div>
+            <div class="field"><label>New password</label><input type="password" name="new_password" required minlength="6"></div>
+            <button type="submit" class="btn btn-dark" style="align-self: flex-start;">Change password</button>
+          </form>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+          <h2 style="font-size: 16px; margin-bottom: 6px;">Refer &amp; earn</h2>
+          <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px;">Refer 2 teachers — once both have purchased a paid plan, you get 6 months added to your own subscription, free.</p>
+          <div class="field">
+            <label>Your referral link</label>
+            <div style="display: flex; gap: 8px;">
+              <input readonly value="<%= referralUrl %>" style="flex: 1; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; background: var(--bg);">
+              <button type="button" class="btn btn-ghost" onclick="navigator.clipboard.writeText('<%= referralUrl %>'); this.textContent='Copied!';">Copy</button>
+            </div>
+          </div>
+          <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 13px; font-weight: 600;">Progress: <%= purchasedReferrals %> purchased referral<%= purchasedReferrals === 1 ? '' : 's' %> (<%= teacher.referral_rewards_granted %> reward<%= teacher.referral_rewards_granted === 1 ? '' : 's' %> earned so far)</span>
+            <% if (referredTeachers.length === 0) { %>
+              <span style="font-size: 12px; color: var(--faint);">Nobody has signed up with your link yet.</span>
+            <% } else { %>
+              <% referredTeachers.forEach(function(t) { %>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">
+                  <span><%= t.name %></span>
+                  <% if (t.has_purchased) { %><span class="badge badge-good">Purchased</span><% } else { %><span class="badge badge-neutral">Trial only</span><% } %>
+                </div>
+              <% }); %>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+          <h2 style="font-size: 16px; margin-bottom: 12px;">Account</h2>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--muted);">
+            <div style="display: flex; justify-content: space-between;"><span>Member since</span><span style="color: var(--ink); font-weight: 600;"><%= teacher.created_at.slice(0, 10) %></span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

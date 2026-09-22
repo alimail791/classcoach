@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Parent reports — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'reports' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">Parent reports</h1>
+      <span style="font-size: 13px; color: var(--faint);"><%= rows.length %> generated</span>
+    </div>
+    <div class="content">
+      <div style="display: flex; gap: 24px; align-items: flex-start;">
+
+        <!-- LIST -->
+        <div class="card" style="width: 340px; flex-shrink: 0; overflow: hidden;">
+          <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8;">
+            <span style="font-size: 14px; font-weight: 700;">All reports</span>
+          </div>
+          <% if (rows.length === 0) { %>
+            <div style="padding: 20px; color: var(--faint); font-size: 14px;">No reports generated yet — open a test's results page and click "Generate report" for a student.</div>
+          <% } else { %>
+            <div>
+              <% rows.forEach(function(r) { %>
+                <a href="/reports?token=<%= r.token %>" style="display: block; padding: 14px 20px; border-bottom: 1px solid #F3ECDF; text-decoration: none; color: inherit; background: <%= r.token === selectedToken ? '#F0E6D6' : 'transparent' %>;">
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 14px; color: #211C15; font-weight: 600;"><%= r.student_name %></span>
+                  </div>
+                  <span style="font-size: 12px; color: #7A6E5C;"><%= r.batch_name %> · <%= r.test_title %></span>
+                </a>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- PREVIEW -->
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
+          <% if (!preview) { %>
+            <div class="card" style="padding: 40px; text-align: center; color: var(--faint); font-size: 14px;">Select a report on the left to preview it.</div>
+          <% } else { %>
+            <span style="font-size: 13px; color: var(--faint);">Preview — exactly what the parent sees</span>
+            <div class="card" style="padding: 40px; display: flex; flex-direction: column; gap: 24px; box-shadow: 0 20px 40px -28px rgba(33,28,21,0.3);">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 20px; border-bottom: 2px solid var(--ink);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; color: #FBF6EE; font-family: 'Newsreader', serif; font-size: 16px;">C</div>
+                  <span style="font-family: 'Newsreader', serif; font-size: 18px;">ClassCoach</span>
+                </div>
+                <span style="font-size: 12px; color: var(--faint);"><%= preview.test.title %></span>
+              </div>
+
+              <div>
+                <h2 style="font-size: 22px; margin-bottom: 4px;"><%= preview.student.name %></h2>
+                <span style="font-size: 13px; color: var(--faint);"><%= preview.batch.name %><% if (preview.batch.subject) { %> · <%= preview.batch.subject %><% } %></span>
+              </div>
+
+              <% if (preview.attempt.status === 'pending') { %>
+                <div class="flash" style="background: #F0E6D6; border: 1px solid #D8CBB0; color: var(--muted);">Still being graded.</div>
+              <% } else { %>
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px;">
+                  <div style="padding: 16px; background: var(--bg); border-radius: 8px; text-align: center;">
+                    <div style="font-family: 'Newsreader', serif; font-size: 26px;"><%= preview.attempt.score %> / <%= preview.attempt.total %></div>
+                    <div style="font-size: 12px; color: var(--faint); margin-top: 4px;">Score</div>
+                  </div>
+                  <div style="padding: 16px; background: var(--bg); border-radius: 8px; text-align: center;">
+                    <div style="font-family: 'Newsreader', serif; font-size: 26px;"><%= Math.round((preview.attempt.score / preview.attempt.total) * 100) %>%</div>
+                    <div style="font-size: 12px; color: var(--faint); margin-top: 4px;">Percentage</div>
+                  </div>
+                </div>
+                <% if (preview.chapterBreakdown.length) { %>
+                <div>
+                  <h3 style="font-size: 14px; margin-bottom: 12px;">Chapter breakdown</h3>
+                  <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <% preview.chapterBreakdown.forEach(function(c) { %>
+                      <div class="bar-row">
+                        <span class="name"><%= c.chapter %></span>
+                        <div class="bar-track"><div class="bar-fill" style="width: <%= c.pct === null ? 0 : c.pct %>%; background: <%= c.pct === null ? '#D8CBB0' : (c.pct < 50 ? '#B4501C' : c.pct < 75 ? '#D8A24A' : '#6B8F71') %>;"></div></div>
+                        <span class="pct"><%= c.pct === null ? '—' : c.pct + '%' %></span>
+                      </div>
+                    <% }); %>
+                  </div>
+                </div>
+                <% } %>
+              <% } %>
+
+              <% if (preview.note) { %>
+                <div style="padding: 16px 18px; background: var(--accent-tint); border-radius: 8px; font-size: 14px; color: var(--accent-deep); line-height: 1.6;">
+                  <strong>Teacher's note:</strong> <%= preview.note %>
+                </div>
+              <% } %>
+
+              <div style="padding-top: 16px; border-top: 1px solid #EFE6D8; font-size: 12px; color: #A69D89; text-align: center;">
+                Sent via ClassCoach on behalf of <%= preview.teacher.name %>
+              </div>
+            </div>
+            <a href="/r/<%= selectedToken %>" target="_blank" style="font-size: 13px; font-weight: 600; align-self: flex-start;">Open the parent's link in a new tab →</a>
+          <% } %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

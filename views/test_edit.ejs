@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: test.title + ' — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/batches/<%= batch.id %>" style="font-size: 14px; color: var(--faint);">← <%= batch.name %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;"><%= test.title %></h1>
+        <% if (test.status === 'published') { %><span class="badge badge-good">Published</span>
+        <% } else if (test.scheduled_at) { %><span class="badge badge-warm">Scheduled for <%= new Date(test.scheduled_at).toLocaleString() %></span>
+        <% } else { %><span class="badge badge-neutral">Draft</span><% } %>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <% if (questions.length > 0) { %>
+          <a href="/tests/<%= test.id %>/download" class="btn btn-ghost">⬇ Question paper</a>
+          <a href="/tests/<%= test.id %>/download?answers=1" class="btn btn-ghost">⬇ Answer key</a>
+        <% } %>
+        <% if (test.status === 'draft' && questions.length > 0) { %>
+          <% if (test.scheduled_at) { %>
+            <form method="POST" action="/tests/<%= test.id %>/unschedule">
+              <button type="submit" class="btn btn-ghost">Cancel schedule</button>
+            </form>
+          <% } else { %>
+            <form method="POST" action="/tests/<%= test.id %>/schedule" style="display: flex; gap: 6px; align-items: center;">
+              <input type="datetime-local" name="scheduled_at" required style="padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px;">
+              <button type="submit" class="btn btn-ghost">Schedule</button>
+            </form>
+          <% } %>
+          <form method="POST" action="/tests/<%= test.id %>/publish">
+            <button type="submit" class="btn btn-primary">Publish now →</button>
+          </form>
+        <% } else if (test.status === 'published') { %>
+          <a href="/tests/<%= test.id %>/results" class="btn btn-primary">View results →</a>
+        <% } %>
+      </div>
+    </div>
+    <div class="content">
+
+      <% if (test.status === 'draft') { %>
+
+        <div class="grid-2">
+          <div class="card" style="padding: 24px;">
+            <h2 style="font-size: 16px; margin-bottom: 6px;">Generate with AI</h2>
+            <p style="font-size: 13px; color: var(--muted); margin: 0 0 14px;">Paste text, upload a PDF, or upload a photo of a page (OCR) — questions are added straight into the list below for you to review.</p>
+            <% if (aiError) { %><div class="flash flash-error" style="margin-bottom: 14px;"><%= aiError %></div><% } %>
+            <form method="POST" action="/tests/<%= test.id %>/generate" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="field">
+                <label>Syllabus / chapter text</label>
+                <textarea name="syllabus_text" rows="5" placeholder="Paste the chapter content or a topic outline here..."></textarea>
+              </div>
+              <div class="field">
+                <label>Or upload a PDF</label>
+                <input type="file" name="syllabus_pdf" accept="application/pdf">
+              </div>
+              <div class="field">
+                <label>Or upload a photo of the page (OCR)</label>
+                <input type="file" name="syllabus_image" accept="image/jpeg,image/png">
+              </div>
+              <div class="field" style="max-width: 140px;">
+                <label>Number of questions</label>
+                <input name="count" type="number" value="6" min="1" max="15">
+              </div>
+              <button type="submit" class="btn btn-dark" style="align-self: flex-start;">Generate questions</button>
+            </form>
+          </div>
+
+          <div class="card" style="padding: 24px;">
+            <h2 style="font-size: 16px; margin-bottom: 6px;">Add a question manually</h2>
+            <p style="font-size: 13px; color: var(--muted); margin: 0 0 14px;">Multiple-choice auto-grades instantly; descriptive answers you grade yourself.</p>
+            <% if (error) { %><div class="flash flash-error" style="margin-bottom: 14px;"><%= error %></div><% } %>
+            <form method="POST" action="/tests/<%= test.id %>/questions" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="field">
+                <label>Question type</label>
+                <select name="type" id="qtype-select" onchange="ccToggleQType(this.value)">
+                  <option value="mcq">Multiple choice (auto-graded)</option>
+                  <option value="descriptive">Descriptive (you grade it)</option>
+                </select>
+              </div>
+              <div class="field"><label>Question</label><textarea name="text" rows="2" required></textarea></div>
+              <div class="field"><label>Chapter tag</label><input name="chapter" value="<%= test.chapter %>"></div>
+
+              <div id="mcq-fields" style="display: flex; flex-direction: column; gap: 8px;">
+                <% [0,1,2,3].forEach(function(i) { %>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="radio" name="correctIndex" value="<%= i %>">
+                    <input name="opt<%= i %>" placeholder="Option <%= i + 1 %>" style="flex: 1; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px;">
+                  </div>
+                <% }); %>
+                <span style="font-size: 12px; color: var(--faint);">Select the radio button next to the correct option.</span>
+              </div>
+
+              <div id="descriptive-fields" style="display: none; max-width: 160px;">
+                <div class="field"><label>Max marks</label><input name="max_marks" type="number" value="5" min="1"></div>
+              </div>
+
+              <button type="submit" class="btn btn-dark" style="align-self: flex-start; margin-top: 4px;">Add question</button>
+            </form>
+          </div>
+        </div>
+
+        <script>
+        function ccToggleQType(val) {
+          document.getElementById('mcq-fields').style.display = val === 'descriptive' ? 'none' : 'flex';
+          document.getElementById('descriptive-fields').style.display = val === 'descriptive' ? 'block' : 'none';
+          document.querySelectorAll('#mcq-fields input').forEach(function (el) { el.required = val !== 'descriptive' && el.type !== 'radio'; });
+        }
+        </script>
+
+      <% } %>
+
+      <div>
+        <h2 style="font-size: 15px; color: var(--muted); margin-bottom: 14px; font-family: 'Karla', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;"><%= questions.length %> question<%= questions.length === 1 ? '' : 's' %></h2>
+        <% if (questions.length === 0) { %>
+          <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">No questions yet — generate some with AI or add one manually above.</div>
+        <% } else { %>
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <% questions.forEach(function(q, idx) { %>
+              <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;">
+                  <span style="font-size: 14px; color: var(--ink); line-height: 1.5;"><strong><%= idx + 1 %>.</strong> <%= q.text %></span>
+                  <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                    <% if (q.type === 'descriptive') { %><span class="badge badge-neutral" style="white-space: nowrap;">Descriptive · <%= q.max_marks %> marks</span>
+                    <% } else { %><span class="badge badge-warm" style="white-space: nowrap;"><%= q.chapter || 'General' %></span><% } %>
+                  </div>
+                </div>
+                <% if (q.type === 'mcq') { %>
+                  <div style="display: flex; flex-direction: column; gap: 6px; padding-left: 4px;">
+                    <% q.options.forEach(function(opt, oi) { %>
+                      <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: <%= oi === q.correct_index ? '#211C15' : '#4A4032' %>;">
+                        <span style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid <%= oi === q.correct_index ? '#6B8F71' : '#D8CBB0' %>; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px;"><%= oi === q.correct_index ? '✓' : '' %></span>
+                        <%= opt %>
+                      </div>
+                    <% }); %>
+                  </div>
+                <% } else { %>
+                  <div style="padding-left: 4px;">
+                    <span class="badge badge-warm"><%= q.chapter || 'General' %></span>
+                    <span style="font-size: 12px; color: var(--faint); margin-left: 8px;">Student writes a free-text answer — you'll grade it after they submit.</span>
+                  </div>
+                <% } %>
+                <% if (test.status === 'draft') { %>
+                  <form method="POST" action="/tests/<%= test.id %>/questions/<%= q.id %>/delete" style="padding-top: 8px; border-top: 1px solid #F3ECDF;">
+                    <button type="submit" style="background: none; border: none; padding: 0; font-size: 12px; font-weight: 600; color: var(--accent); cursor: pointer;">Remove</button>
+                  </form>
+                <% } %>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Join a class — ClassCoach' }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Join a class</h1>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <form method="POST" action="/join" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="field"><label>Class code</label><input name="code" required placeholder="e.g. AB12CD" style="text-transform: uppercase;"></div>
+        <button type="submit" class="btn btn-primary">Continue</button>
+      </form>
+      <span style="font-size: 13px; color: var(--faint);">Ask your teacher for the class code.</span>
+      <a href="/student/login" style="font-size: 13px; color: var(--faint);">Already have a login? →</a>
+    </div>
+  </div>
+</body>
+</html>

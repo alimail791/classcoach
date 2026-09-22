@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: batch.name + ' — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/dashboard" style="font-size: 14px; color: var(--faint);">← Dashboard</a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;"><%= batch.name %></h1>
+        <% if (batch.subject) { %><span class="badge badge-warm"><%= batch.subject %></span><% } %>
+        <span class="badge badge-neutral" style="cursor: pointer;" onclick="navigator.clipboard.writeText('<%= batch.join_code %>'); this.textContent='Copied!';" title="Click to copy — share this so students can join themselves at /join">Class code: <%= batch.join_code %></span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <a href="/batches/<%= batch.id %>/attendance" class="btn btn-ghost">📋 Attendance</a>
+        <a href="/batches/<%= batch.id %>/homework" class="btn btn-ghost">✏️ Homework</a>
+        <a href="/batches/<%= batch.id %>/materials/new" class="btn btn-ghost">+ Slides &amp; notes</a>
+        <a href="/batches/<%= batch.id %>/tests/new" class="btn btn-primary">+ Create test</a>
+      </div>
+    </div>
+    <div class="content">
+
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <% if (notified) { %><div class="flash flash-ok">Notification sent.</div><% } %>
+      <% if (importResult) { %>
+        <div class="flash flash-ok">
+          Imported <%= importResult.imported %> student<%= importResult.imported === 1 ? '' : 's' %>.
+          <% if (importResult.skipped.length) { %>
+            Skipped <%= importResult.skipped.length %>: <%= importResult.skipped.join('; ') %>
+          <% } %>
+        </div>
+      <% } %>
+
+      <div style="display: flex; gap: 24px; align-items: flex-start;">
+        <div class="card" style="flex: 1.4; overflow: hidden;">
+          <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 14px; font-weight: 700;">Students (<%= students.length %>)</span>
+          </div>
+          <% if (students.length === 0) { %>
+            <div style="padding: 20px; color: var(--faint); font-size: 14px;">No students added yet.</div>
+          <% } else { %>
+            <table class="plain">
+              <thead><tr><th>Roll no.</th><th>Name</th><th>Student PIN</th><th>Parent PIN</th><th>Parent contact</th><th></th></tr></thead>
+              <tbody>
+                <% students.forEach(function(s) { %>
+                  <tr>
+                    <td><%= s.roll_no %></td>
+                    <td><a href="/batches/<%= batch.id %>/students/<%= s.id %>" style="font-weight: 600;"><%= s.name %></a></td>
+                    <td style="font-family: monospace;"><%= s.pin %></td>
+                    <td style="font-family: monospace;"><%= s.parent_pin %></td>
+                    <td style="color: var(--faint);"><%= s.parent_contact || '—' %></td>
+                    <td>
+                      <form method="POST" action="/batches/<%= batch.id %>/students/<%= s.id %>/delete" onsubmit="return confirm('Remove <%= s.name.replace(/'/g, '') %>? This deletes their test attempts, attendance, and homework records too. This cannot be undone.');">
+                        <button type="submit" style="background: none; border: none; padding: 0; font-size: 12px; color: var(--accent); cursor: pointer;">Remove</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+
+        <div style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px;">
+          <div class="card" style="padding: 20px;">
+            <h2 style="font-size: 14px; margin-bottom: 14px;">Add a student</h2>
+            <form method="POST" action="/batches/<%= batch.id %>/students" style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="field"><label>Roll number</label><input name="roll_no" required></div>
+              <div class="field"><label>Name</label><input name="name" required></div>
+              <div class="field"><label>Student phone</label><input name="phone" type="tel" placeholder="+91 9xxxxxxxxx" required></div>
+              <div class="field"><label>Parent name (optional)</label><input name="parent_name"></div>
+              <div class="field"><label>Parent phone</label><input name="parent_phone" type="tel" placeholder="+91 9xxxxxxxxx" required></div>
+              <div class="field"><label>Parent email</label><input name="parent_contact" type="email" placeholder="parent@example.com" required></div>
+              <button type="submit" class="btn btn-dark">Add student</button>
+            </form>
+            <p style="font-size: 12px; color: var(--faint); margin-top: 12px;">Each student gets a login PIN, and each parent gets a separate login PIN — share the roll number with each so they can log in on their own.</p>
+          </div>
+
+          <div id="import" class="card" style="padding: 20px;">
+            <h2 style="font-size: 14px; margin-bottom: 10px;">Import from a spreadsheet</h2>
+            <form method="POST" action="/batches/<%= batch.id %>/students/import" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 10px;">
+              <input type="file" name="student_file" accept=".csv,.xlsx,.xls" required>
+              <button type="submit" class="btn btn-ghost">Import</button>
+            </form>
+            <p style="font-size: 12px; color: var(--faint); margin-top: 10px;">Columns: <strong>name</strong>, <strong>roll_no</strong>, and optionally <strong>parent_name</strong>, <strong>parent_contact</strong>. Header names are matched loosely (e.g. "Roll No" or "Student Name" both work).</p>
+          </div>
+
+          <div class="card" style="padding: 20px;">
+            <h2 style="font-size: 14px; margin-bottom: 10px;">Send a notification</h2>
+            <form method="POST" action="/batches/<%= batch.id %>/notify" style="display: flex; flex-direction: column; gap: 10px;">
+              <textarea name="message" rows="3" placeholder="e.g. Tomorrow's class moved to 5 PM" style="padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px;" required></textarea>
+              <select name="audience" style="padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px;">
+                <option value="both">Students &amp; parents</option>
+                <option value="students">Students only</option>
+                <option value="parents">Parents only</option>
+              </select>
+              <button type="submit" class="btn btn-ghost">Send to <%= students.length %> student<%= students.length === 1 ? '' : 's' %></button>
+            </form>
+            <p style="font-size: 12px; color: var(--faint); margin-top: 10px;">Shows up in their app when they next log in — this isn't SMS or push, so it won't reach them if they don't open ClassCoach.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 style="font-size: 15px; color: var(--muted); margin-bottom: 14px; font-family: 'Karla', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">Tests</h2>
+        <% if (tests.length === 0) { %>
+          <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">No tests yet for this class.</div>
+        <% } else { %>
+          <div class="card" style="overflow: hidden;">
+            <table class="plain">
+              <thead><tr><th>Title</th><th>Chapter</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                <% tests.forEach(function(t) { %>
+                  <tr>
+                    <td><%= t.title %></td>
+                    <td><%= t.chapter || '—' %></td>
+                    <td>
+                      <% if (t.status === 'published') { %><span class="badge badge-good">Published</span>
+                      <% } else { %><span class="badge badge-neutral">Draft</span><% } %>
+                    </td>
+                    <td>
+                      <% if (t.status === 'published') { %>
+                        <a href="/tests/<%= t.id %>/results" style="font-size: 13px; font-weight: 600;">Results →</a>
+                      <% } else { %>
+                        <a href="/tests/<%= t.id %>/edit" style="font-size: 13px; font-weight: 600;">Continue editing →</a>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+
+      <div>
+        <h2 style="font-size: 15px; color: var(--muted); margin-bottom: 14px; font-family: 'Karla', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">Slides &amp; notes</h2>
+        <% if (materials.length === 0) { %>
+          <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">Nothing created yet for this class.</div>
+        <% } else { %>
+          <div class="card" style="overflow: hidden;">
+            <table class="plain">
+              <thead><tr><th>Title</th><th>Type</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                <% materials.forEach(function(m) { %>
+                  <tr>
+                    <td><%= m.title %></td>
+                    <td><%= m.type === 'slides' ? '🖥️ Slides' : '📝 Notes' %></td>
+                    <td><% if (m.shared) { %><span class="badge badge-good">Shared</span><% } else { %><span class="badge badge-neutral">Draft</span><% } %></td>
+                    <td><a href="/materials/<%= m.id %>/edit" style="font-size: 13px; font-weight: 600;">Open →</a></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

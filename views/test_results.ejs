@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: test.title + ' — Results' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/batches/<%= batch.id %>" style="font-size: 14px; color: var(--faint);">← <%= batch.name %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;"><%= test.title %> — Results</h1>
+        <% if (pendingCount > 0) { %><span class="badge badge-warm"><%= pendingCount %> pending grading</span><% } %>
+      </div>
+      <form method="POST" action="/tests/<%= test.id %>/reports/generate-all">
+        <button type="submit" class="btn btn-ghost">Generate reports for all →</button>
+      </form>
+    </div>
+    <div class="content">
+
+      <% if (typeof generated !== 'undefined' && generated) { %><div class="flash flash-ok"><%= generated %> new report<%= generated == 1 ? '' : 's' %> generated below.</div><% } %>
+      <% if (sent) { %><div class="flash flash-ok">Report emailed to the parent on file.</div><% } %>
+      <% if (mailError) { %><div class="flash flash-error"><%= mailError %></div><% } %>
+      <% if (!emailConfigured) { %>
+        <div class="flash" style="background: #F0E6D6; border: 1px solid #D8CBB0; color: var(--muted);">
+          Email isn't configured yet — add SMTP_HOST, SMTP_USER, and SMTP_PASS to your .env to send reports directly. Until then, use "Copy link" to send it yourself.
+        </div>
+      <% } %>
+
+      <div style="display: flex; gap: 24px; align-items: flex-start;">
+        <div class="card" style="flex: 1.6; overflow: hidden;">
+          <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8;">
+            <span style="font-size: 14px; font-weight: 700;"><%= attempts.length %> student<%= attempts.length === 1 ? '' : 's' %> attempted</span>
+          </div>
+          <% if (attempts.length === 0) { %>
+            <div style="padding: 20px; color: var(--faint); font-size: 14px;">No submissions yet.</div>
+          <% } else { %>
+            <table class="plain">
+              <thead><tr><th>Roll no.</th><th>Student</th><th>Score</th><th>Parent report</th></tr></thead>
+              <tbody>
+                <% attempts.forEach(function(a) { %>
+                  <tr>
+                    <td><%= a.roll_no %></td>
+                    <td><%= a.student_name %></td>
+                    <td>
+                      <% if (a.status === 'pending') { %>
+                        <a href="/tests/<%= test.id %>/attempts/<%= a.id %>/grade" style="font-weight: 700; color: var(--accent);">Grade →</a>
+                      <% } else { %>
+                        <span style="font-weight: 700; color: <%= a.score / a.total >= 0.5 ? '#6B8F71' : '#B4501C' %>;"><%= a.score %> / <%= a.total %></span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (a.status === 'pending') { %>
+                        <span style="font-size: 12px; color: var(--faint);">Grade first</span>
+                      <% } else if (!a.reportToken) { %>
+                        <form method="POST" action="/tests/<%= test.id %>/reports/<%= a.student_id %>/generate">
+                          <button type="submit" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">Generate report</button>
+                        </form>
+                      <% } else { %>
+                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                          <button type="button" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;" onclick="navigator.clipboard.writeText('<%= reportBaseUrl %>/r/<%= a.reportToken %>'); this.textContent='Copied!';">Copy link</button>
+                          <a href="<%= a.waLink %>" target="_blank" rel="noopener" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">WhatsApp</a>
+                          <% if (a.parent_contact && looksLikeEmail(a.parent_contact)) { %>
+                            <form method="POST" action="/tests/<%= test.id %>/reports/<%= a.student_id %>/email">
+                              <button type="submit" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;" <%= emailConfigured ? '' : 'disabled title="Configure SMTP in .env first"' %>>Email parent</button>
+                            </form>
+                          <% } %>
+                        </div>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+
+        <div class="card" style="width: 300px; flex-shrink: 0; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+          <h2 style="font-size: 14px;">Chapter-wise class average</h2>
+          <% if (chapterBreakdown.length === 0) { %>
+            <span style="font-size: 13px; color: var(--faint);">No data yet.</span>
+          <% } else { %>
+            <% chapterBreakdown.forEach(function(c) { %>
+              <div class="bar-row">
+                <span class="name"><%= c.chapter %></span>
+                <div class="bar-track"><div class="bar-fill" style="width: <%= c.pct === null ? 0 : c.pct %>%; background: <%= c.pct === null ? '#D8CBB0' : (c.pct < 50 ? '#B4501C' : c.pct < 75 ? '#D8A24A' : '#6B8F71') %>;"></div></div>
+                <span class="pct"><%= c.pct === null ? '—' : c.pct + '%' %></span>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

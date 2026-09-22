@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Homework — ' + batch.name }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/batches/<%= batch.id %>" style="font-size: 14px; color: var(--faint);">← <%= batch.name %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;">Homework</h1>
+      </div>
+    </div>
+    <div class="content">
+
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+
+      <% if (homework.length === 0) { %>
+        <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">No homework assigned yet.</div>
+      <% } else { %>
+        <div class="card" style="overflow: hidden;">
+          <table class="plain">
+            <thead><tr><th>Title</th><th>Due</th><th>Completion</th><th></th></tr></thead>
+            <tbody>
+              <% homework.forEach(function(h) { %>
+                <tr>
+                  <td><%= h.title %><% if (h.chapter) { %><span class="badge badge-warm" style="margin-left: 8px;"><%= h.chapter %></span><% } %></td>
+                  <td><%= h.due_date || '—' %></td>
+                  <td><%= h.completed %> / <%= h.studentCount %></td>
+                  <td style="display: flex; gap: 12px;">
+                    <a href="/homework/<%= h.id %>/mark" style="font-size: 13px; font-weight: 600;">Mark completion →</a>
+                    <form method="POST" action="/homework/<%= h.id %>/delete" onsubmit="return confirm('Delete this assignment?');">
+                      <button type="submit" style="background: none; border: none; padding: 0; font-size: 13px; color: var(--faint); cursor: pointer;">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+
+      <div class="card" style="padding: 24px; max-width: 480px;">
+        <h2 style="font-size: 16px; margin-bottom: 14px;">Assign homework</h2>
+        <form method="POST" action="/batches/<%= batch.id %>/homework" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="field"><label>Title</label><input name="title" placeholder="Worksheet 4 — Kinematics" required></div>
+          <div class="field"><label>Chapter</label><input name="chapter" placeholder="Kinematics"></div>
+          <div class="field"><label>Due date</label><input type="date" name="due_date"></div>
+          <button type="submit" class="btn btn-dark" style="align-self: flex-start;">Assign</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

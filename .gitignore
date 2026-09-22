@@ -1,0 +1,7 @@
+node_modules/
+classcoach.sqlite
+classcoach.sqlite-wal
+classcoach.sqlite-shm
+.env
+eng.traineddata
+*.traineddata

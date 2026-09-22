@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: material.title }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/batches/<%= batch.id %>" style="font-size: 14px; color: var(--faint);">← <%= batch.name %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;"><%= material.title %></h1>
+        <span class="badge badge-warm"><%= material.type === 'slides' ? '🖥️ Slides' : '📝 Notes' %></span>
+        <% if (material.shared) { %><span class="badge badge-good">Shared with class</span><% } %>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <a href="/materials/<%= material.id %>/download" class="btn btn-ghost">⬇ Download PDF</a>
+        <% if (material.shared) { %>
+          <form method="POST" action="/materials/<%= material.id %>/unshare"><button type="submit" class="btn btn-ghost">Unshare</button></form>
+        <% } else { %>
+          <form method="POST" action="/materials/<%= material.id %>/share"><button type="submit" class="btn btn-primary">Share with class →</button></form>
+        <% } %>
+      </div>
+    </div>
+    <div class="content" style="align-items: center;">
+      <div style="width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 20px;">
+
+        <% if (material.type === 'slides') { %>
+          <div class="grid-2">
+            <% material.content.forEach(function(slide, idx) { %>
+              <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px; <%= idx === 0 ? 'background: var(--ink); color: #FBF6EE; border: none;' : '' %>">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+                  <span style="font-size: <%= idx === 0 ? '17px' : '14px' %>; font-weight: 700; <%= idx === 0 ? "font-family: 'Newsreader', serif;" : '' %>"><%= slide.title %></span>
+                </div>
+                <% if (slide.bullets && slide.bullets.length) { %>
+                  <ul style="margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: <%= idx === 0 ? '#E8DFCE' : 'var(--muted)' %>;">
+                    <% slide.bullets.forEach(function(b) { %><li><%= b %></li><% }); %>
+                  </ul>
+                <% } %>
+                <form method="POST" action="/materials/<%= material.id %>/items/<%= idx %>/delete" style="margin-top: auto;">
+                  <button type="submit" style="background: none; border: none; padding: 0; font-size: 11px; font-weight: 600; color: <%= idx === 0 ? '#C9BEA9' : 'var(--accent)' %>; cursor: pointer;">Remove</button>
+                </form>
+              </div>
+            <% }); %>
+          </div>
+
+          <div class="card" style="padding: 20px;">
+            <h2 style="font-size: 14px; margin-bottom: 12px;">Add a slide</h2>
+            <form method="POST" action="/materials/<%= material.id %>/items" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="field"><label>Slide title</label><input name="title" required></div>
+              <div class="field"><label>Bullets (one per line)</label><textarea name="bullets" rows="3"></textarea></div>
+              <button type="submit" class="btn btn-dark" style="align-self: flex-start;">Add slide</button>
+            </form>
+          </div>
+
+        <% } else { %>
+          <% material.content.forEach(function(section, idx) { %>
+            <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+              <h3 style="font-size: 17px;"><%= section.heading %></h3>
+              <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;"><%= section.body %></p>
+              <form method="POST" action="/materials/<%= material.id %>/items/<%= idx %>/delete">
+                <button type="submit" style="background: none; border: none; padding: 0; font-size: 11px; font-weight: 600; color: var(--accent); cursor: pointer;">Remove</button>
+              </form>
+            </div>
+          <% }); %>
+
+          <div class="card" style="padding: 20px;">
+            <h2 style="font-size: 14px; margin-bottom: 12px;">Add a section</h2>
+            <form method="POST" action="/materials/<%= material.id %>/items" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="field"><label>Heading</label><input name="heading" required></div>
+              <div class="field"><label>Body</label><textarea name="body" rows="3" required></textarea></div>
+              <button type="submit" class="btn btn-dark" style="align-self: flex-start;">Add section</button>
+            </form>
+          </div>
+        <% } %>
+
+        <form method="POST" action="/materials/<%= material.id %>/delete" onsubmit="return confirm('Delete this permanently?');">
+          <button type="submit" style="background: none; border: none; padding: 0; font-size: 12px; color: var(--faint); cursor: pointer;">Delete this <%= material.type === 'slides' ? 'deck' : 'note set' %></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

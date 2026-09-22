@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Join ' + batch.name }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Join <%= batch.name %></h1>
+      <span style="font-size: 13px; color: var(--faint); margin-top: -8px;">Taught by <%= teacher.name %><% if (batch.subject) { %> · <%= batch.subject %><% } %></span>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <form method="POST" action="/join/<%= batch.join_code %>" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="field"><label>Your name</label><input name="name" required></div>
+        <div class="field"><label>Roll number</label><input name="roll_no" required placeholder="Ask your teacher if unsure"></div>
+        <div class="field"><label>Your phone number</label><input name="phone" type="tel" required></div>
+        <div class="field"><label>Parent name (optional)</label><input name="parent_name"></div>
+        <div class="field"><label>Parent phone</label><input name="parent_phone" type="tel" required></div>
+        <div class="field"><label>Parent email</label><input name="parent_contact" type="email" required></div>
+        <button type="submit" class="btn btn-primary">Join class</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

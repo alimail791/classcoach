@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: student.name + ' progress' }) %></head>
+<body>
+  <div class="topbar">
+    <div class="crumbs">
+      <h1 style="font-size: 17px;"><%= student.name %></h1>
+      <span class="badge badge-warm"><%= batch.name %></span>
+    </div>
+    <form method="POST" action="/parent/logout">
+      <button type="submit" class="btn btn-ghost">Log out</button>
+    </form>
+  </div>
+
+  <div style="max-width: 780px; margin: 0 auto; padding: 32px; display: flex; flex-direction: column; gap: 24px;">
+
+    <%- include('partials/notifications', { notifications: notifications, unreadCount: unreadCount, markReadAction: '/parent/notifications/mark-read' }) %>
+
+    <div class="grid-3">
+      <div class="card stat-card">
+        <span class="label">Overall average</span>
+        <span class="value"><%= avgPct === null ? '—' : avgPct + '%' %></span>
+      </div>
+      <div class="card stat-card">
+        <span class="label">Attendance</span>
+        <span class="value"><%= attendancePct === null ? '—' : attendancePct + '%' %></span>
+        <span class="sub"><%= attendanceTotal === 0 ? 'No sessions yet' : attendancePresent + ' of ' + attendanceTotal %></span>
+      </div>
+      <div class="card stat-card">
+        <span class="label">Homework</span>
+        <span class="value"><%= homeworkTotal === 0 ? '—' : homeworkDone + ' / ' + homeworkTotal %></span>
+      </div>
+    </div>
+
+    <% if (chapterBreakdown.length > 0) { %>
+      <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+        <span style="font-size: 14px; font-weight: 700;">Chapter-wise performance</span>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <% chapterBreakdown.forEach(function(c) { %>
+            <div class="bar-row">
+              <span class="name"><%= c.chapter %></span>
+              <div class="bar-track"><div class="bar-fill" style="width: <%= c.pct === null ? 0 : c.pct %>%; background: <%= c.pct === null ? '#D8CBB0' : (c.pct < 50 ? '#B4501C' : c.pct < 75 ? '#D8A24A' : '#6B8F71') %>;"></div></div>
+              <span class="pct"><%= c.pct === null ? '—' : c.pct + '%' %></span>
+            </div>
+          <% }); %>
+        </div>
+        <% var weakest = chapterBreakdown.find(function(c) { return c.pct !== null && c.pct < 50; }); %>
+        <% if (weakest) { %>
+          <div style="padding: 12px 14px; background: var(--accent-tint); border-radius: 8px; font-size: 13px; color: var(--accent-deep);">
+            <strong>Weakest topic:</strong> <%= weakest.chapter %> (<%= weakest.pct %>%) — worth some extra practice at home.
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+
+    <div class="card" style="overflow: hidden;">
+      <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8;">
+        <span style="font-size: 14px; font-weight: 700;">Test history</span>
+      </div>
+      <% if (history.length === 0) { %>
+        <div style="padding: 20px; color: var(--faint); font-size: 14px;">No tests recorded yet.</div>
+      <% } else { %>
+        <table class="plain">
+          <thead><tr><th>Test</th><th>Date</th><th>Score</th></tr></thead>
+          <tbody>
+            <% history.forEach(function(h) { %>
+              <tr>
+                <td><%= h.title %></td>
+                <td><%= h.submitted_at.slice(0, 10) %></td>
+                <td>
+                  <% if (h.status === 'pending') { %><span class="badge badge-neutral">Pending grading</span>
+                  <% } else { %><span style="font-weight: 700; color: <%= h.score / h.total >= 0.5 ? '#6B8F71' : '#B4501C' %>;"><%= h.score %> / <%= h.total %></span><% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+
+    <div class="card" style="overflow: hidden;">
+      <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8;">
+        <span style="font-size: 14px; font-weight: 700;">Reports from <%= teacher.name %></span>
+      </div>
+      <% if (sharedReports.length === 0) { %>
+        <div style="padding: 20px; color: var(--faint); font-size: 14px;">No reports shared yet.</div>
+      <% } else { %>
+        <% sharedReports.forEach(function(r) { %>
+          <a href="/r/<%= r.token %>" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #F3ECDF; text-decoration: none; color: inherit;">
+            <span style="font-size: 14px; color: var(--ink); font-weight: 600;"><%= r.test_title %></span>
+            <span style="font-size: 13px; font-weight: 600; color: var(--accent);">View report →</span>
+          </a>
+        <% }); %>
+      <% } %>
+    </div>
+
+  </div>
+</body>
+</html>

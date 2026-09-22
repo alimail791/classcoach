@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Dashboard — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h1 style="font-size: 20px;">Good day, <%= teacher.name %></h1>
+      </div>
+    </div>
+    <div class="content">
+
+      <% if (!planActive) { %>
+        <div class="flash flash-error">Your <%= planName %> plan expired <%= Math.abs(expiryDays) %> day<%= Math.abs(expiryDays) === 1 ? '' : 's' %> ago — no new students can be added and AI generation is paused until it's renewed. Everything else still works.</div>
+      <% } else if (expiryDays !== null && expiryDays <= 7) { %>
+        <div class="flash" style="background: #F5E6D3; border: 1px solid #D8A87C; color: var(--accent-deep);"><%= planName %> plan expires in <%= expiryDays %> day<%= expiryDays === 1 ? '' : 's' %>.</div>
+      <% } %>
+
+      <%- include('partials/notifications', { notifications: notifications, unreadCount: unreadCount, markReadAction: '/notifications/mark-read' }) %>
+
+      <div class="grid-5">
+        <div class="card stat-card">
+          <span class="label">Classes</span>
+          <span class="value"><%= batches.length %></span>
+          <span class="sub">Batches you teach</span>
+        </div>
+        <div class="card stat-card">
+          <span class="label">Students</span>
+          <span class="value"><%= batches.reduce((s, b) => s + b.studentCount, 0) %></span>
+          <span class="sub">Across all batches</span>
+        </div>
+        <div class="card stat-card">
+          <span class="label">Published tests</span>
+          <span class="value"><%= publishedTests.length %></span>
+          <span class="sub">Live for students right now</span>
+        </div>
+        <div class="card stat-card" style="<%= toGrade > 0 ? 'background: var(--accent-tint); border-color: #D8A87C;' : '' %>">
+          <span class="label" style="<%= toGrade > 0 ? 'color: var(--accent-deep);' : '' %>">To grade</span>
+          <span class="value" style="<%= toGrade > 0 ? 'color: var(--accent-deep);' : '' %>"><%= toGrade %></span>
+          <span class="sub">Descriptive answers awaiting marks</span>
+        </div>
+        <div class="card stat-card">
+          <span class="label">Attempts recorded</span>
+          <span class="value"><%= reportsSent %></span>
+          <span class="sub">Auto- and manually graded</span>
+        </div>
+      </div>
+
+      <div>
+        <h2 style="font-size: 15px; color: var(--muted); margin-bottom: 14px; font-family: 'Karla', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">Your classes</h2>
+        <% if (batches.length === 0) { %>
+          <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">No classes yet — create your first one below.</div>
+        <% } else { %>
+          <div class="grid-3">
+            <% batches.forEach(function(b) { %>
+              <a href="/batches/<%= b.id %>" class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit;">
+                <span style="font-size: 16px; font-weight: 600; color: var(--ink);"><%= b.name %></span>
+                <span style="font-size: 13px; color: var(--faint);"><%= b.subject || 'No subject set' %></span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px;"><%= b.studentCount %> students · <%= b.testCount %> tests</span>
+              </a>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="card" style="padding: 24px; max-width: 480px;">
+        <h2 style="font-size: 16px; margin-bottom: 14px;">Create a new class</h2>
+        <form method="POST" action="/batches" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="field"><label>Class name</label><input name="name" placeholder="Class 11 · Batch A" required></div>
+          <div class="field"><label>Subject</label><input name="subject" placeholder="Physics"></div>
+          <button type="submit" class="btn btn-dark" style="align-self: flex-start;">Create class</button>
+        </form>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div>
+        <h2 style="font-size: 15px; color: var(--muted); margin-bottom: 14px; font-family: 'Karla', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">Quick actions</h2>
+        <% if (!activeBatch) { %>
+          <div class="card" style="padding: 20px; color: var(--muted); font-size: 14px;">Create a class below to unlock test creation, slides &amp; notes, and reports.</div>
+        <% } else { %>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+            <a href="/batches/<%= activeBatch.id %>/tests/new" class="btn btn-ghost">📄 Generate test from syllabus</a>
+            <a href="/batches/<%= activeBatch.id %>/materials/new" class="btn btn-ghost">🖥️ Create slides &amp; notes</a>
+            <a href="/reports" class="btn btn-ghost">📊 Parent reports</a>
+            <a href="/batches/<%= activeBatch.id %>#import" class="btn btn-ghost">📥 Import students (Excel)</a>
+            <a href="/question-bank" class="btn btn-ghost">🗂️ Browse question bank</a>
+          </div>
+          <p style="font-size: 12px; color: var(--faint); margin-top: 10px;">Test/slide creation and import apply to <strong><%= activeBatch.name %></strong> — your most recently created class.</p>
+        <% } %>
+      </div>
+
+      <div>
+        <h2 style="font-size: 15px; color: var(--muted); margin-bottom: 14px; font-family: 'Karla', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">Search tests &amp; chapters</h2>
+        <form method="GET" action="/tests" style="display: flex; gap: 10px; max-width: 420px;">
+          <input type="text" name="q" placeholder="e.g. Gravitation, Quiz 1..." style="flex: 1; padding: 11px 14px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px;">
+          <button type="submit" class="btn btn-ghost">Search</button>
+        </form>
+      </div>
+
+      <div class="dash-lower" style="display: flex; gap: 24px; align-items: flex-start;">
+
+        <!-- RECENT TESTS -->
+        <div class="card" style="flex: 1.4; min-width: 0; overflow: hidden;">
+          <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 14px; font-weight: 700;">Recent tests</span>
+          </div>
+          <% if (recentTests.length === 0) { %>
+            <div style="padding: 20px; color: var(--faint); font-size: 14px;">No tests created yet.</div>
+          <% } else { %>
+            <% recentTests.forEach(function(t) { %>
+              <a href="<%= t.status === 'draft' ? '/tests/' + t.id + '/edit' : '/tests/' + t.id + '/results' %>" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #F3ECDF; text-decoration: none; color: inherit;">
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                  <span style="font-size: 14px; color: var(--ink); font-weight: 600;"><%= t.title %></span>
+                  <span style="font-size: 12px; color: var(--faint);"><%= t.batch_name %> · <%= t.questionCount %> question<%= t.questionCount === 1 ? '' : 's' %></span>
+                </div>
+                <span class="badge <%= t.badgeClass %>" style="white-space: nowrap;"><%= t.label %></span>
+              </a>
+            <% }); %>
+          <% } %>
+        </div>
+
+        <!-- WEAK CHAPTERS -->
+        <div class="card" style="flex: 1; min-width: 260px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-size: 14px; font-weight: 700;"><%= activeBatch ? activeBatch.name + ' · weak chapters' : 'Weak chapters' %></span>
+          <% if (!activeBatch || chapterBreakdown.length === 0) { %>
+            <span style="font-size: 13px; color: var(--faint);">No graded tests yet — chapter performance will show up here once students start taking tests.</span>
+          <% } else { %>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <% chapterBreakdown.forEach(function(c) { %>
+                <div class="bar-row">
+                  <span class="name"><%= c.chapter %></span>
+                  <div class="bar-track"><div class="bar-fill" style="width: <%= c.pct === null ? 0 : c.pct %>%; background: <%= c.pct === null ? '#D8CBB0' : (c.pct < 50 ? '#B4501C' : c.pct < 75 ? '#D8A24A' : '#6B8F71') %>;"></div></div>
+                  <span class="pct"><%= c.pct === null ? '—' : c.pct + '%' %></span>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

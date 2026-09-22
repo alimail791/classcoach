@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: material.title }) %></head>
+<body>
+  <div class="topbar">
+    <div class="crumbs">
+      <a href="/student/dashboard" style="font-size: 14px; color: var(--faint);">← My tests</a>
+      <div class="divider-v"></div>
+      <h1 style="font-size: 17px;"><%= material.title %></h1>
+    </div>
+    <a href="/student/materials/<%= material.id %>/download" class="btn btn-ghost">⬇ Download PDF</a>
+  </div>
+  <div style="max-width: 720px; margin: 0 auto; padding: 32px; display: flex; flex-direction: column; gap: 20px;">
+
+    <% if (material.type === 'slides') { %>
+      <div class="grid-2">
+        <% material.content.forEach(function(slide, idx) { %>
+          <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px; <%= idx === 0 ? 'background: var(--ink); color: #FBF6EE; border: none;' : '' %>">
+            <span style="font-size: <%= idx === 0 ? '17px' : '14px' %>; font-weight: 700; <%= idx === 0 ? "font-family: 'Newsreader', serif;" : '' %>"><%= slide.title %></span>
+            <% if (slide.bullets && slide.bullets.length) { %>
+              <ul style="margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: <%= idx === 0 ? '#E8DFCE' : 'var(--muted)' %>;">
+                <% slide.bullets.forEach(function(b) { %><li><%= b %></li><% }); %>
+              </ul>
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <% material.content.forEach(function(section) { %>
+        <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+          <h3 style="font-size: 17px;"><%= section.heading %></h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;"><%= section.body %></p>
+        </div>
+      <% }); %>
+    <% } %>
+
+  </div>
+</body>
+</html>

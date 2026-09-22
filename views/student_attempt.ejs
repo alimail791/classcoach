@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: test.title }) %></head>
+<body>
+  <div class="topbar">
+    <div class="crumbs">
+      <a href="/student/dashboard" style="font-size: 14px; color: var(--faint);">← My tests</a>
+      <div class="divider-v"></div>
+      <h1 style="font-size: 17px;"><%= test.title %></h1>
+    </div>
+    <span style="font-size: 13px; color: var(--faint);"><%= test.duration_minutes %> minutes · <%= questions.length %> questions</span>
+  </div>
+  <div style="max-width: 720px; margin: 0 auto; padding: 32px;">
+    <form method="POST" action="/student/tests/<%= test.id %>/submit" style="display: flex; flex-direction: column; gap: 16px;">
+      <% questions.forEach(function(q, idx) { %>
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+            <span style="font-size: 14px; font-weight: 600;"><%= idx + 1 %>. <%= q.text %></span>
+            <% if (q.type === 'descriptive') { %><span class="badge badge-neutral" style="white-space: nowrap;"><%= q.max_marks %> marks</span><% } %>
+          </div>
+          <% if (q.type === 'descriptive') { %>
+            <textarea name="q<%= q.id %>" rows="4" placeholder="Write your answer..." style="width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px;" required></textarea>
+          <% } else { %>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <% q.options.forEach(function(opt, oi) { %>
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer;">
+                  <input type="radio" name="q<%= q.id %>" value="<%= oi %>" required>
+                  <%= opt %>
+                </label>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+      <% }); %>
+      <button type="submit" class="btn btn-primary" style="align-self: flex-end;">Submit test</button>
+    </form>
+  </div>
+</body>
+</html>

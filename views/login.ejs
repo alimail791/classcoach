@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Log in — ClassCoach' }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Welcome back</h1>
+      <% if (typeof justReset !== 'undefined' && justReset) { %><div class="flash flash-ok">Password changed — log in with your new password.</div><% } %>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <form method="POST" action="/login" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="field"><label>Email</label><input type="email" name="email" required></div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Log in</button>
+      </form>
+      <a href="/forgot-password" style="font-size: 13px; color: var(--faint);">Forgot your password?</a>
+      <span style="font-size: 13px; color: var(--faint);">New here? <a href="/signup">Create an account</a></span>
+    </div>
+  </div>
+</body>
+</html>

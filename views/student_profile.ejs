@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: student.name + ' — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/batches/<%= batch.id %>" style="font-size: 14px; color: var(--faint);">← <%= batch.name %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;"><%= student.name %></h1>
+        <span class="badge badge-warm"><%= batch.name %></span>
+      </div>
+    </div>
+    <div class="content">
+
+      <div style="display: flex; gap: 24px; align-items: flex-start;">
+
+        <!-- SIDEBAR CARD -->
+        <div style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px;">
+          <div class="card" style="padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; color: #FBF6EE; font-family: 'Newsreader', serif; font-size: 24px;">
+              <%= student.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() %>
+            </div>
+            <div>
+              <h2 style="font-size: 19px;"><%= student.name %></h2>
+              <span style="font-size: 13px; color: var(--faint);"><%= batch.name %></span>
+            </div>
+            <div style="width: 100%; height: 1px; background: #EFE6D8; margin: 4px 0;"></div>
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; text-align: left; font-size: 13px; color: var(--muted);">
+              <div style="display: flex; justify-content: space-between;"><span>Roll no.</span><span style="color: var(--ink); font-weight: 600;"><%= student.roll_no %></span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Login PIN</span><span style="color: var(--ink); font-weight: 600; font-family: monospace;"><%= student.pin %></span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Student phone</span><span style="color: var(--ink); font-weight: 600;"><%= student.phone || '—' %></span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Parent name</span><span style="color: var(--ink); font-weight: 600;"><%= student.parent_name || '—' %></span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Parent phone</span><span style="color: var(--ink); font-weight: 600;"><%= student.parent_phone || '—' %></span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Parent email</span><span style="color: var(--ink); font-weight: 600;"><%= student.parent_contact || '—' %></span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Joined</span><span style="color: var(--ink); font-weight: 600;"><%= student.created_at.slice(0, 7) %></span></div>
+            </div>
+            <a href="#test-history" class="btn btn-dark" style="width: 100%; margin-top: 8px;">Send report to parent</a>
+            <a href="/batches/<%= batch.id %>/students/<%= student.id %>/edit" class="btn btn-ghost" style="width: 100%;">Edit details</a>
+          </div>
+
+          <div class="card stat-card">
+            <span class="label">Overall average</span>
+            <span class="value"><%= avgPct === null ? '—' : avgPct + '%' %></span>
+            <span class="sub"><%= history.filter(function(h){return h.status==='graded';}).length %> graded test<%= history.length === 1 ? '' : 's' %></span>
+          </div>
+
+          <div class="card stat-card">
+            <span class="label">This month</span>
+            <span class="value"><%= thisMonthAvgPct === null ? '—' : thisMonthAvgPct + '%' %></span>
+            <span class="sub"><%= testsThisMonth %> test<%= testsThisMonth === 1 ? '' : 's' %> taken</span>
+          </div>
+
+          <div class="card stat-card">
+            <span class="label">Attendance</span>
+            <span class="value"><%= attendancePct === null ? '—' : attendancePct + '%' %></span>
+            <span class="sub"><%= attendanceTotal === 0 ? 'No sessions recorded yet' : attendancePresent + ' of ' + attendanceTotal + ' sessions' %></span>
+          </div>
+
+          <div class="card stat-card">
+            <span class="label">Homework</span>
+            <span class="value"><%= homeworkTotal === 0 ? '—' : homeworkDone + ' / ' + homeworkTotal %></span>
+            <span class="sub"><%= homeworkTotal === 0 ? 'None assigned yet' : 'Completed' %></span>
+          </div>
+        </div>
+
+        <!-- DETAIL -->
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px;">
+
+          <div class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+            <h2 style="font-size: 16px; font-family: 'Karla', sans-serif; font-weight: 600;">Chapter-wise performance</h2>
+            <% if (chapterBreakdown.length === 0) { %>
+              <span style="font-size: 13px; color: var(--faint);">No graded tests yet.</span>
+            <% } else { %>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <% chapterBreakdown.forEach(function(c) { %>
+                  <div class="bar-row">
+                    <span class="name"><%= c.chapter %></span>
+                    <div class="bar-track"><div class="bar-fill" style="width: <%= c.pct === null ? 0 : c.pct %>%; background: <%= c.pct === null ? '#D8CBB0' : (c.pct < 50 ? '#B4501C' : c.pct < 75 ? '#D8A24A' : '#6B8F71') %>;"></div></div>
+                    <span class="pct"><%= c.pct === null ? '—' : c.pct + '%' %></span>
+                  </div>
+                <% }); %>
+              </div>
+              <% if (weakest && weakest.pct !== null && weakest.pct < 50) { %>
+                <div style="padding: 14px 16px; background: var(--accent-tint); border-radius: 8px; font-size: 13px; color: var(--accent-deep); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                  <span><strong>Weakest chapter:</strong> <%= weakest.chapter %> (<%= weakest.pct %>%)</span>
+                  <form method="POST" action="/batches/<%= batch.id %>/students/<%= student.id %>/practice">
+                    <input type="hidden" name="chapter" value="<%= weakest.chapter %>">
+                    <button type="submit" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">Generate practice set with AI</button>
+                  </form>
+                </div>
+              <% } %>
+            <% } %>
+            <% if (practiceGenerated) { %><div class="flash flash-ok">Practice set generated — see below.</div><% } %>
+            <% if (practiceError) { %><div class="flash flash-error"><%= practiceError %></div><% } %>
+            <% if (practiceRecommendations.length > 0) { %>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 13px; font-weight: 700;">Recommended practice for <%= student.name %></span>
+                <% practiceRecommendations.forEach(function(p) { %>
+                  <a href="/materials/<%= p.material_id %>/edit" style="display: flex; justify-content: space-between; padding: 10px 12px; background: var(--bg); border-radius: 6px; text-decoration: none; color: var(--ink); font-size: 13px;">
+                    <span><%= p.material_title %></span>
+                    <span style="color: var(--faint);"><%= p.created_at.slice(0, 10) %></span>
+                  </a>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+
+          <div id="test-history" class="card" style="overflow: hidden;">
+            <div style="padding: 18px 24px; border-bottom: 1px solid #EFE6D8;">
+              <h2 style="font-size: 16px; font-family: 'Karla', sans-serif; font-weight: 600;">Test history</h2>
+            </div>
+            <% if (sent) { %><div class="flash flash-ok" style="margin: 16px 24px 0;">Report emailed to the parent on file.</div><% } %>
+            <% if (mailError) { %><div class="flash flash-error" style="margin: 16px 24px 0;"><%= mailError %></div><% } %>
+            <% if (!emailConfigured) { %>
+              <div class="flash" style="margin: 16px 24px 0; background: #F0E6D6; border: 1px solid #D8CBB0; color: var(--muted);">Email isn't configured — "Copy link" still works to send a report yourself.</div>
+            <% } %>
+            <% if (history.length === 0) { %>
+              <div style="padding: 20px; color: var(--faint); font-size: 14px;">No tests attempted yet.</div>
+            <% } else { %>
+              <table class="plain">
+                <thead><tr><th>Test</th><th>Date</th><th>Score</th><th>Parent report</th></tr></thead>
+                <tbody>
+                  <% history.forEach(function(h) { %>
+                    <tr>
+                      <td><a href="/tests/<%= h.test_id %>/results" style="font-weight: 600;"><%= h.title %></a></td>
+                      <td><%= h.submitted_at.slice(0, 10) %></td>
+                      <td>
+                        <% if (h.status === 'pending') { %><span class="badge badge-neutral">Pending grading</span>
+                        <% } else { %><span style="font-weight: 700; color: <%= h.score / h.total >= 0.5 ? '#6B8F71' : '#B4501C' %>;"><%= h.score %> / <%= h.total %></span><% } %>
+                      </td>
+                      <td>
+                        <% if (h.status === 'pending') { %>
+                          <span style="font-size: 12px; color: var(--faint);">Grade first</span>
+                        <% } else if (!h.reportToken) { %>
+                          <form method="POST" action="/tests/<%= h.test_id %>/reports/<%= student.id %>/generate">
+                            <input type="hidden" name="return_to" value="/batches/<%= batch.id %>/students/<%= student.id %>">
+                            <button type="submit" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">Generate report</button>
+                          </form>
+                        <% } else { %>
+                          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;" onclick="navigator.clipboard.writeText(window.location.origin + '/r/<%= h.reportToken %>'); this.textContent='Copied!';">Copy link</button>
+                            <% if (student.parent_contact && looksLikeEmail(student.parent_contact)) { %>
+                              <form method="POST" action="/tests/<%= h.test_id %>/reports/<%= student.id %>/email">
+                                <input type="hidden" name="return_to" value="/batches/<%= batch.id %>/students/<%= student.id %>">
+                                <button type="submit" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;" <%= emailConfigured ? '' : 'disabled title="Configure SMTP in .env first"' %>>Email parent</button>
+                              </form>
+                            <% } %>
+                          </div>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            <% } %>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Attendance — ' + batch.name }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/batches/<%= batch.id %>" style="font-size: 14px; color: var(--faint);">← <%= batch.name %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;">Attendance</h1>
+      </div>
+    </div>
+    <div class="content">
+      <div style="display: flex; gap: 24px; align-items: flex-start;">
+
+        <div class="card" style="flex: 1.4; min-width: 0; padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+          <form method="GET" action="/batches/<%= batch.id %>/attendance" style="display: flex; align-items: center; gap: 12px;">
+            <label style="font-size: 13px; font-weight: 600; color: var(--muted);">Date</label>
+            <input type="date" name="date" value="<%= date %>" onchange="this.form.submit()" style="padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px;">
+            <% if (!hasSession) { %><span class="badge badge-neutral">No session recorded yet — mark below and save</span><% } %>
+          </form>
+
+          <% if (rows.length === 0) { %>
+            <div style="color: var(--muted); font-size: 14px;">No students in this class yet.</div>
+          <% } else { %>
+            <form method="POST" action="/batches/<%= batch.id %>/attendance" style="display: flex; flex-direction: column; gap: 10px;">
+              <input type="hidden" name="date" value="<%= date %>">
+              <% rows.forEach(function(s) { %>
+                <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer;">
+                  <span style="font-size: 14px; color: var(--ink);"><%= s.roll_no %> · <%= s.name %></span>
+                  <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted);">
+                    Present
+                    <input type="checkbox" name="present_<%= s.id %>" <%= s.present ? 'checked' : '' %> style="width: 18px; height: 18px;">
+                  </span>
+                </label>
+              <% }); %>
+              <button type="submit" class="btn btn-primary" style="align-self: flex-start; margin-top: 8px;">Save attendance for <%= date %></button>
+            </form>
+          <% } %>
+        </div>
+
+        <div class="card" style="width: 280px; flex-shrink: 0; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-size: 14px; font-weight: 700;">Recent sessions</span>
+          <% if (recentSessions.length === 0) { %>
+            <span style="font-size: 13px; color: var(--faint);">No sessions recorded yet.</span>
+          <% } else { %>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <% recentSessions.forEach(function(s) { %>
+                <a href="/batches/<%= batch.id %>/attendance?date=<%= s.session_date %>" style="display: flex; justify-content: space-between; font-size: 13px; text-decoration: none; color: var(--ink);">
+                  <span><%= s.session_date %></span>
+                  <span style="color: var(--faint);"><%= s.present %> / <%= s.total %></span>
+                </a>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

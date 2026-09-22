@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Upgrade — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'upgrade' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">Upgrade your plan</h1>
+    </div>
+    <div class="content">
+
+      <% if (upgraded) { %><div class="flash flash-ok">Payment received — your plan has been upgraded!</div><% } %>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 13px; color: var(--faint);">Current plan</span>
+        <span style="font-size: 16px; font-weight: 600;"><%= teacher.plan %> · <%= teacher.max_students %> students · <%= teacher.ai_limit_monthly %> AI generations/month</span>
+      </div>
+
+      <% if (!razorpayConfigured) { %>
+        <div class="card" style="padding: 24px; color: var(--muted); font-size: 14px;">
+          Online payment isn't set up yet on this installation — ask your admin to add <code>RAZORPAY_KEY_ID</code> and <code>RAZORPAY_KEY_SECRET</code> to <code>.env</code>, or contact them directly to arrange your plan.
+        </div>
+      <% } %>
+
+      <div class="grid-3">
+        <% plans.forEach(function(p) { %>
+          <div class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 15px; font-weight: 700;"><%= p.name %></span>
+            <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹<%= p.price %></span><span style="font-size: 13px; color: var(--faint);"> / <%= p.duration_months %> months</span></div>
+            <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--muted);">
+              <li>Up to <%= p.max_students %> students</li>
+              <li><%= p.ai_limit_monthly %> AI generations / month</li>
+            </ul>
+            <button
+              class="btn btn-primary"
+              style="margin-top: 8px;"
+              onclick="classcoachPay('<%= p.id %>', '<%= p.name %>', <%= p.price %>)"
+              <%= razorpayConfigured ? '' : 'disabled' %>
+            >Pay ₹<%= p.price %></button>
+          </div>
+        <% }); %>
+      </div>
+
+      <p style="font-size: 12px; color: var(--faint);">Payments are handled by Razorpay — cards, UPI, netbanking. ClassCoach never sees or stores your card details.</p>
+
+    </div>
+  </div>
+</div>
+
+<% if (razorpayConfigured) { %>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+function classcoachPay(planId, planName, price) {
+  fetch('/upgrade/create-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ plan_id: planId })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.error) { alert(data.error); return; }
+      var rzp = new Razorpay({
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'ClassCoach',
+        description: planName + ' plan',
+        order_id: data.orderId,
+        prefill: { name: data.teacherName, email: data.teacherEmail, contact: data.teacherPhone },
+        theme: { color: '#B4501C' },
+        handler: function (response) {
+          fetch('/upgrade/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          })
+            .then(function (r) { return r.json(); })
+            .then(function (result) {
+              if (result.success) {
+                window.location.href = '/upgrade?upgraded=1';
+              } else {
+                window.location.href = '/upgrade?error=' + encodeURIComponent(result.error || 'Payment could not be verified.');
+              }
+            });
+        }
+      });
+      rzp.on('payment.failed', function (resp) {
+        alert('Payment failed: ' + (resp.error && resp.error.description ? resp.error.description : 'unknown error'));
+      });
+      rzp.open();
+    })
+    .catch(function () { alert('Could not start payment — check your connection and try again.'); });
+}
+</script>
+<% } %>
+</body>
+</html>

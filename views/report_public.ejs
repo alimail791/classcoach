@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: student.name + ' report' }) %></head>
+<body>
+  <div style="max-width: 640px; margin: 0 auto; padding: 48px 24px;">
+    <div class="card" style="padding: 36px; display: flex; flex-direction: column; gap: 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 20px; border-bottom: 2px solid var(--ink);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; color: #FBF6EE; font-family: 'Newsreader', serif; font-size: 16px;">C</div>
+          <span style="font-family: 'Newsreader', serif; font-size: 18px;">ClassCoach</span>
+        </div>
+        <span style="font-size: 12px; color: var(--faint);"><%= test.title %></span>
+      </div>
+
+      <div>
+        <h1 style="font-size: 22px;"><%= student.name %></h1>
+        <span style="font-size: 13px; color: var(--faint);"><%= batch.name %><% if (batch.subject) { %> · <%= batch.subject %><% } %></span>
+      </div>
+
+      <% if (attempt.status === 'pending') { %>
+        <div class="flash" style="background: #F0E6D6; border: 1px solid #D8CBB0; color: var(--muted);">This test is still being graded — check back soon for the full result.</div>
+      <% } else { %>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px;">
+          <div style="padding: 16px; background: var(--bg); border-radius: 8px; text-align: center;">
+            <div style="font-family: 'Newsreader', serif; font-size: 26px;"><%= attempt.score %> / <%= attempt.total %></div>
+            <div style="font-size: 12px; color: var(--faint); margin-top: 4px;">Score on <%= test.title %></div>
+          </div>
+          <div style="padding: 16px; background: var(--bg); border-radius: 8px; text-align: center;">
+            <div style="font-family: 'Newsreader', serif; font-size: 26px;"><%= Math.round((attempt.score / attempt.total) * 100) %>%</div>
+            <div style="font-size: 12px; color: var(--faint); margin-top: 4px;">Overall percentage</div>
+          </div>
+        </div>
+
+        <% if (chapterBreakdown.length) { %>
+        <div>
+          <h3 style="font-size: 14px; margin-bottom: 12px;">Chapter breakdown</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <% chapterBreakdown.forEach(function(c) { %>
+              <div class="bar-row">
+                <span class="name"><%= c.chapter %></span>
+                <div class="bar-track"><div class="bar-fill" style="width: <%= c.pct === null ? 0 : c.pct %>%; background: <%= c.pct === null ? '#D8CBB0' : (c.pct < 50 ? '#B4501C' : c.pct < 75 ? '#D8A24A' : '#6B8F71') %>;"></div></div>
+                <span class="pct"><%= c.pct === null ? '—' : c.pct + '%' %></span>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+        <% } %>
+      <% } %>
+
+      <% if (note) { %>
+        <div style="padding: 16px 18px; background: var(--accent-tint); border-radius: 8px; font-size: 14px; color: var(--accent-deep); line-height: 1.6;">
+          <strong>Teacher's note:</strong> <%= note %>
+        </div>
+      <% } %>
+
+      <div style="padding-top: 16px; border-top: 1px solid #EFE6D8; font-size: 12px; color: #A69D89; text-align: center;">
+        Sent via ClassCoach on behalf of <%= teacher.name %>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
