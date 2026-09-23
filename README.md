@@ -417,6 +417,36 @@ The demo ships **without** SMTP/AI keys configured, so:
     authenticated — the actual proof this needed, not just that the
     startup warning went away. Expired sessions are swept automatically
     every 6 hours so the table doesn't grow forever.
+51. **Email sending switched from SMTP to Resend's HTTPS API** — this
+    fixes a real production issue, not a code bug: **Railway's
+    Free/Trial/Hobby plans block all outbound SMTP traffic (ports 25,
+    465, 587) at the network/firewall level**, confirmed directly by
+    Railway's own support team across many recent threads. This meant
+    every email feature — verification, password reset, parent
+    reports, notifications — worked perfectly locally but silently
+    failed once deployed, with no amount of `.env` configuration able
+    to fix it, since the connection to the mail server never left the
+    container. Switching to Resend's plain HTTPS API (a normal POST
+    request on port 443, which isn't blocked) fixes this regardless of
+    which Railway plan you're on. Your existing `SMTP_PASS` value (if
+    it's your Resend API key, which it was in this setup) is read
+    automatically — no new variable is required, though `RESEND_API_KEY`
+    is the clearer name going forward. `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`
+    are no longer used at all; only `SMTP_FROM` (or `RESEND_API_KEY`)
+    still matter.
+
+    **Honest limit on testing this one:** my own sandbox's network
+    restrictions block `api.resend.com` outright (the same kind of
+    restriction that affected the OCR library earlier in this build),
+    so I could not verify an actual successful send end-to-end from
+    here. What I did verify: the "not configured" error path, that a
+    failed request to Resend is caught cleanly without crashing the
+    app (tested against my own sandbox's block, which behaves like a
+    real network failure would), and that every existing feature that
+    sends email still calls the same functions with no changes needed
+    elsewhere in the code. Please do one real test — Settings → "Send
+    verification email" — after deploying this, to confirm delivery
+    actually works from Railway now.
 
 ## Gaps still open from the original feature spec
 
