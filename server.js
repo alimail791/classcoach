@@ -19,6 +19,15 @@ const reportsHubRoutes = require('./routes/reports_hub');
 
 const app = express();
 
+// Railway (and most hosts) terminate HTTPS at their own edge, then forward
+// requests to this container over plain HTTP internally. Without this,
+// req.protocol always reports "http" no matter how the visitor actually
+// connected — which silently put http:// links into verification emails,
+// password resets, report shares, referral links, and the canonical/OG
+// tags on the homepage. This tells Express to trust the X-Forwarded-Proto
+// header the proxy sets, so req.protocol reports the real, original scheme.
+app.set('trust proxy', 1);
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
