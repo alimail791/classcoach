@@ -404,6 +404,19 @@ The demo ships **without** SMTP/AI keys configured, so:
     defaulting to `classcoach.sqlite` next to the code. `npm run seed`
     respects this too, so seeding a deployed instance targets the same
     file the running app actually uses.
+50. **Persistent, database-backed sessions** — logins used to live in
+    memory only (`express-session`'s default store), which forgets
+    every logged-in user the moment the process restarts — meaning
+    every Railway redeploy logged everyone out, teachers included.
+    Sessions now live in the same SQLite database as everything else,
+    in their own `sessions` table, with no new native dependency (a
+    small custom store, since most session-store packages depend on a
+    different SQLite binding than this app's `node:sqlite`). Verified
+    directly: logged in, killed the server process entirely, started a
+    completely new one, and the same browser cookie was still
+    authenticated — the actual proof this needed, not just that the
+    startup warning went away. Expired sessions are swept automatically
+    every 6 hours so the table doesn't grow forever.
 
 ## Gaps still open from the original feature spec
 

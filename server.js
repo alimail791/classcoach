@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const SqliteSessionStore = require('./lib/sessionStore');
 const path = require('path');
 
 const authRoutes = require('./routes/auth');
@@ -26,6 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(
   session({
+    store: new SqliteSessionStore(),
     secret: process.env.SESSION_SECRET || 'classcoach-dev-secret-change-me',
     resave: false,
     saveUninitialized: false,
