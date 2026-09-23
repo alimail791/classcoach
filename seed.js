@@ -1,8 +1,9 @@
 // Populates the database with realistic demo data covering every feature,
 // so you can explore the app without setting anything up by hand.
 //
-// WARNING: this deletes classcoach.sqlite and starts fresh. Don't run it
-// against data you want to keep.
+// WARNING: this deletes the database file (classcoach.sqlite locally, or
+// whatever DB_PATH points to) and starts fresh. Don't run it against data
+// you want to keep.
 //
 // Usage: npm run seed
 
@@ -11,7 +12,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
-const dbPath = path.join(__dirname, 'classcoach.sqlite');
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'classcoach.sqlite');
 ['', '-wal', '-shm'].forEach((suffix) => {
   const p = dbPath + suffix;
   if (fs.existsSync(p)) fs.unlinkSync(p);

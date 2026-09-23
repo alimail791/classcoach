@@ -396,6 +396,14 @@ The demo ships **without** SMTP/AI keys configured, so:
     normal monthly AI limit, and only works on descriptive answers
     (rejected cleanly on an MCQ answer, which is already auto-graded
     anyway).
+49. **`DB_PATH` environment variable** — for deploying somewhere with an
+    ephemeral filesystem (like Railway), set this to a file on a
+    persistent Volume (e.g. `/data/classcoach.sqlite`) so the database
+    survives redeploys instead of getting wiped each time. Leave it
+    unset for local development — everything works exactly as before,
+    defaulting to `classcoach.sqlite` next to the code. `npm run seed`
+    respects this too, so seeding a deployed instance targets the same
+    file the running app actually uses.
 
 ## Gaps still open from the original feature spec
 
