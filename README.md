@@ -447,6 +447,40 @@ The demo ships **without** SMTP/AI keys configured, so:
     elsewhere in the code. Please do one real test — Settings → "Send
     verification email" — after deploying this, to confirm delivery
     actually works from Railway now.
+52. **Marketing email broadcast script** (`npm run broadcast <file.csv>`)
+    — for sending a one-off (or occasional) campaign to a list of leads,
+    separate from the app's own transactional emails. Import a CSV with
+    `email` and optionally `name` columns; re-running with the same file
+    never creates duplicates. Sends through the same Resend setup as the
+    rest of the app (reads `RESEND_API_KEY` or falls back to `SMTP_PASS`),
+    paced at a safe rate under Resend's 2-request/second limit on every
+    plan, and capped at `MAX_SENDS_PER_RUN` (default 90) per run so it
+    naturally stays under the free plan's 100/day limit — just re-run it
+    daily (Task Scheduler, cron, or by hand) and it resumes exactly where
+    it left off. Every email includes a working, cryptographically signed
+    unsubscribe link (`/unsubscribe`) — clicking it marks that lead
+    permanently excluded from all future runs, checked directly against
+    the database rather than just being a dead link. This matters for
+    more than compliance: a bulk send that racks up spam complaints can
+    hurt your sending domain's reputation enough to affect deliverability
+    of the app's own verification and password-reset emails, since they
+    share the same domain. Verified directly: CSV import and
+    deduplication, the per-run send cap, a forged/invalid unsubscribe
+    token being rejected without crashing the server, and a real
+    unsubscribe correctly excluding that lead from the next run. Actual
+    delivery through Resend couldn't be verified from here, for the same
+    sandbox-network reason as the email switch above.
+53. **Admin email alert on every new teacher signup** — set
+    `ADMIN_NOTIFY_EMAIL` in `.env` and you'll get an email with the new
+    teacher's name, email, and phone the moment they register (needs
+    `RESEND_API_KEY` set too, same as any other email feature). Fires
+    once, on signup only — it doesn't cover students self-joining a
+    class via a class code, since that's a different, lower-signal
+    event; ask if you'd like that covered too. Like every other email
+    in this app, this is fire-and-forget: if it fails to send for any
+    reason, the new teacher's actual signup still succeeds normally —
+    verified this directly by forcing the notification to fail and
+    confirming signup completed anyway.
 
 ## Gaps still open from the original feature spec
 
@@ -498,9 +532,6 @@ and spreadsheet import. A few honest limits remain:
   verification and message templates, a bigger, separate step.
 - Descriptive answers are graded one attempt at a time — there's no
   bulk-grading view.
-- Sessions use an in-memory store, which is fine for local use but resets
-  if you restart the server (everyone stays logged in via the browser
-  cookie, but you'd need to log in again after a restart).
 
 When you're ready to put this on the internet so students can reach it
 from anywhere, deploying it (e.g. to Railway) is a separate, short next

@@ -92,6 +92,20 @@ app.get('/sitemap.xml', (req, res) => {
   );
 });
 
+app.get('/unsubscribe', (req, res) => {
+  const email = (req.query.email || '').toLowerCase().trim();
+  const token = req.query.token || '';
+  const { verifyUnsubscribeToken } = require('./lib/unsubscribe');
+
+  if (!verifyUnsubscribeToken(email, token)) {
+    return res.status(400).send('<p>This unsubscribe link is invalid or has expired.</p>');
+  }
+
+  const db = require('./lib/db');
+  db.prepare("UPDATE email_leads SET status = 'unsubscribed' WHERE email = ?").run(email);
+  res.send(`<!doctype html><html><head><title>Unsubscribed — ClassCoach</title></head><body style="font-family: sans-serif; max-width: 480px; margin: 80px auto; text-align: center;"><h1>You're unsubscribed</h1><p>${email} won't receive any further emails from ClassCoach.</p></body></html>`);
+});
+
 app.use('/', authRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', testRoutes);

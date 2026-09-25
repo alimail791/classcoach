@@ -69,6 +69,21 @@ router.post('/signup', (req, res) => {
     mailer.sendVerificationEmail({ to: email.toLowerCase().trim(), name: name.trim(), verifyUrl }).catch((err) => {
       console.error('Verification email failed to send:', err.message);
     });
+
+    if (process.env.ADMIN_NOTIFY_EMAIL) {
+      const notifyText = [
+        'A new teacher just registered on ClassCoach:',
+        '',
+        `Name: ${name.trim()}`,
+        `Email: ${email.toLowerCase().trim()}`,
+        `Phone: ${phone.trim()}`,
+        `Plan: ${trial.name} (free trial)`,
+        `Signed up: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+      ].join('\n');
+      mailer
+        .sendPlainEmail({ to: process.env.ADMIN_NOTIFY_EMAIL, subject: `New ClassCoach signup: ${name.trim()}`, text: notifyText })
+        .catch((err) => console.error('Admin signup notification failed to send:', err.message));
+    }
   }
 
   res.redirect('/dashboard');

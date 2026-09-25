@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "node --no-warnings server.js",
     "start": "node --no-warnings server.js",
-    "seed": "node --no-warnings seed.js"
+    "seed": "node --no-warnings seed.js",
+    "broadcast": "node --no-warnings broadcast.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
