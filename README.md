@@ -478,9 +478,37 @@ The demo ships **without** SMTP/AI keys configured, so:
     class via a class code, since that's a different, lower-signal
     event; ask if you'd like that covered too. Like every other email
     in this app, this is fire-and-forget: if it fails to send for any
-    reason, the new teacher's actual signup still succeeds normally —
-    verified this directly by forcing the notification to fail and
-    confirming signup completed anyway.
+    reason, signup still succeeds normally.
+54. **One-tap WhatsApp login for students** — no roll number or PIN to
+    type. On a class roster, "Send WhatsApp link" next to a student (only
+    shown if they or their parent has a phone number on file) opens
+    WhatsApp with a message ready to send, containing a personal link.
+    Whoever taps that link is logged straight into their dashboard — no
+    account, no password, nothing to remember. This exists specifically
+    for students and parents who've never used a login-based tool
+    before and might not adopt one at all if the first thing they hit is
+    a login screen; WhatsApp is something they already trust and use
+    daily. Links stay valid for 30 days and can be tapped more than once
+    (a student might reasonably want to reopen it later), but each one
+    only ever logs in the one student it was made for — verified
+    directly: an invalid or expired link shows a clear message and falls
+    back to normal PIN login rather than erroring, and it's cryptographically
+    impossible to guess someone else's link. This does not require any
+    WhatsApp Business API account or approval — it reuses the same plain
+    `wa.me` link scheme as the existing report-sharing feature, so there's
+    nothing to configure or sign up for.
+
+    **What this is not, and what would need separate setup:** this
+    doesn't let a student answer a quiz *inside* the WhatsApp chat itself
+    — tapping the link still opens the real ClassCoach page in a browser,
+    just without needing to log in first. A true "answer questions
+    directly in a WhatsApp conversation" experience is a materially
+    bigger feature — it needs an actual WhatsApp Business API account
+    (via Meta directly or a provider like Gupshup/Twilio/360dialog),
+    business verification, and approved message templates, none of
+    which can be set up or tested without that account existing first.
+    Worth building next if the simpler link-based version proves out —
+    just say the word once you have (or want to set up) that account.
 
 ## Gaps still open from the original feature spec
 

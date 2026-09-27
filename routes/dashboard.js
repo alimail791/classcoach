@@ -6,6 +6,8 @@ const { requireTeacher } = require('../lib/auth');
 const mailer = require('../lib/mailer');
 const { parseStudentFile } = require('../lib/importStudents');
 const { effectiveMaxStudents, isPlanActive, getPlan, daysUntil } = require('../lib/plans');
+const { createMagicLink } = require('../lib/magicLink');
+const { buildWhatsAppLink } = require('../lib/whatsapp');
 const { getFor, unreadCountFor, markAllRead, notifyAllStudentsInBatch, notifyAllParentsInBatch } = require('../lib/notifications');
 const { checkAndSendExpiryNotice } = require('../lib/expiryNotice');
 const { sendDueDigests } = require('../lib/weeklyDigest');
@@ -492,6 +494,31 @@ router.get('/batches/:batchId/students/:studentId', requireTeacher, (req, res) =
     practiceGenerated: req.query.practiceGenerated || null,
     practiceError: req.query.practiceError || null
   });
+});
+
+router.post('/batches/:batchId/students/:studentId/whatsapp-login', requireTeacher, (req, res) => {
+  const batch = db.prepare('SELECT * FROM batches WHERE id = ? AND teacher_id = ?').get(req.params.batchId, req.teacher.id);
+  if (!batch) return res.status(404).send('Batch not found');
+  const student = db.prepare('SELECT * FROM students WHERE id = ? AND batch_id = ?').get(req.params.studentId, batch.id);
+  if (!student) return res.status(404).send('Student not found');
+
+  // Optional: a specific test to link straight to (?test_id=), so a
+  // teacher can send "here's today's test" rather than just "here's your
+  // dashboard". Falls back to the dashboard if no test is specified or
+  // it doesn't belong to this batch.
+  let redirectPath = '/student/dashboard';
+  const testId = parseInt(req.query.test_id, 10);
+  if (testId) {
+    const test = db.prepare("SELECT * FROM tests WHERE id = ? AND batch_id = ? AND status = 'published'").get(testId, batch.id);
+    if (test) redirectPath = `/student/tests/${test.id}`;
+  }
+
+  const token = createMagicLink(student.id, redirectPath);
+  const loginUrl = `${req.protocol}://${req.get('host')}/go/${token}`;
+  const message = `Hi ${student.name}, here's your ClassCoach link — tap to open, no login needed: ${loginUrl}`;
+  const waLink = buildWhatsAppLink(student.phone || student.parent_phone, message);
+
+  res.redirect(waLink);
 });
 
 router.get('/help', requireTeacher, (req, res) => {

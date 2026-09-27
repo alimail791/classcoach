@@ -4,8 +4,23 @@ const { requireStudent } = require('../lib/auth');
 const { generateMaterialPdf, generateTestPdf } = require('../lib/pdfExport');
 const { chapterBreakdownFor } = require('../lib/studentStats');
 const { getFor, unreadCountFor, markAllRead } = require('../lib/notifications');
+const { resolveMagicLink } = require('../lib/magicLink');
 
 const router = express.Router();
+
+// A one-tap login link sent via WhatsApp — no roll number or PIN to type.
+// Meant to be tolerant of being tapped days later, since a student
+// sharing a family phone might not open it right away.
+router.get('/go/:token', (req, res) => {
+  const result = resolveMagicLink(req.params.token);
+  if (!result) {
+    return res.render('student_login', {
+      error: "This link has expired or was already used up. Ask your teacher to send a fresh one, or log in with your roll number and PIN below."
+    });
+  }
+  req.session.studentId = result.student.id;
+  res.redirect(result.redirectPath);
+});
 
 router.get('/student/login', (req, res) => {
   res.render('student_login', { error: null });

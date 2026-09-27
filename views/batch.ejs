@@ -51,7 +51,12 @@
                     <td style="font-family: monospace;"><%= s.pin %></td>
                     <td style="font-family: monospace;"><%= s.parent_pin %></td>
                     <td style="color: var(--faint);"><%= s.parent_contact || '—' %></td>
-                    <td>
+                    <td style="display: flex; gap: 12px; align-items: center;">
+                      <% if (s.phone || s.parent_phone) { %>
+                        <form method="POST" action="/batches/<%= batch.id %>/students/<%= s.id %>/whatsapp-login">
+                          <button type="submit" style="background: none; border: none; padding: 0; font-size: 12px; color: #34502E; cursor: pointer;" title="No PIN needed — opens WhatsApp with a one-tap login link ready to send">Send WhatsApp link</button>
+                        </form>
+                      <% } %>
                       <form method="POST" action="/batches/<%= batch.id %>/students/<%= s.id %>/delete" onsubmit="return confirm('Remove <%= s.name.replace(/'/g, '') %>? This deletes their test attempts, attendance, and homework records too. This cannot be undone.');">
                         <button type="submit" style="background: none; border: none; padding: 0; font-size: 12px; color: var(--accent); cursor: pointer;">Remove</button>
                       </form>
