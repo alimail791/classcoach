@@ -130,6 +130,14 @@ router.get('/dashboard', requireTeacher, (req, res) => {
   const expiryDays = daysUntil(req.teacher.plan_expires_at);
   const planActive = isPlanActive(req.teacher);
 
+  // Refer & earn — lives on the dashboard so teachers see it every time
+  // they log in, rather than needing to dig into Settings for it.
+  const referredTeachers = db
+    .prepare('SELECT name, has_purchased FROM teachers WHERE referred_by_teacher_id = ?')
+    .all(req.teacher.id);
+  const purchasedReferrals = referredTeachers.filter((t) => t.has_purchased).length;
+  const referralUrl = `${req.protocol}://${req.get('host')}/signup?ref=${req.teacher.referral_code}`;
+
   res.render('dashboard', {
     teacher: req.teacher,
     batches,
@@ -143,7 +151,10 @@ router.get('/dashboard', requireTeacher, (req, res) => {
     expiryDays,
     planActive,
     notifications,
-    unreadCount
+    unreadCount,
+    referredTeachers,
+    purchasedReferrals,
+    referralUrl
   });
 });
 

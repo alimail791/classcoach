@@ -141,6 +141,32 @@
 
       </div>
 
+      <!-- REFER & EARN -->
+      <div class="card" style="padding: 24px;">
+        <h2 style="font-size: 16px; margin-bottom: 6px;">Refer &amp; earn</h2>
+        <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px;">Refer 2 teachers — once both have purchased a paid plan, you get 3 months added to your own subscription, free.</p>
+        <div class="field">
+          <label>Your referral link</label>
+          <div style="display: flex; gap: 8px;">
+            <input readonly value="<%= referralUrl %>" style="flex: 1; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; background: var(--bg);">
+            <button type="button" class="btn btn-ghost" onclick="navigator.clipboard.writeText('<%= referralUrl %>'); this.textContent='Copied!';">Copy</button>
+          </div>
+        </div>
+        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-size: 13px; font-weight: 600;">Progress: <%= purchasedReferrals %> purchased referral<%= purchasedReferrals === 1 ? '' : 's' %> (<%= teacher.referral_rewards_granted %> reward<%= teacher.referral_rewards_granted === 1 ? '' : 's' %> earned so far)</span>
+          <% if (referredTeachers.length === 0) { %>
+            <span style="font-size: 12px; color: var(--faint);">Nobody has signed up with your link yet.</span>
+          <% } else { %>
+            <% referredTeachers.forEach(function(t) { %>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">
+                <span><%= t.name %></span>
+                <% if (t.has_purchased) { %><span class="badge badge-good">Purchased</span><% } else { %><span class="badge badge-neutral">Trial only</span><% } %>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

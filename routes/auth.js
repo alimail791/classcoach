@@ -261,20 +261,13 @@ router.post('/settings/resend-verification', requireTeacher, async (req, res) =>
 });
 
 router.get('/settings', requireTeacher, (req, res) => {
-  const referredTeachers = db
-    .prepare('SELECT name, has_purchased FROM teachers WHERE referred_by_teacher_id = ?')
-    .all(req.teacher.id);
-  const purchasedReferrals = referredTeachers.filter((t) => t.has_purchased).length;
-
+  // Refer & earn moved to the dashboard — see routes/dashboard.js.
   res.render('settings', {
     teacher: req.teacher,
     error: null,
     saved: req.query.saved || null,
     verificationSent: req.query.verification_sent || null,
-    verificationError: req.query.verification_error || null,
-    referralUrl: `${req.protocol}://${req.get('host')}/signup?ref=${req.teacher.referral_code}`,
-    referredTeachers,
-    purchasedReferrals
+    verificationError: req.query.verification_error || null
   });
 });
 
