@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Verify your email — ClassCoach' }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Verify your email</h1>
+      <p style="font-size: 14px; color: var(--faint); margin-top: -8px;">
+        We sent a 6-digit code to <strong><%= email %></strong>. Enter it below to confirm your account.
+      </p>
+      <% if (resent) { %><div class="flash flash-ok">A new code has been sent.</div><% } %>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <form method="POST" action="/verify-otp" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="field">
+          <label>Verification code</label>
+          <input
+            name="code"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="6"
+            autocomplete="one-time-code"
+            placeholder="000000"
+            required
+            autofocus
+          >
+        </div>
+        <button type="submit" class="btn btn-primary">Verify</button>
+      </form>
+      <form method="POST" action="/verify-otp/resend">
+        <button type="submit" class="btn btn-ghost" style="width: 100%;">Resend code</button>
+      </form>
+      <span style="font-size: 13px; color: var(--faint);">
+        Wrong account? <form method="POST" action="/logout" style="display: inline;"><button type="submit" style="background: none; border: none; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font-size: inherit;">Log out</button></form>
+      </span>
+    </div>
+  </div>
+</body>
+</html>

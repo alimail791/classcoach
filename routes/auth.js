@@ -8,6 +8,10 @@ const mailer = require('../lib/mailer');
 
 const router = express.Router();
 
+function generateOtp() {
+  return String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+}
+
 router.get('/signup', (req, res) => {
   res.render('signup', { error: null, refCode: req.query.ref || '' });
 });
@@ -23,7 +27,8 @@ router.post('/signup', (req, res) => {
   }
   const hash = bcrypt.hashSync(password, 10);
   const trial = PLANS.trial;
-  const verifyToken = crypto.randomBytes(20).toString('hex');
+  const otp = generateOtp();
+  const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
 
   let referredByTeacherId = null;
   if (ref && ref.trim()) {
@@ -46,8 +51,8 @@ router.post('/signup', (req, res) => {
   const info = db
     .prepare(
       `INSERT INTO teachers
-       (name, email, phone, password_hash, plan, max_students, ai_limit_monthly, plan_expires_at, email_verify_token, referral_code, referred_by_teacher_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       (name, email, phone, password_hash, plan, max_students, ai_limit_monthly, plan_expires_at, referral_code, referred_by_teacher_id, signup_verified, email_otp, email_otp_expires)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`
     )
     .run(
       name.trim(),
@@ -58,16 +63,16 @@ router.post('/signup', (req, res) => {
       trial.max_students,
       trial.ai_limit_monthly,
       trialExpiryFromNow(),
-      verifyToken,
       referralCode,
-      referredByTeacherId
+      referredByTeacherId,
+      otp,
+      otpExpires
     );
   req.session.teacherId = info.lastInsertRowid;
 
   if (mailer.isConfigured()) {
-    const verifyUrl = `${req.protocol}://${req.get('host')}/verify-email/${verifyToken}`;
-    mailer.sendVerificationEmail({ to: email.toLowerCase().trim(), name: name.trim(), verifyUrl }).catch((err) => {
-      console.error('Verification email failed to send:', err.message);
+    mailer.sendOtpEmail({ to: email.toLowerCase().trim(), name: name.trim(), otp }).catch((err) => {
+      console.error('OTP email failed to send:', err.message);
     });
 
     if (process.env.ADMIN_NOTIFY_EMAIL) {
@@ -84,9 +89,67 @@ router.post('/signup', (req, res) => {
         .sendPlainEmail({ to: process.env.ADMIN_NOTIFY_EMAIL, subject: `New ClassCoach signup: ${name.trim()}`, text: notifyText })
         .catch((err) => console.error('Admin signup notification failed to send:', err.message));
     }
+  } else {
+    console.log(`[Signup OTP] Email not configured. Code for ${email.toLowerCase().trim()}: ${otp}`);
   }
 
+  res.redirect('/verify-otp');
+});
+
+router.get('/verify-otp', (req, res) => {
+  if (!req.session.teacherId) return res.redirect('/login');
+  const teacher = db.prepare('SELECT * FROM teachers WHERE id = ?').get(req.session.teacherId);
+  if (!teacher) return res.redirect('/login');
+  if (teacher.signup_verified && teacher.email_verified) return res.redirect('/dashboard');
+  res.render('verify_otp', { email: teacher.email, error: null, resent: req.query.resent || null });
+});
+
+router.post('/verify-otp', (req, res) => {
+  if (!req.session.teacherId) return res.redirect('/login');
+  const teacher = db.prepare('SELECT * FROM teachers WHERE id = ?').get(req.session.teacherId);
+  if (!teacher) return res.redirect('/login');
+
+  const code = (req.body.code || '').trim();
+  const valid =
+    teacher.email_otp &&
+    code === teacher.email_otp &&
+    teacher.email_otp_expires &&
+    new Date(teacher.email_otp_expires) > new Date();
+
+  if (!valid) {
+    return res.render('verify_otp', { email: teacher.email, error: 'That code is incorrect or has expired. Request a new one below.', resent: null });
+  }
+
+  db.prepare('UPDATE teachers SET signup_verified = 1, email_verified = 1, email_otp = NULL, email_otp_expires = NULL WHERE id = ?').run(teacher.id);
   res.redirect('/dashboard');
+});
+
+router.post('/verify-otp/resend', (req, res) => {
+  if (!req.session.teacherId) return res.redirect('/login');
+  const teacher = db.prepare('SELECT * FROM teachers WHERE id = ?').get(req.session.teacherId);
+  if (!teacher) return res.redirect('/login');
+
+  // A fresh 10-minute code always resets the expiry, so this also doubles
+  // as the cooldown check: if the last one was sent under 30 seconds ago,
+  // more than 9.5 minutes will still be left on it.
+  const msRemaining = teacher.email_otp_expires ? new Date(teacher.email_otp_expires) - new Date() : 0;
+  if (msRemaining > 9.5 * 60 * 1000) {
+    return res.render('verify_otp', { email: teacher.email, error: 'Please wait a few seconds before requesting another code.', resent: null });
+  }
+
+  const otp = generateOtp();
+  const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  db.prepare('UPDATE teachers SET email_otp = ?, email_otp_expires = ? WHERE id = ?').run(otp, otpExpires, teacher.id);
+
+  if (mailer.isConfigured()) {
+    mailer.sendOtpEmail({ to: teacher.email, name: teacher.name, otp }).catch((err) => {
+      console.error('OTP resend failed to send:', err.message);
+    });
+  } else {
+    console.log(`[Signup OTP] Email not configured. Code for ${teacher.email}: ${otp}`);
+  }
+
+  res.redirect('/verify-otp?resent=1');
 });
 
 router.get('/forgot-password', (req, res) => {
@@ -172,6 +235,8 @@ router.post('/logout', (req, res) => {
   res.redirect('/login');
 });
 
+// Old link-based verification is kept only as a harmless fallback for any
+// email already sent before the switch to OTP — new sends always use a code.
 router.get('/verify-email/:token', (req, res) => {
   const teacher = db.prepare('SELECT * FROM teachers WHERE email_verify_token = ?').get(req.params.token);
   if (!teacher) return res.status(404).send('This verification link is not valid — it may have already been used.');
@@ -182,18 +247,17 @@ router.get('/verify-email/:token', (req, res) => {
 
 router.post('/settings/resend-verification', requireTeacher, async (req, res) => {
   if (req.teacher.email_verified) return res.redirect('/settings');
-  let token = req.teacher.email_verify_token;
-  if (!token) {
-    token = crypto.randomBytes(20).toString('hex');
-    db.prepare('UPDATE teachers SET email_verify_token = ? WHERE id = ?').run(token, req.teacher.id);
-  }
+
+  const otp = generateOtp();
+  const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  db.prepare('UPDATE teachers SET email_otp = ?, email_otp_expires = ? WHERE id = ?').run(otp, otpExpires, req.teacher.id);
+
   try {
-    const verifyUrl = `${req.protocol}://${req.get('host')}/verify-email/${token}`;
-    await mailer.sendVerificationEmail({ to: req.teacher.email, name: req.teacher.name, verifyUrl });
-    res.redirect('/settings?verification_sent=1');
+    await mailer.sendOtpEmail({ to: req.teacher.email, name: req.teacher.name, otp });
   } catch (err) {
-    res.redirect(`/settings?verification_error=${encodeURIComponent(err.message)}`);
+    return res.redirect(`/settings?verification_error=${encodeURIComponent(err.message)}`);
   }
+  res.redirect('/verify-otp?resent=1');
 });
 
 router.get('/settings', requireTeacher, (req, res) => {
@@ -227,14 +291,18 @@ router.post('/settings', requireTeacher, (req, res) => {
   const emailChanged = email.toLowerCase().trim() !== req.teacher.email;
   if (emailChanged) {
     // A changed email needs to be re-verified — clear the old status and
-    // send a fresh link automatically if email sending is configured.
-    const newToken = crypto.randomBytes(20).toString('hex');
+    // send a fresh OTP automatically if email sending is configured. This
+    // only resets email_verified, never signup_verified, so it can never
+    // re-trigger the hard signup gate in requireTeacher.
+    const otp = generateOtp();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     db.prepare(
-      'UPDATE teachers SET name = ?, email = ?, phone = ?, email_verified = 0, email_verify_token = ? WHERE id = ?'
-    ).run(name.trim(), email.toLowerCase().trim(), (phone || '').trim(), newToken, req.teacher.id);
+      'UPDATE teachers SET name = ?, email = ?, phone = ?, email_verified = 0, email_otp = ?, email_otp_expires = ? WHERE id = ?'
+    ).run(name.trim(), email.toLowerCase().trim(), (phone || '').trim(), otp, otpExpires, req.teacher.id);
     if (mailer.isConfigured()) {
-      const verifyUrl = `${req.protocol}://${req.get('host')}/verify-email/${newToken}`;
-      mailer.sendVerificationEmail({ to: email.toLowerCase().trim(), name: name.trim(), verifyUrl }).catch(() => {});
+      mailer.sendOtpEmail({ to: email.toLowerCase().trim(), name: name.trim(), otp }).catch(() => {});
+    } else {
+      console.log(`[Settings OTP] Email not configured. Code for ${email.toLowerCase().trim()}: ${otp}`);
     }
   } else {
     db.prepare('UPDATE teachers SET name = ?, email = ?, phone = ? WHERE id = ?').run(

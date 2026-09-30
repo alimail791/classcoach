@@ -13,7 +13,7 @@
 
         <% if (saved === 'profile') { %><div class="flash flash-ok">Profile updated.</div><% } %>
         <% if (saved === 'password') { %><div class="flash flash-ok">Password changed.</div><% } %>
-        <% if (verificationSent) { %><div class="flash flash-ok">Verification email sent — check your inbox.</div><% } %>
+        <% if (verificationSent) { %><div class="flash flash-ok">Verification code sent — check your inbox.</div><% } %>
         <% if (verificationError) { %><div class="flash flash-error"><%= verificationError %></div><% } %>
         <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
 
@@ -21,7 +21,7 @@
           <div class="flash" style="background: #F5E6D3; border: 1px solid #D8A87C; color: var(--accent-deep); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
             <span>Your email isn't verified yet.</span>
             <form method="POST" action="/settings/resend-verification">
-              <button type="submit" class="btn btn-ghost" style="padding: 6px 14px; font-size: 13px;">Send verification email</button>
+              <button type="submit" class="btn btn-ghost" style="padding: 6px 14px; font-size: 13px;">Send verification code</button>
             </form>
           </div>
         <% } %>
@@ -37,7 +37,7 @@
             <div class="field"><label>Phone number</label><input name="phone" value="<%= teacher.phone %>" placeholder="+91 9xxxxxxxxx"></div>
             <button type="submit" class="btn btn-dark" style="align-self: flex-start;">Save profile</button>
           </form>
-          <p style="font-size: 12px; color: var(--faint); margin-top: 10px;">Changing your email will require re-verifying it.</p>
+          <p style="font-size: 12px; color: var(--faint); margin-top: 10px;">Changing your email will send a new verification code to the new address.</p>
         </div>
 
         <div class="card" style="padding: 24px;">
