@@ -138,7 +138,16 @@ router.get('/dashboard', requireTeacher, (req, res) => {
   const purchasedReferrals = referredTeachers.filter((t) => t.has_purchased).length;
   const referralUrl = `${req.protocol}://${req.get('host')}/signup?ref=${req.teacher.referral_code}`;
 
+  // Refer & earn nudge: shown at most once per calendar day (IST), tracked
+  // server-side so it's once a day across devices, not once per browser.
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const showReferralPopup = req.teacher.last_referral_popup_on !== today;
+  if (showReferralPopup) {
+    db.prepare('UPDATE teachers SET last_referral_popup_on = ? WHERE id = ?').run(today, req.teacher.id);
+  }
+
   res.render('dashboard', {
+    showReferralPopup,
     teacher: req.teacher,
     batches,
     publishedTests,

@@ -16,6 +16,7 @@ const paymentRoutes = require('./routes/payments');
 const joinRoutes = require('./routes/join');
 const reportPublicRoutes = require('./routes/report_public');
 const reportsHubRoutes = require('./routes/reports_hub');
+const { startInactivityScheduler } = require('./lib/inactivity');
 
 const app = express();
 
@@ -124,6 +125,8 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+startInactivityScheduler();
+
 app.listen(PORT, () => {
   console.log(`ClassCoach running at http://localhost:${PORT}`);
 });
