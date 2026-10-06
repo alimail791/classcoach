@@ -70,6 +70,9 @@ router.post('/signup', (req, res) => {
       otpExpires,
       examTrack
     );
+  const signupToken = require('crypto').randomBytes(16).toString('hex');
+  db.prepare('UPDATE teachers SET session_token = ? WHERE id = ?').run(signupToken, info.lastInsertRowid);
+  req.session.sessionToken = signupToken;
   req.session.teacherId = info.lastInsertRowid;
 
   if (mailer.isConfigured()) {
@@ -216,7 +219,7 @@ router.post('/reset-password/:token', (req, res) => {
 });
 
 router.get('/login', (req, res) => {
-  res.render('login', { error: null });
+  res.render('login', { error: req.query.moved ? 'You were signed out because this account was logged in on another device. Log in again to continue here.' : null });
 });
 
 router.post('/login', (req, res) => {
@@ -228,7 +231,10 @@ router.post('/login', (req, res) => {
   if (!teacher.active) {
     return res.render('login', { error: 'This account has been deactivated. Contact support if you believe this is a mistake.' });
   }
+  const token = require('crypto').randomBytes(16).toString('hex');
+  db.prepare('UPDATE teachers SET session_token = ? WHERE id = ?').run(token, teacher.id);
   req.session.teacherId = teacher.id;
+  req.session.sessionToken = token;
   res.redirect('/dashboard');
 });
 

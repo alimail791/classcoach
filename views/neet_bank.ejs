@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'NEET Test Builder — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'neetbank' }) %>
+  <div class="main">
+    <div class="topbar"><h1 style="font-size: 17px;">NEET Test Builder</h1></div>
+    <div class="content">
+      <p style="margin:0;font-size:14px;color:var(--muted);max-width:640px;line-height:1.6;">Pick chapters, choose how many questions, and ClassCoach builds a ready-to-share test from the NEET bank (previous-year questions included). You can review it, remove any question, then publish to your batch.</p>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <% if (!batches.length) { %><div class="flash flash-error">You need a batch first — <a href="/classes">create one in Classes &amp; Batches</a>.</div><% } %>
+
+      <form method="POST" action="/neet-bank/create-test" style="display:flex;flex-direction:column;gap:20px;">
+        <div class="card" style="padding:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;">
+          <div class="field"><label>Batch</label>
+            <select name="batch_id" required><% batches.forEach(function(b){ %><option value="<%= b.id %>"><%= b.name %></option><% }) %></select></div>
+          <div class="field"><label>Questions</label>
+            <select name="count"><% [10,20,30,45,90].forEach(function(n){ %><option value="<%= n %>" <%= n===30?'selected':'' %>><%= n %><%= n===45?' (NEET section)':'' %><%= n===90?' (full subject-mix)':'' %></option><% }) %></select></div>
+          <div class="field"><label>Difficulty</label>
+            <select name="difficulty"><option value="">Mixed</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
+          <div class="field"><label>Source</label>
+            <select name="pyq"><option value="">All questions</option><option value="1">Previous-year only</option></select></div>
+          <div class="field"><label>Test title (optional)</label><input name="title" maxlength="120" placeholder="Auto-named from chapters"></div>
+        </div>
+
+        <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+            <div class="nb-tabs" style="display:inline-flex;background:#EFE6D8;border-radius:100px;padding:4px;gap:2px;">
+              <% Object.keys(index).forEach(function(sub, i){ %><button type="button" data-sub="<%= sub %>" aria-pressed="<%= i===0 %>"><%= sub %></button><% }) %>
+            </div>
+            <input id="nb-search" placeholder="Search chapters" style="max-width:220px;">
+          </div>
+          <% Object.keys(index).forEach(function(sub, i){ %>
+            <div class="nb-pane" data-sub="<%= sub %>" style="<%= i===0 ? '' : 'display:none;' %>grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;">
+              <% index[sub].forEach(function(c){ %>
+                <label class="nb-ch"><input type="checkbox" name="chapters" value="<%= c.chapter %>"> <span><%= c.chapter %></span> <em><%= c.n %> Qs<%= c.pyq ? ' · ' + c.pyq + ' PYQ' : '' %></em></label>
+              <% }) %>
+            </div>
+          <% }) %>
+        </div>
+        <div><button type="submit" class="btn btn-primary" <%= batches.length ? '' : 'disabled' %>>Build test</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+<style>
+  .nb-tabs button{border:none;background:transparent;padding:9px 18px;border-radius:100px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+  .nb-tabs button[aria-pressed="true"]{background:var(--ink);color:#FBF6EE}
+  .nb-pane{display:grid}
+  .nb-ch{display:flex;gap:8px;align-items:baseline;font-size:13.5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+  .nb-ch em{margin-left:auto;font-style:normal;font-size:11px;color:var(--faint);white-space:nowrap}
+</style>
+<script>
+document.querySelectorAll('.nb-tabs button').forEach(function(b){b.addEventListener('click',function(){
+  document.querySelectorAll('.nb-tabs button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+  document.querySelectorAll('.nb-pane').forEach(function(p){p.style.display=p.getAttribute('data-sub')===b.getAttribute('data-sub')?'grid':'none';});
+});});
+document.getElementById('nb-search').addEventListener('input',function(e){var q=e.target.value.toLowerCase();
+  document.querySelectorAll('.nb-ch').forEach(function(l){l.style.display=l.textContent.toLowerCase().indexOf(q)>-1?'':'none';});});
+</script>
+</body>
+</html>

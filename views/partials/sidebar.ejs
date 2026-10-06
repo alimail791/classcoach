@@ -7,6 +7,9 @@
     <a href="/dashboard" class="navitem <%= active === 'dashboard' ? 'active' : '' %>">⌂ Dashboard</a>
     <a href="/classes" class="navitem <%= active === 'classes' ? 'active' : '' %>">🏫 Classes &amp; Batches</a>
     <a href="/tests" class="navitem <%= active === 'tests' ? 'active' : '' %>">📝 Tests &amp; Worksheets</a>
+    <% if (typeof neetJeeEnabled !== 'undefined' && neetJeeEnabled && teacher.exam_track === 'neet_jee') { %>
+    <a href="/neet-bank" class="navitem <%= active === 'neetbank' ? 'active' : '' %>">🎯 NEET Test Builder</a>
+    <% } %>
     <a href="/question-bank" class="navitem <%= active === 'bank' ? 'active' : '' %>">🗂️ Question Bank</a>
     <a href="/reports" class="navitem <%= active === 'reports' ? 'active' : '' %>">📊 Reports</a>
     <a href="/students" class="navitem <%= active === 'students' ? 'active' : '' %>">👥 Students</a>

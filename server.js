@@ -16,6 +16,8 @@ const paymentRoutes = require('./routes/payments');
 const joinRoutes = require('./routes/join');
 const reportPublicRoutes = require('./routes/report_public');
 const reportsHubRoutes = require('./routes/reports_hub');
+const neetBankRoutes = require('./routes/neet_bank');
+const { seedBank } = require('./lib/bank');
 const { startInactivityScheduler } = require('./lib/inactivity');
 const { trackEnabled, njTiers } = require('./lib/plans');
 
@@ -124,6 +126,7 @@ app.use('/', paymentRoutes);
 app.use('/', joinRoutes);
 app.use('/', reportPublicRoutes);
 app.use('/', reportsHubRoutes);
+app.use('/', neetBankRoutes);
 
 app.use((req, res) => {
   res.status(404).send('Page not found. <a href="/">Go home</a>');
@@ -131,6 +134,8 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 startInactivityScheduler();
+
+try { const n = seedBank(); if (n) console.log(`Loaded ${n} NEET bank questions`); } catch (e) { console.error('NEET bank load failed:', e.message); }
 
 app.listen(PORT, () => {
   console.log(`ClassCoach running at http://localhost:${PORT}`);
