@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireTeacher } = require('../lib/auth');
-const { PLANS, getPlan, applyPurchasedPlan } = require('../lib/plans');
+const { PLANS, getPlan, applyPurchasedPlan, paidPlansForTrack, trackEnabled } = require('../lib/plans');
 const razorpay = require('../lib/razorpay');
 const { markPurchasedAndCheckReferral } = require('../lib/referrals');
 const { notify } = require('../lib/notifications');
@@ -9,17 +9,29 @@ const mailer = require('../lib/mailer');
 
 const router = express.Router();
 
-const PAID_PLANS = Object.values(PLANS).filter((p) => p.id !== 'trial');
-
 router.get('/upgrade', requireTeacher, (req, res) => {
+  const planName = (getPlan(req.teacher.plan) || {}).name || req.teacher.plan;
   res.render('upgrade', {
     teacher: req.teacher,
-    plans: PAID_PLANS,
+    planName,
+    plans: paidPlansForTrack(req.teacher.exam_track),
     razorpayConfigured: razorpay.isConfigured(),
     razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
     error: req.query.error || null,
     upgraded: req.query.upgraded || null
   });
+});
+
+// Switch category (General <-> NEET/JEE). Only while still on the free trial,
+// so nobody can buy a cheaper category's plan and then flip categories.
+router.post('/upgrade/track', requireTeacher, (req, res) => {
+  const track = req.body.track === 'neet_jee' ? 'neet_jee' : 'general';
+  if (!trackEnabled() && track === 'neet_jee') return res.redirect('/upgrade');
+  if (req.teacher.plan !== 'trial' || req.teacher.has_purchased) {
+    return res.redirect('/upgrade?error=' + encodeURIComponent('Category can only be changed before your first purchase - contact us if you need help.'));
+  }
+  db.prepare('UPDATE teachers SET exam_track = ? WHERE id = ?').run(track, req.teacher.id);
+  res.redirect('/upgrade');
 });
 
 router.post('/upgrade/create-order', requireTeacher, express.json(), async (req, res) => {
@@ -29,6 +41,11 @@ router.post('/upgrade/create-order', requireTeacher, express.json(), async (req,
   const plan = getPlan(req.body.plan_id);
   if (!plan || plan.id === 'trial') {
     return res.status(400).json({ error: 'Invalid plan selected.' });
+  }
+  // A teacher can only buy plans from their own category.
+  const allowed = paidPlansForTrack(req.teacher.exam_track).some((p) => p.id === plan.id);
+  if (!allowed) {
+    return res.status(400).json({ error: 'That plan is not available for your account category.' });
   }
 
   try {

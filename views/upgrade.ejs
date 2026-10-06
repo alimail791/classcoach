@@ -15,7 +15,7 @@
 
       <div style="display: flex; flex-direction: column; gap: 6px;">
         <span style="font-size: 13px; color: var(--faint);">Current plan</span>
-        <span style="font-size: 16px; font-weight: 600;"><%= teacher.plan %> · <%= teacher.max_students %> students · <%= teacher.ai_limit_monthly %> AI generations/month</span>
+        <span style="font-size: 16px; font-weight: 600;"><%= planName || teacher.plan %> · <%= teacher.max_students %> students · <%= teacher.ai_limit_monthly %> AI generations/month</span>
       </div>
 
       <% if (!razorpayConfigured) { %>
@@ -24,24 +24,37 @@
         </div>
       <% } %>
 
+      <% var isNJ = neetJeeEnabled && teacher.exam_track === 'neet_jee'; %>
+      <% if (isNJ) { %>
+        <%- include('partials/nj_pricing', { tiers: njTiers, mode: 'buy', razorpayConfigured: razorpayConfigured }) %>
+      <% } else { %>
       <div class="grid-3">
-        <% plans.forEach(function(p) { %>
-          <div class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
-            <span style="font-size: 15px; font-weight: 700;"><%= p.name %></span>
-            <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹<%= p.price %></span><span style="font-size: 13px; color: var(--faint);"> / <%= p.duration_months %> months</span></div>
-            <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--muted);">
-              <li>Up to <%= p.max_students %> students</li>
-              <li><%= p.ai_limit_monthly %> AI generations / month</li>
-            </ul>
-            <button
-              class="btn btn-primary"
-              style="margin-top: 8px;"
-              onclick="classcoachPay('<%= p.id %>', '<%= p.name %>', <%= p.price %>)"
-              <%= razorpayConfigured ? '' : 'disabled' %>
-            >Pay ₹<%= p.price %></button>
-          </div>
-        <% }); %>
-      </div>
+          <% plans.forEach(function(p) { %>
+            <div class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+              <span style="font-size: 15px; font-weight: 700;"><%= p.name %></span>
+              <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹<%= p.price %></span><span style="font-size: 13px; color: var(--faint);"> / <%= p.duration_months %> months</span></div>
+              <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--muted);">
+                <li>Up to <%= p.max_students %> students</li>
+                <li><%= p.ai_limit_monthly %> AI generations / month</li>
+              </ul>
+              <button
+                class="btn btn-primary"
+                style="margin-top: 8px;"
+                onclick="classcoachPay('<%= p.id %>', '<%= p.name %>', <%= p.price %>)"
+                <%= razorpayConfigured ? '' : 'disabled' %>
+              >Pay ₹<%= p.price %></button>
+            </div>
+          <% }); %>
+        </div>
+  
+      <% if (neetJeeEnabled && teacher.plan === 'trial' && !teacher.has_purchased) { %>
+        <form method="POST" action="/upgrade/track" class="card" style="padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+          <input type="hidden" name="track" value="neet_jee">
+          <span style="font-size: 14px; color: var(--muted);"><b style="color: var(--ink);">Coaching students for NEET or JEE?</b> See plans made for you, with a ready question bank.</span>
+          <button type="submit" class="btn btn-dark">See NEET &amp; JEE plans</button>
+        </form>
+      <% } %>
+      <% } %>
 
       <p style="font-size: 12px; color: var(--faint);">Payments are handled by Razorpay — cards, UPI, netbanking. ClassCoach never sees or stores your card details.</p>
 

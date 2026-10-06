@@ -1,0 +1,117 @@
+<%
+  // Inputs: tiers (from njTiers()), mode: 'buy' (logged-in upgrade page) or 'public' (landing page)
+  var inr = function (n) { return '₹' + Number(n).toLocaleString('en-IN'); };
+  var featured = 1; // middle tier is highlighted
+%>
+<style>
+  .njp { --njp-accent: var(--accent); }
+  .njp-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+  .njp-title { font-family: 'Newsreader', Georgia, serif; font-size: 26px; margin: 0 0 6px; }
+  .njp-sub { font-size: 14px; color: var(--muted); margin: 0; max-width: 560px; line-height: 1.55; }
+  .njp-toggle { display: inline-flex; background: #EFE6D8; border-radius: 100px; padding: 4px; gap: 2px; }
+  .njp-toggle button { border: none; background: transparent; padding: 9px 18px; border-radius: 100px; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .njp-toggle button[aria-pressed="true"] { background: var(--ink); color: #FBF6EE; }
+  .njp-toggle .njp-save { background: var(--good); color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 100px; letter-spacing: .02em; }
+  .njp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; }
+  .njp-card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 28px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .njp-card.is-featured { border: 2px solid var(--njp-accent); box-shadow: 0 14px 34px rgba(140, 60, 19, 0.16); background: linear-gradient(180deg, #FFF8EE 0%, #FFFFFF 38%); }
+  .njp-ribbon { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--njp-accent); color: #FBF6EE; font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 100px; white-space: nowrap; letter-spacing: .03em; }
+  .njp-ribbon.is-alt { background: var(--good); }
+  .njp-size { font-size: 13px; font-weight: 700; color: var(--accent-deep); text-transform: uppercase; letter-spacing: .06em; }
+  .njp-price { display: flex; align-items: baseline; gap: 6px; }
+  .njp-amt { font-family: 'Newsreader', Georgia, serif; font-size: 44px; line-height: 1; color: var(--ink); }
+  .njp-per { font-size: 14px; color: var(--faint); }
+  .njp-note { font-size: 13px; color: var(--muted); min-height: 18px; }
+  .njp-note b { color: #34502E; }
+  .njp-pill { align-self: flex-start; background: var(--good-tint); color: #34502E; border: 1px solid var(--good-line); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 8px; }
+  .njp-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+  .njp-list li { display: flex; gap: 10px; align-items: flex-start; }
+  .njp-list li::before { content: '✓'; color: var(--good); font-weight: 800; flex: none; margin-top: 0; }
+  .njp-cta { margin-top: auto; padding-top: 6px; }
+  .njp-cta .btn { width: 100%; padding: 14px 22px; font-size: 15px; }
+  .njp-foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 26px; margin: 26px 0 0; font-size: 13px; color: var(--muted); }
+  .njp-foot span::before { content: '✓ '; color: var(--good); font-weight: 800; }
+  .njp[data-period="yearly"] .only-m, .njp[data-period="monthly"] .only-y { display: none; }
+  @media (max-width: 860px) { .njp-grid { grid-template-columns: 1fr; gap: 26px; } .njp-top { flex-direction: column; align-items: flex-start; } }
+</style>
+
+<div class="njp" data-period="yearly" data-mode="<%= mode %>">
+  <div class="njp-top">
+    <div>
+      <h2 class="njp-title">Plans for NEET &amp; JEE coaches</h2>
+      <p class="njp-sub">A ready bank of NEET-level Physics, Chemistry and Biology questions, tagged chapter by chapter — plus tests, auto-grading and weak-area tracking for every student.</p>
+    </div>
+    <div class="njp-toggle" role="group" aria-label="Billing period">
+      <button type="button" data-set="monthly" aria-pressed="false">Monthly</button>
+      <button type="button" data-set="yearly" aria-pressed="true">Yearly <span class="njp-save">SAVE UP TO <%= inr(Math.max.apply(null, tiers.map(function (t) { return t.yearlySaving; }))) %></span></button>
+    </div>
+  </div>
+
+  <div class="njp-grid">
+    <% tiers.forEach(function (t, i) { %>
+      <div class="njp-card<%= i === featured ? ' is-featured' : '' %>">
+        <% if (i === featured) { %><span class="njp-ribbon">MOST POPULAR</span><% } %>
+        <% if (i === tiers.length - 1) { %><span class="njp-ribbon is-alt">LOWEST COST PER STUDENT</span><% } %>
+        <span class="njp-size">Up to <%= t.students %> students</span>
+
+        <div class="njp-price only-y"><span class="njp-amt"><%= inr(t.yearly.price) %></span><span class="njp-per">/ year</span></div>
+        <div class="njp-price only-m"><span class="njp-amt"><%= inr(t.monthly.price) %></span><span class="njp-per">/ month</span></div>
+
+        <div class="njp-note only-y">That's about <b><%= inr(t.yearlyPerMonth) %> a month</b> — you save <b><%= inr(t.yearlySaving) %></b> vs paying monthly</div>
+        <div class="njp-note only-m">Or <b><%= inr(t.yearly.price) %> a year</b> and save <b><%= inr(t.yearlySaving) %></b></div>
+
+        <span class="njp-pill only-y">≈ ₹<%= t.perStudentYearly %> per student / month</span>
+        <span class="njp-pill only-m">≈ ₹<%= t.perStudentMonthly %> per student / month</span>
+
+        <ul class="njp-list">
+          <li>Ready-made NEET chapter tests and previous-year questions, Physics · Chemistry · Biology</li>
+          <li>Chapter-wise weak-area report for every student</li>
+          <li>Up to <%= t.students %> students, each with their own login</li>
+          <li><%= t.ai %> AI test generations every month</li>
+          <li>Share tests by link; send parents instant reports</li>
+          <li>Printable question papers with answer key</li>
+        </ul>
+
+        <div class="njp-cta">
+          <% if (mode === 'buy') { %>
+            <button type="button" class="btn <%= i === featured ? 'btn-primary' : 'btn-dark' %>"
+              data-id-m="<%= t.monthly.id %>" data-id-y="<%= t.yearly.id %>"
+              data-price-m="<%= t.monthly.price %>" data-price-y="<%= t.yearly.price %>"
+              data-size="<%= t.students %>"
+              onclick="njPay(this)" <%= (typeof razorpayConfigured !== 'undefined' && !razorpayConfigured) ? 'disabled' : '' %>>
+              <span class="only-y">Get yearly · <%= inr(t.yearly.price) %></span><span class="only-m">Get monthly · <%= inr(t.monthly.price) %></span>
+            </button>
+          <% } else { %>
+            <a href="/signup?track=neet_jee" class="btn <%= i === featured ? 'btn-primary' : 'btn-dark' %>">Start free for 1 month</a>
+          <% } %>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+
+  <div class="njp-foot">
+    <span>Cards, UPI &amp; netbanking via Razorpay</span>
+    <span>Renew early and the days you have left carry over</span>
+    <span>Every plan is for one teacher's account</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  document.querySelectorAll('.njp').forEach(function (root) {
+    root.querySelectorAll('.njp-toggle button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        root.setAttribute('data-period', b.getAttribute('data-set'));
+        root.querySelectorAll('.njp-toggle button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  });
+})();
+function njPay(btn) {
+  var root = btn.closest('.njp');
+  var yearly = root.getAttribute('data-period') === 'yearly';
+  var id = btn.getAttribute(yearly ? 'data-id-y' : 'data-id-m');
+  var price = Number(btn.getAttribute(yearly ? 'data-price-y' : 'data-price-m'));
+  classcoachPay(id, 'NEET/JEE ' + btn.getAttribute('data-size') + ' students (' + (yearly ? 'yearly' : 'monthly') + ')', price);
+}
+</script>

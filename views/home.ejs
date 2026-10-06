@@ -132,6 +132,14 @@
     <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
       <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 12px;">Simple 3-month pricing, per teacher</h2>
       <p style="font-size: 15px; color: var(--muted); margin: 0 0 40px;">Start free. No card needed.</p>
+      <% if (neetJeeEnabled) { %>
+      <div class="pt-tabs" style="display:inline-flex;background:#EFE6D8;border-radius:100px;padding:4px;gap:2px;margin-bottom:32px;">
+        <button type="button" data-pt="gen" aria-pressed="true" style="border:none;padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;">School &amp; general</button>
+        <button type="button" data-pt="nj" aria-pressed="false" style="border:none;padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;">NEET &amp; JEE coaches</button>
+      </div>
+      <style>.pt-tabs button{background:transparent;color:var(--muted)}.pt-tabs button[aria-pressed="true"]{background:var(--ink);color:#FBF6EE}</style>
+      <div id="pt-gen">
+      <% } %>
       <div class="grid-4">
         <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
           <span style="font-size: 15px; font-weight: 700;">Free Trial</span>
@@ -154,6 +162,18 @@
           <span style="font-size: 13px; color: var(--muted);">Up to 100 students</span>
         </div>
       </div>
+      <% if (neetJeeEnabled) { %>
+      </div>
+      <div id="pt-nj" style="display:none;"><%- include('partials/nj_pricing', { tiers: njTiers, mode: 'public' }) %></div>
+      <script>
+      document.querySelectorAll('.pt-tabs button').forEach(function(b){b.addEventListener('click',function(){
+        var nj=b.getAttribute('data-pt')==='nj';
+        document.getElementById('pt-gen').style.display=nj?'none':'';
+        document.getElementById('pt-nj').style.display=nj?'':'none';
+        document.querySelectorAll('.pt-tabs button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+      });});
+      </script>
+      <% } %>
       <p style="font-size: 12px; color: var(--faint); margin-top: 20px;">Plans are assigned by the ClassCoach team after enrollment — sign up for the free trial to get started.</p>
     </div>
   </div>

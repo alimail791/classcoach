@@ -17,6 +17,7 @@ const joinRoutes = require('./routes/join');
 const reportPublicRoutes = require('./routes/report_public');
 const reportsHubRoutes = require('./routes/reports_hub');
 const { startInactivityScheduler } = require('./lib/inactivity');
+const { trackEnabled, njTiers } = require('./lib/plans');
 
 const app = express();
 
@@ -28,6 +29,10 @@ const app = express();
 // tags on the homepage. This tells Express to trust the X-Forwarded-Proto
 // header the proxy sets, so req.protocol reports the real, original scheme.
 app.set('trust proxy', 1);
+
+// NEET/JEE category: off unless NEET_JEE_TRACK=1. Views read these as globals.
+app.locals.neetJeeEnabled = trackEnabled();
+app.locals.njTiers = njTiers();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));

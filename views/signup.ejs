@@ -9,6 +9,14 @@
       <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
       <form method="POST" action="/signup" style="display: flex; flex-direction: column; gap: 16px;">
         <input type="hidden" name="ref" value="<%= refCode %>">
+        <% if (neetJeeEnabled) { %>
+        <div class="field"><label>I teach</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <label style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;font-size:14px;"><input type="radio" name="exam_track" value="general" <%= track !== 'neet_jee' ? 'checked' : '' %>> School / general subjects</label>
+            <label style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;font-size:14px;"><input type="radio" name="exam_track" value="neet_jee" <%= track === 'neet_jee' ? 'checked' : '' %>> NEET / JEE coaching</label>
+          </div>
+        </div>
+        <% } %>
         <div class="field"><label>Your name</label><input name="name" required></div>
         <div class="field"><label>Email</label><input type="email" name="email" required></div>
         <div class="field"><label>Phone number</label><input type="tel" name="phone" placeholder="+91 9xxxxxxxxx" required></div>

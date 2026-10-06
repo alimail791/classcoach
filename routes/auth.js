@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const db = require('../lib/db');
 const { requireTeacher } = require('../lib/auth');
-const { PLANS, trialExpiryFromNow } = require('../lib/plans');
+const { PLANS, trialExpiryFromNow, trackEnabled } = require('../lib/plans');
 const mailer = require('../lib/mailer');
 
 const router = express.Router();
@@ -13,17 +13,18 @@ function generateOtp() {
 }
 
 router.get('/signup', (req, res) => {
-  res.render('signup', { error: null, refCode: req.query.ref || '' });
+  res.render('signup', { error: null, refCode: req.query.ref || '', track: req.query.track === 'neet_jee' ? 'neet_jee' : 'general' });
 });
 
 router.post('/signup', (req, res) => {
   const { name, email, phone, password, ref } = req.body;
+  const examTrack = trackEnabled() && req.body.exam_track === 'neet_jee' ? 'neet_jee' : 'general';
   if (!name || !email || !phone || !password) {
-    return res.render('signup', { error: 'All fields are required, including phone number.', refCode: ref || '' });
+    return res.render('signup', { error: 'All fields are required, including phone number.', refCode: ref || '', track: examTrack });
   }
   const existing = db.prepare('SELECT id FROM teachers WHERE email = ?').get(email.toLowerCase().trim());
   if (existing) {
-    return res.render('signup', { error: 'An account with that email already exists.', refCode: ref || '' });
+    return res.render('signup', { error: 'An account with that email already exists.', refCode: ref || '', track: examTrack });
   }
   const hash = bcrypt.hashSync(password, 10);
   const trial = PLANS.trial;
@@ -51,8 +52,8 @@ router.post('/signup', (req, res) => {
   const info = db
     .prepare(
       `INSERT INTO teachers
-       (name, email, phone, password_hash, plan, max_students, ai_limit_monthly, plan_expires_at, referral_code, referred_by_teacher_id, signup_verified, email_otp, email_otp_expires)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`
+       (name, email, phone, password_hash, plan, max_students, ai_limit_monthly, plan_expires_at, referral_code, referred_by_teacher_id, signup_verified, email_otp, email_otp_expires, exam_track)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`
     )
     .run(
       name.trim(),
@@ -66,7 +67,8 @@ router.post('/signup', (req, res) => {
       referralCode,
       referredByTeacherId,
       otp,
-      otpExpires
+      otpExpires,
+      examTrack
     );
   req.session.teacherId = info.lastInsertRowid;
 
