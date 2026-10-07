@@ -52,6 +52,16 @@ app.use(
   })
 );
 
+// Google Analytics runs on the public site and the teacher area only. Pages
+// for students, parents and tokenised links (reports, join, password reset,
+// magic links) are excluded so children's activity and secret URLs are never
+// sent to Google.
+const NO_ANALYTICS = /^\/(student|parent|r|join|reset-password|report|m|magic|unsubscribe)(\/|$)/;
+app.use((req, res, next) => {
+  res.locals.gaId = NO_ANALYTICS.test(req.path) ? '' : 'G-XVCD3VF3BY';
+  next();
+});
+
 app.get('/', (req, res) => {
   if (req.session.teacherId) return res.redirect('/dashboard');
   if (req.session.studentId) return res.redirect('/student/dashboard');
