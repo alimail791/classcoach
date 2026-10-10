@@ -17,6 +17,7 @@ const joinRoutes = require('./routes/join');
 const reportPublicRoutes = require('./routes/report_public');
 const reportsHubRoutes = require('./routes/reports_hub');
 const neetBankRoutes = require('./routes/neet_bank');
+const internalRoutes = require('./routes/internal');
 const { seedBank } = require('./lib/bank');
 const { startInactivityScheduler } = require('./lib/inactivity');
 const { trackEnabled, njTiers } = require('./lib/plans');
@@ -137,6 +138,7 @@ app.use('/', joinRoutes);
 app.use('/', reportPublicRoutes);
 app.use('/', reportsHubRoutes);
 app.use('/', neetBankRoutes);
+app.use('/', internalRoutes);
 
 app.use((req, res) => {
   res.status(404).send('Page not found. <a href="/">Go home</a>');
