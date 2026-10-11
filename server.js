@@ -97,6 +97,10 @@ Object.keys(LANDING_PAGES).forEach((slug) => {
   });
 });
 
+// Old slug for the parent-reports page; it sat under the `Disallow: /student`
+// robots rule, so it moved. Keep the old address working.
+app.get('/student-progress-report', (req, res) => res.redirect(301, '/progress-reports-for-parents'));
+
 app.get('/robots.txt', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;
   res.type('text/plain').send(
