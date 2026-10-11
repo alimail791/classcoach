@@ -1,0 +1,25 @@
+<%
+  // landingPages is set on app.locals in server.js.
+  const LANDING_PAGES = typeof landingPages !== 'undefined' ? landingPages : {};
+  const currentSlug = typeof current !== 'undefined' ? current : '';
+%>
+<div style="border-top: 1px solid var(--line);">
+  <div style="max-width: 1180px; margin: 0 auto; padding: 28px 32px; display: flex; flex-direction: column; gap: 18px;">
+    <nav aria-label="ClassCoach features" style="display: flex; gap: 18px; flex-wrap: wrap;">
+      <% Object.keys(LANDING_PAGES).forEach(function (s) { if (s === currentSlug) return; %>
+      <a href="/<%= s %>" style="font-size: 13px; color: var(--muted);"><%= LANDING_PAGES[s].nav %></a>
+      <% }) %>
+    </nav>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink);">
+        <%- include('logo', { size: 22 }) %>
+        <span style="font-family: 'Newsreader', serif; font-size: 16px;">ClassCoach</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
+        <a href="mailto:info@classcoach.in" style="font-size: 13px; color: var(--faint);">info@classcoach.in</a>
+        <a href="https://wa.me/919443424064?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20ClassCoach" style="font-size: 13px; color: var(--faint);" target="_blank" rel="noopener">WhatsApp us</a>
+        <a href="/student/login" style="font-size: 13px; color: var(--faint);">Student login →</a>
+      </div>
+    </div>
+  </div>
+</div>

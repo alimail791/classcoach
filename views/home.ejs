@@ -128,7 +128,7 @@
   </div>
 
   <!-- PRICING -->
-  <div style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+  <div id="pricing" style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
     <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
       <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 12px;">Simple 3-month pricing, per teacher</h2>
       <p style="font-size: 15px; color: var(--muted); margin: 0 0 40px;">Start free. No card needed.</p>
@@ -217,20 +217,7 @@
   </div>
 
   <!-- FOOTER -->
-  <div style="border-top: 1px solid var(--line);">
-    <div style="max-width: 1180px; margin: 0 auto; padding: 28px 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <%- include('partials/logo', { size: 22 }) %>
-        <span style="font-family: 'Newsreader', serif; font-size: 16px;">ClassCoach</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
-        <a href="mailto:info@classcoach.in" style="font-size: 13px; color: var(--faint);">info@classcoach.in</a>
-        <a href="https://wa.me/919443424064?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20ClassCoach" style="font-size: 13px; color: var(--faint);" target="_blank" rel="noopener">WhatsApp us</a>
-        <a href="/student/login" style="font-size: 13px; color: var(--faint);">Student login →</a>
-      </div>
-    </div>
-  </div>
-
+  <%- include('partials/public_footer') %>
   <!-- Floating WhatsApp chat button -->
   <a
     href="https://wa.me/919443424064?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20ClassCoach"
