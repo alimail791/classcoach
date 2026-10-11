@@ -36,6 +36,14 @@ app.set('trust proxy', 1);
 // NEET/JEE category: off unless NEET_JEE_TRACK=1. Views read these as globals.
 app.locals.neetJeeEnabled = trackEnabled();
 app.locals.njTiers = njTiers();
+// Public landing pages (see lib/landing_pages.js) — exposed to views so the
+// shared public footer can link them all.
+const { LANDING_PAGES } = require('./lib/landing_pages');
+app.locals.landingPages = LANDING_PAGES;
+
+// Canonical origin for public pages — fixed rather than taken from the
+// request, so classcoach.in / Railway domains never become the canonical.
+const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.classcoach.in';
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -67,12 +75,25 @@ app.get('/', (req, res) => {
   if (req.session.teacherId) return res.redirect('/dashboard');
   if (req.session.studentId) return res.redirect('/student/dashboard');
   if (req.session.parentStudentId) return res.redirect('/parent/dashboard');
-  const canonicalUrl = `${req.protocol}://${req.get('host')}/`;
+  const canonicalUrl = `${SITE_ORIGIN}/`;
   res.render('home', {
     indexable: true,
     canonicalUrl,
     description:
       'ClassCoach helps individual teachers and small coaching classes create AI-generated tests, auto-grade objective answers, track chapter-wise weaknesses, and share results with parents.'
+  });
+});
+
+Object.keys(LANDING_PAGES).forEach((slug) => {
+  app.get(`/${slug}`, (req, res) => {
+    const page = LANDING_PAGES[slug];
+    res.render('landing', {
+      page,
+      slug,
+      indexable: true,
+      canonicalUrl: `${SITE_ORIGIN}/${slug}`,
+      description: page.description
+    });
   });
 });
 
@@ -105,9 +126,13 @@ app.get('/robots.txt', (req, res) => {
 });
 
 app.get('/sitemap.xml', (req, res) => {
-  const base = `${req.protocol}://${req.get('host')}`;
+  const base = SITE_ORIGIN;
   res.type('application/xml').send(
-    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${base}/</loc>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n</urlset>`
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${base}/</loc>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n` +
+      Object.keys(LANDING_PAGES)
+        .map((slug) => `  <url>\n    <loc>${base}/${slug}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`)
+        .join('') +
+      `</urlset>`
   );
 });
 
