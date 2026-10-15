@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1C1812">
+<title><%= title ? title + ' · ' : '' %>Join live quiz — ClassCoach</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<%# Deliberately self-contained: no web fonts, no images, no analytics, so it
+    opens quickly on slow mobile data. Whole page is a few KB. %>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: #F6F2EA; color: #211C15; font: 16px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans Devanagari', sans-serif; }
+  .app { min-height: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  .top { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #7A6E5C; }
+  .top b { color: #211C15; }
+  .lang button { font: 600 13px system-ui, sans-serif; border: 1px solid #E5DBC9; background: #FFF; color: #211C15; border-radius: 6px; padding: 5px 9px; }
+  .lang button[aria-pressed="true"] { background: #211C15; color: #FBF6EE; border-color: #211C15; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0; }
+  label { display: block; font-size: 14px; color: #4A4032; margin-bottom: 4px; font-weight: 600; }
+  input { width: 100%; font-size: 20px; padding: 14px; border: 1px solid #D9CDB7; border-radius: 10px; background: #FFF; color: #211C15; }
+  input.pin { font-family: ui-monospace, Menlo, monospace; letter-spacing: .2em; text-align: center; font-size: 28px; }
+  .go { width: 100%; font: 700 18px system-ui, sans-serif; border: 0; border-radius: 12px; padding: 16px; background: #B4501C; color: #FBF6EE; }
+  .go:disabled { opacity: .5; }
+  .err { background: #F7E3DD; color: #8C3C13; border-radius: 10px; padding: 12px; font-size: 15px; }
+  .mid { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 10px; }
+  .big { font-size: 34px; font-weight: 800; line-height: 1.1; }
+  .ok { color: #15803D; } .bad { color: #B91C1C; }
+  .small { font-size: 14px; color: #7A6E5C; }
+  .qbar { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #7A6E5C; }
+  .tm { font: 700 22px ui-monospace, Menlo, monospace; color: #211C15; }
+  .q { font-size: 19px; font-weight: 600; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .ans { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .a { border: 0; border-radius: 12px; color: #FFF; font: 600 17px system-ui, sans-serif; padding: 16px 14px; text-align: left; display: flex; gap: 12px; align-items: center; min-height: 64px; overflow-wrap: anywhere; }
+  .a .sh { font-size: 22px; flex-shrink: 0; width: 1.2em; text-align: center; }
+  .a:active { transform: scale(.98); }
+  .a0 { background: #C2410C; } .a1 { background: #1D4ED8; } .a2 { background: #A16207; } .a3 { background: #15803D; } .a4 { background: #6D28D9; } .a5 { background: #BE185D; }
+  .net { font-size: 13px; color: #8C3C13; text-align: center; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #E07A3A; outline-offset: 2px; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1C1812; color: #FBF6EE; }
+    .top b, .tm { color: #FBF6EE; }
+    label { color: #D7CCB9; }
+    input { background: #2A241B; color: #FBF6EE; border-color: #4A4032; }
+    .lang button { background: #2A241B; color: #FBF6EE; border-color: #4A4032; }
+    .lang button[aria-pressed="true"] { background: #FBF6EE; color: #1C1812; }
+    .ok { color: #6EE7A0; } .bad { color: #FCA5A5; }
+    .small, .top, .qbar { color: #BFB3A0; }
+    .err { background: #3B1F14; color: #F9C9B4; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top"><span><b>ClassCoach</b> Live</span><span class="lang"><button data-l="en">English</button> <button data-l="hi">हिंदी</button></span></div>
+  <% if (!pin) { %>
+    <form method="POST" action="/play" style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
+      <h1 data-t="enterPin">Enter the game PIN</h1>
+      <% if (error) { %><div class="err"><%= error %></div><% } %>
+      <div><input class="pin" name="pin" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" autocomplete="off" required placeholder="123456" aria-label="Game PIN"></div>
+      <button class="go" type="submit" data-t="next">Next</button>
+      <p class="small" data-t="pinHelp">The PIN is shown on your teacher's screen.</p>
+    </form>
+  <% } else { %>
+    <div id="screen" style="flex:1;display:flex;flex-direction:column;gap:14px"></div>
+    <div class="net" id="net" hidden></div>
+  <% } %>
+</div>
+<script>
+(function () {
+  var T = {
+    en: { enterPin: 'Enter the game PIN', next: 'Next', pinHelp: "The PIN is shown on your teacher's screen.", yourName: 'Your name', join: 'Join', joining: 'Joining…',
+      youreIn: "You're in!", waitStart: 'Look at the screen. Your teacher will start soon.', locked: 'Answer locked', waitOthers: 'Waiting for the rest of the class…',
+      correct: 'Correct!', wrong: 'Not quite', timeUp: "Time's up", answer: 'Answer', rank: 'Rank', of: 'of', pts: 'pts', q: 'Question', final: 'Quiz over',
+      gotRight: 'correct', ended: 'This quiz has ended.', removed: 'Your teacher removed you from this quiz.', offline: 'Connection lost. Your answer is saved and will be sent when you are back online.',
+      joinAs: 'Join as', notYou: 'Not you? Type your name.', saved: 'Saved on your phone', lookScreen: 'Look at the screen' },
+    hi: { enterPin: 'गेम पिन डालें', next: 'आगे', pinHelp: 'पिन आपके शिक्षक की स्क्रीन पर दिखेगा।', yourName: 'आपका नाम', join: 'जुड़ें', joining: 'जुड़ रहे हैं…',
+      youreIn: 'आप जुड़ गए!', waitStart: 'स्क्रीन देखें। शिक्षक जल्द शुरू करेंगे।', locked: 'उत्तर दर्ज हो गया', waitOthers: 'बाकी छात्रों का इंतज़ार…',
+      correct: 'सही!', wrong: 'गलत', timeUp: 'समय समाप्त', answer: 'सही उत्तर', rank: 'रैंक', of: 'में से', pts: 'अंक', q: 'प्रश्न', final: 'क्विज़ समाप्त',
+      gotRight: 'सही', ended: 'यह क्विज़ समाप्त हो गया है।', removed: 'शिक्षक ने आपको इस क्विज़ से हटा दिया।', offline: 'नेटवर्क नहीं है। आपका उत्तर सुरक्षित है, नेटवर्क आते ही भेज दिया जाएगा।',
+      joinAs: 'इस नाम से जुड़ें', notYou: 'आप नहीं? अपना नाम लिखें।', saved: 'फ़ोन में सुरक्षित', lookScreen: 'स्क्रीन देखें' }
+  };
+  var SH = ['▲', '◆', '●', '■', '★', '♥'];
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  var lang = store('live_lang') === 'hi' ? 'hi' : 'en';
+  function t(k) { return T[lang][k] || T.en[k]; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function applyStatic() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-l]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-l') === lang); });
+    document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = t(el.getAttribute('data-t')); });
+  }
+  document.querySelectorAll('[data-l]').forEach(function (b) {
+    b.onclick = function () { lang = b.getAttribute('data-l'); store('live_lang', lang); applyStatic(); if (view) render(view, true); else if (window.__joinForm) window.__joinForm(); };
+  });
+  applyStatic();
+
+  var PIN = <%- JSON.stringify(pin).replace(/</g, '\\u003c') %>;
+  if (!PIN) return;
+  var STUDENT = <%- JSON.stringify(studentName).replace(/</g, '\\u003c') %>;
+  var KEY = 'live_' + PIN;
+  var screen = document.getElementById('screen'), net = document.getElementById('net');
+  var token = null, view = null, es = null, deadline = 0, tick = null, lastKey = '';
+  try { var saved = JSON.parse(store(KEY) || 'null'); if (saved && saved.t) token = saved.t; } catch (e) {}
+
+  // ---- join ----
+  function joinForm(err) {
+    window.__joinForm = function () { joinForm(err); };
+    screen.innerHTML =
+      '<h1 style="margin-top:12px">' + esc(<%- JSON.stringify(title).replace(/</g, '\\u003c') %>) + '</h1>' +
+      '<p class="small">PIN ' + PIN + '</p>' +
+      (err ? '<div class="err">' + esc(err) + '</div>' : '') +
+      '<div><label for="nm">' + (STUDENT ? t('joinAs') : t('yourName')) + '</label><input id="nm" maxlength="20" autocomplete="name" value="' + esc(STUDENT) + '"></div>' +
+      (STUDENT ? '<p class="small">' + t('notYou') + '</p>' : '') +
+      '<button class="go" id="jb">' + t('join') + '</button>';
+    var nm = document.getElementById('nm'), jb = document.getElementById('jb');
+    if (!STUDENT) nm.focus();
+    function go() {
+      if (!nm.value.trim()) return nm.focus();
+      jb.disabled = true; jb.textContent = t('joining');
+      var body = { name: nm.value };
+      // A logged-in student keeps their linked seat unless they change the name.
+      if (STUDENT && nm.value.trim() === STUDENT) body.name = '';
+      fetch('/play/' + PIN + '/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.error) return joinForm(d.error);
+          token = d.token; store(KEY, JSON.stringify({ t: token })); window.__joinForm = null; connect();
+        })
+        .catch(function () { joinForm(t('offline')); });
+    }
+    jb.onclick = go;
+    nm.onkeydown = function (e) { if (e.key === 'Enter') go(); };
+  }
+
+  // ---- answers: saved on the phone first, retried until the server replies ----
+  function pending() { try { return JSON.parse(store(KEY + '_a') || 'null'); } catch (e) { return null; } }
+  function flush() {
+    var p = pending();
+    if (!p || !token) return;
+    if (view && (view.phase !== 'question' || view.qi !== p.q)) { store(KEY + '_a', null); return; }
+    fetch('/play/' + PIN + '/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token, q: p.q, c: p.c }) })
+      .then(function (r) { return r.json(); })
+      .then(function () { store(KEY + '_a', null); net.hidden = true; })
+      .catch(function () { net.textContent = t('offline'); net.hidden = false; setTimeout(flush, 1500); });
+  }
+  function choose(i) {
+    store(KEY + '_a', JSON.stringify({ q: view.qi, c: i }));
+    view.answered = i;
+    render(view, true);
+    flush();
+  }
+
+  // ---- screens ----
+  function render(v, force) {
+    view = v;
+    clearInterval(tick);
+    var key = JSON.stringify([v.phase, v.qi, v.answered, v.result, v.rank, v.of]);
+    if (key === lastKey && !force) return v.phase === 'question' ? startTimer(v) : null;
+    lastKey = key;
+    var h = '';
+    var stats = '<p class="small">' + t('rank') + ' #' + v.rank + ' ' + t('of') + ' ' + v.of + ' · ' + v.score + ' ' + t('pts') + '</p>';
+    if (v.phase === 'removed') { h = '<div class="mid"><div class="big">🙁</div><p>' + t('removed') + '</p></div>'; store(KEY, null); }
+    else if (v.phase === 'lobby') {
+      h = '<div class="mid"><div class="big">' + t('youreIn') + '</div><p style="font-size:20px;font-weight:600">' + esc(v.name) + '</p><p class="small">' + t('waitStart') + '</p></div>';
+    } else if (v.phase === 'question') {
+      var p = pending();
+      var mine = v.answered != null ? v.answered : (p && p.q === v.qi ? p.c : null);
+      if (mine == null) {
+        h = '<div class="qbar"><span>' + t('q') + ' ' + (v.qi + 1) + '/' + v.total + '</span><span class="tm" id="tm"></span></div>' +
+          '<div class="q">' + esc(v.question.text) + '</div><div class="ans">' +
+          v.question.options.map(function (o, i) { return '<button class="a a' + i + '" data-c="' + i + '"><span class="sh">' + SH[i] + '</span><span>' + esc(o) + '</span></button>'; }).join('') + '</div>';
+      } else {
+        h = '<div class="mid"><div class="a a' + mine + '" style="width:100%;justify-content:center"><span class="sh">' + SH[mine] + '</span><span>' + esc(v.question.options[mine]) + '</span></div>' +
+          '<div class="big" style="font-size:26px">' + t('locked') + '</div><p class="small">' + t('waitOthers') + '</p></div>';
+      }
+    } else if (v.phase === 'reveal' || v.phase === 'board') {
+      var r = v.result || {};
+      var head = r.ok ? '<span class="ok">' + t('correct') + '</span>' : r.chose == null ? '<span class="bad">' + t('timeUp') + '</span>' : '<span class="bad">' + t('wrong') + '</span>';
+      h = '<div class="mid"><div class="big">' + head + '</div>' +
+        (r.ok ? '<p style="font-size:22px;font-weight:700">+' + r.pts + ' ' + t('pts') + '</p>' : '<p>' + t('answer') + ': <b>' + esc(r.correctText) + '</b></p>') +
+        stats + '<p class="small">' + t('lookScreen') + '</p></div>';
+    } else if (v.phase === 'final') {
+      h = '<div class="mid"><p class="small">' + t('final') + '</p><div class="big">#' + v.rank + ' ' + t('of') + ' ' + v.of + '</div>' +
+        '<p style="font-size:18px">' + v.correct + '/' + (v.qi + 1) + ' ' + t('gotRight') + ' · ' + v.score + ' ' + t('pts') + '</p></div>';
+      store(KEY, null);
+    }
+    screen.innerHTML = h;
+    screen.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { choose(+b.getAttribute('data-c')); }; });
+    if (v.phase === 'question') startTimer(v);
+    if (v.phase !== 'question') store(KEY + '_a', null);
+  }
+  function startTimer(v) {
+    deadline = Date.now() + v.remainingMs;
+    function step() { var tm = document.getElementById('tm'); if (tm) tm.textContent = Math.ceil(Math.max(0, deadline - Date.now()) / 1000); }
+    step(); tick = setInterval(step, 250);
+  }
+  function gone(msg) { if (es) es.close(); clearInterval(poller); screen.innerHTML = '<div class="mid"><p>' + msg + '</p><a class="go" style="text-decoration:none" href="/play">' + t('next') + '</a></div>'; }
+
+  // ---- connection: event stream, with polling as a fallback ----
+  var poller = null;
+  function poll() {
+    if (!token || (es && es.readyState === 1)) return;
+    fetch('/play/' + PIN + '/state?t=' + token, { cache: 'no-store' })
+      .then(function (r) { if (r.status === 404) { gone(t('ended')); throw 0; } if (r.status === 401) { store(KEY, null); token = null; if (es) es.close(); joinForm(); throw 0; } return r.json(); })
+      .then(function (v) { net.hidden = true; render(v); flush(); })
+      .catch(function (e) { if (e !== 0) { net.textContent = t('offline'); net.hidden = false; } });
+  }
+  function connect() {
+    if (es) es.close();
+    if (window.EventSource) {
+      es = new EventSource('/play/' + PIN + '/events?t=' + token);
+      es.onmessage = function (e) { net.hidden = true; render(JSON.parse(e.data)); flush(); };
+      es.onerror = function () { poll(); };
+    }
+    poll();
+    if (!poller) poller = setInterval(poll, 2500);
+  }
+  window.addEventListener('online', function () { flush(); poll(); });
+
+  if (token) {
+    // Rejoining after a refresh or a dropped connection: check the seat still exists.
+    fetch('/play/' + PIN + '/state?t=' + token, { cache: 'no-store' })
+      .then(function (r) { if (r.status === 404) return gone(t('ended')); if (r.status === 401) { store(KEY, null); token = null; return joinForm(); } return r.json().then(function (v) { render(v); connect(); }); })
+      .catch(function () { connect(); });
+  } else {
+    joinForm();
+  }
+})();
+</script>
+</body>
+</html>

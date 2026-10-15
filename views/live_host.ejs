@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title><%= game.title %> · Live — ClassCoach</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Karla:wght@400;500;600;700&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg: #1C1812; --panel: #2A241B; --panel-2: #352D22; --ink: #FBF6EE; --muted: #BFB3A0;
+    --accent: #E07A3A; --accent-ink: #1C1812;
+    --a0: #C2410C; --a1: #1D4ED8; --a2: #A16207; --a3: #15803D;
+  }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Karla', system-ui, sans-serif; }
+  .app { min-height: 100%; display: flex; flex-direction: column; padding: 20px max(20px, env(safe-area-inset-right)) 20px max(20px, env(safe-area-inset-left)); gap: 18px; max-width: 1400px; margin: 0 auto; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .brand { font-family: 'Newsreader', Georgia, serif; font-size: 22px; font-weight: 600; }
+  .brand span { color: var(--accent); }
+  .meta { color: var(--muted); font-size: 15px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .btn { font: 700 16px 'Karla', system-ui, sans-serif; border: 0; border-radius: 10px; padding: 14px 26px; cursor: pointer; background: var(--accent); color: var(--accent-ink); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid #5A4E3D; padding: 10px 16px; font-size: 14px; }
+  .btn.wa { background: #25D366; color: #0B2E17; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .stage { flex: 1; display: flex; flex-direction: column; gap: 18px; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .muted { color: var(--muted); }
+
+  /* lobby */
+  .lobby { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .joinpanel { background: var(--panel); border-radius: 16px; padding: 24px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 20px; align-items: center; }
+  .joinpanel small { display: block; color: var(--muted); font-size: 15px; margin-bottom: 4px; }
+  .pin { font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: clamp(48px, 8vw, 96px); letter-spacing: .06em; line-height: 1; }
+  .url { font-size: clamp(18px, 2.2vw, 26px); font-weight: 700; margin-top: 14px; word-break: break-all; }
+  .qr { background: #FFFFFF; border-radius: 12px; padding: 10px; width: clamp(150px, 18vw, 230px); }
+  .qr svg { display: block; width: 100%; height: auto; }
+  .players { display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; }
+  .chip { background: var(--panel-2); color: var(--ink); border: 0; border-radius: 999px; padding: 8px 14px; font: 600 17px 'Karla', sans-serif; cursor: pointer; animation: pop .3s ease-out; }
+  .chip.linked::before { content: '✓ '; color: #7CC38A; }
+  .chip:hover { text-decoration: line-through; }
+  @keyframes pop { from { transform: scale(.6); opacity: .2; } to { transform: scale(1); opacity: 1; } }
+  .count { font-family: 'Newsreader', serif; font-size: 44px; font-weight: 600; line-height: 1; }
+
+  /* question */
+  .qhead { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .timer { font-family: ui-monospace, Menlo, monospace; font-size: 54px; font-weight: 700; min-width: 2.2ch; text-align: center; background: var(--panel); border-radius: 14px; padding: 4px 18px; }
+  .timer.low { color: #FCA5A5; }
+  .bar { height: 8px; background: var(--panel); border-radius: 99px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--accent); width: 100%; }
+  .qtext { font-family: 'Newsreader', Georgia, serif; font-size: clamp(26px, 3.6vw, 48px); font-weight: 600; line-height: 1.2; text-wrap: balance; white-space: pre-wrap; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: auto; }
+  .opt { border-radius: 14px; padding: 20px 22px; color: #FFFFFF; font-size: clamp(18px, 2.2vw, 28px); font-weight: 600; display: flex; gap: 14px; align-items: center; min-height: 90px; transition: opacity .3s; }
+  .opt .sh { font-size: 1.1em; opacity: .9; flex-shrink: 0; }
+  .opt .n { margin-left: auto; font-family: ui-monospace, Menlo, monospace; font-size: .9em; padding-left: 12px; }
+  .o0 { background: var(--a0); } .o1 { background: var(--a1); } .o2 { background: var(--a2); } .o3 { background: var(--a3); }
+  .o4 { background: #6D28D9; } .o5 { background: #BE185D; }
+  .opt.dim { opacity: .25; }
+
+  /* board */
+  .board { display: flex; flex-direction: column; gap: 10px; max-width: 900px; width: 100%; margin: 0 auto; }
+  .brow { display: grid; grid-template-columns: 3rem minmax(0,1fr) auto auto; gap: 16px; align-items: center; background: var(--panel); border-radius: 12px; padding: 14px 20px; font-size: clamp(18px, 2vw, 26px); font-weight: 600; }
+  .brow .r { font-family: ui-monospace, Menlo, monospace; color: var(--accent); }
+  .brow .g { color: #7CC38A; font-size: .75em; }
+  .brow .s { font-family: ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .podium { display: flex; justify-content: center; align-items: flex-end; gap: 16px; }
+  .pod { flex: 1; max-width: 220px; text-align: center; }
+  .pod .nm { font-size: 22px; font-weight: 700; margin-bottom: 4px; overflow-wrap: anywhere; }
+  .pod .sc { color: var(--muted); margin-bottom: 8px; font-family: ui-monospace, Menlo, monospace; }
+  .pod .blk { background: var(--panel-2); border-radius: 12px 12px 0 0; font-family: 'Newsreader', serif; font-size: 52px; font-weight: 600; color: var(--accent); padding-top: 12px; }
+  h2 { font-family: 'Newsreader', Georgia, serif; font-weight: 600; font-size: clamp(28px, 3.4vw, 44px); margin: 0; text-wrap: balance; }
+  .center { text-align: center; }
+  .conn { font-size: 13px; color: #FCA5A5; }
+
+  @media (max-width: 860px) {
+    .lobby { grid-template-columns: 1fr; }
+    .joinpanel { grid-template-columns: 1fr; justify-items: start; }
+    .opts { grid-template-columns: 1fr; }
+    .brow { grid-template-columns: 2.2rem minmax(0,1fr) auto; }
+    .brow .g { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand">ClassCoach <span>Live</span></div>
+    <div class="meta">
+      <span id="conn" class="conn" hidden>Reconnecting…</span>
+      <span><%= game.title %></span>
+      <button class="btn ghost" id="fsBtn" type="button">Full screen</button>
+      <button class="btn ghost" id="endBtn" type="button">End quiz</button>
+    </div>
+  </div>
+  <div class="stage" id="stage"><p class="muted">Loading…</p></div>
+</div>
+
+<script>
+(function () {
+  var PIN = <%- JSON.stringify(game.pin).replace(/</g, '\\u003c') %>;
+  var JOIN_URL = <%- JSON.stringify(joinUrl).replace(/</g, '\\u003c') %>;
+  var SHORT_URL = <%- JSON.stringify(shortUrl).replace(/</g, '\\u003c') %>;
+  var WA_LINK = <%- JSON.stringify(waLink).replace(/</g, '\\u003c') %>;
+  var QR = <%- JSON.stringify(qrSvg).replace(/</g, '\\u003c') %>;
+  var SH = ['▲', '◆', '●', '■', '★', '♥'];
+  var stage = document.getElementById('stage');
+  var view = null, deadline = 0, tick = null, lastKey = '';
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  function act(action, extra) {
+    var body = Object.assign({ action: action }, extra || {});
+    return fetch('/live/host/' + PIN + '/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (d.error) alert(d.error); if (d.view) render(d.view); })
+      .catch(function () { alert('Could not reach the server. Check the internet connection.'); });
+  }
+
+  function opts(q, counts, correct) {
+    return '<div class="opts">' + q.options.map(function (o, i) {
+      var dim = correct != null && i !== correct ? ' dim' : '';
+      var sh = correct != null && i === correct ? '✓' : SH[i];
+      var n = counts ? '<span class="n">' + counts[i] + '</span>' : '';
+      return '<div class="opt o' + i + dim + '"><span class="sh">' + sh + '</span><span>' + esc(o) + '</span>' + n + '</div>';
+    }).join('') + '</div>';
+  }
+
+  function render(v) {
+    view = v;
+    clearInterval(tick);
+    // Rebuild the screen only when something visible changed, so the
+    // timer and player chips don't flicker.
+    var key = JSON.stringify([v.phase, v.qi, v.players, v.board, v.counts, v.sessionId]);
+    if (key === lastKey && v.phase === 'question') { updateCounts(v); return startTimer(v); }
+    lastKey = key;
+    var h = '';
+    if (v.phase === 'lobby') {
+      h += '<div class="lobby">' +
+        '<div class="joinpanel"><div>' +
+          '<small>Game PIN</small><div class="pin">' + PIN.slice(0, 3) + ' ' + PIN.slice(3) + '</div>' +
+          '<div class="url">' + esc(SHORT_URL) + '</div>' +
+          '<div class="muted" style="margin-top:6px">Scan the QR, or open the link and type the PIN. No app or login needed.</div>' +
+        '</div><div class="qr" aria-label="QR code to join">' + QR + '</div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:14px">' +
+          '<div style="display:flex;align-items:baseline;gap:10px"><span class="count">' + v.playerCount + '</span><span class="muted">joined · up to ' + v.maxPlayers + '</span></div>' +
+          '<div class="players">' + (v.players.length ? v.players.map(function (p) {
+            return '<button class="chip' + (p.linked ? ' linked' : '') + '" data-kick="' + p.id + '" title="Tap to remove ' + esc(p.name) + '">' + esc(p.name) + '</button>';
+          }).join('') : '<span class="muted">Students appear here as they join. ✓ means matched to your class list.</span>') + '</div>' +
+        '</div></div>' +
+        '<div class="foot"><a class="btn wa" href="' + esc(WA_LINK) + '" target="_blank" rel="noopener">Share join link on WhatsApp</a>' +
+        '<button class="btn" id="go" ' + (v.playerCount ? '' : 'disabled') + '>Start quiz (' + v.total + ' questions) →</button></div>';
+    } else if (v.phase === 'question') {
+      h += '<div class="qhead"><span class="muted" style="font-size:18px">Question ' + (v.qi + 1) + ' of ' + v.total +
+        (v.question.chapter ? ' · ' + esc(v.question.chapter) : '') + '</span><span class="timer" id="tm"></span></div>' +
+        '<div class="bar"><div id="tb"></div></div>' +
+        '<div class="qtext">' + esc(v.question.text) + '</div>' + opts(v.question) +
+        '<div class="foot"><span class="muted" style="font-size:18px" id="ac"></span><button class="btn ghost" id="go">Show answer now</button></div>';
+    } else if (v.phase === 'reveal') {
+      var right = v.counts[v.question.correct], pct = v.playerCount ? Math.round(right / v.playerCount * 100) : 0;
+      h += '<div class="qtext">' + esc(v.question.text) + '</div>' + opts(v.question, v.counts, v.question.correct) +
+        '<div class="foot"><span style="font-size:20px">' + right + ' of ' + v.playerCount + ' got it right (' + pct + '%)' +
+        (pct < 50 ? ' <span class="muted">· worth explaining again</span>' : '') + '</span><button class="btn" id="go">Leaderboard →</button></div>';
+    } else if (v.phase === 'board') {
+      h += '<h2 class="center">Top 5 after question ' + (v.qi + 1) + '</h2><div class="board">' + v.board.map(function (p, i) {
+        return '<div class="brow"><span class="r">' + (i + 1) + '</span><span style="overflow-wrap:anywhere">' + esc(p.name) + '</span><span class="g">' + (p.gained ? '+' + p.gained : '') + '</span><span class="s">' + p.score + '</span></div>';
+      }).join('') + '</div>' +
+        '<div class="foot"><span></span><button class="btn" id="go">' + (v.qi < v.total - 1 ? 'Next question →' : 'Final results →') + '</button></div>';
+    } else if (v.phase === 'final') {
+      var b = v.board, order = [b[1], b[0], b[2]], hts = [120, 170, 90], place = [2, 1, 3];
+      h += '<h2 class="center">Class average ' + v.averagePct + '%</h2>' +
+        '<div class="podium">' + order.map(function (p, i) {
+          return p ? '<div class="pod"><div class="nm">' + esc(p.name) + '</div><div class="sc">' + p.score + ' pts</div><div class="blk" style="height:' + hts[i] + 'px">' + place[i] + '</div></div>' : '';
+        }).join('') + '</div>' +
+        (b.length > 3 ? '<div class="board">' + b.slice(3).map(function (p, i) {
+          return '<div class="brow"><span class="r">' + (i + 4) + '</span><span style="overflow-wrap:anywhere">' + esc(p.name) + '</span><span class="g"></span><span class="s">' + p.score + '</span></div>';
+        }).join('') + '</div>' : '') +
+        '<div class="foot"><a class="btn ghost" href="/live">New quiz</a>' +
+        (v.sessionId ? '<a class="btn" href="/live/results/' + v.sessionId + '">Results &amp; parent updates →</a>' : '') + '</div>';
+      document.getElementById('endBtn').hidden = true;
+    }
+    stage.innerHTML = h;
+    var go = document.getElementById('go');
+    if (go) go.onclick = function () { go.disabled = true; act(v.phase === 'lobby' ? 'start' : 'next'); };
+    stage.querySelectorAll('[data-kick]').forEach(function (b) {
+      b.onclick = function () { if (confirm('Remove ' + b.textContent + ' from the quiz?')) act('kick', { playerId: b.getAttribute('data-kick') }); };
+    });
+    if (v.phase === 'question') { updateCounts(v); startTimer(v); }
+  }
+
+  function updateCounts(v) {
+    var ac = document.getElementById('ac');
+    if (ac) ac.textContent = v.answered + ' of ' + v.playerCount + ' answered';
+  }
+
+  function startTimer(v) {
+    deadline = Date.now() + v.remainingMs;
+    function step() {
+      var left = Math.max(0, deadline - Date.now());
+      var tm = document.getElementById('tm'), tb = document.getElementById('tb');
+      if (tm) { tm.textContent = Math.ceil(left / 1000); tm.className = 'timer' + (left < 5000 ? ' low' : ''); }
+      if (tb) tb.style.width = (left / (v.seconds * 1000) * 100) + '%';
+    }
+    step();
+    tick = setInterval(step, 200);
+  }
+
+  var es;
+  function connect() {
+    es = new EventSource('/live/host/' + PIN + '/events');
+    es.onmessage = function (e) { document.getElementById('conn').hidden = true; render(JSON.parse(e.data)); };
+    es.onerror = function () { document.getElementById('conn').hidden = false; };
+  }
+  connect();
+
+  document.getElementById('endBtn').onclick = function () {
+    if (confirm('End the quiz now? Scores so far will be saved.')) act('end');
+  };
+  document.getElementById('fsBtn').onclick = function () {
+    var el = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (el.requestFullscreen) el.requestFullscreen().catch(function () {});
+  };
+})();
+</script>
+</body>
+</html>
