@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: session.title + ' · Live results — ClassCoach' }) %>
+<style>
+  .wa-btn { display: inline-flex; align-items: center; gap: 6px; background: #25D366; color: #0B2E17; font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 6px; white-space: nowrap; }
+  .wa-btn.sent { background: var(--good-tint); color: #34502E; }
+  .dots { display: flex; gap: 3px; flex-wrap: wrap; }
+  .dot { width: 14px; height: 14px; border-radius: 3px; background: #F0E6D6; }
+  .dot.ok { background: var(--good); }
+  .dot.bad { background: #E3A98F; }
+  .qrow { display: grid; grid-template-columns: 2rem minmax(0, 1fr) 160px; gap: 14px; align-items: center; padding: 12px 20px; border-bottom: 1px solid #F3ECDF; font-size: 14px; }
+  .qrow:last-child { border-bottom: 0; }
+  .qrow .txt { overflow-wrap: anywhere; }
+  .qrow .ch { font-size: 12px; color: var(--faint); }
+  @media (max-width: 700px) { .qrow { grid-template-columns: 2rem minmax(0, 1fr); } .qrow .bar-row { grid-column: 2; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'live' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/live" style="font-size: 14px; color: var(--faint);">← Live Quiz</a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;"><%= session.title %></h1>
+      </div>
+      <span style="font-size: 13px; color: var(--faint);"><%= date %> · <%= players.length %> players · <%= questions.length %> questions</span>
+    </div>
+    <div class="content">
+      <%
+        var withPhone = players.filter(function (p) { return p.waLink; }).length;
+        var guests = players.filter(function (p) { return !p.student_id; }).length;
+        var avg = players.length && questions.length ? Math.round(players.reduce(function (s, p) { return s + p.correct; }, 0) / (players.length * questions.length) * 100) : 0;
+        var weakest = questions.slice().sort(function (a, b) { return a.pct - b.pct; })[0];
+      %>
+      <div class="grid-3">
+        <div class="card stat-card"><span class="label">Class average</span><span class="value"><%= avg %>%</span><span class="sub">of answers correct</span></div>
+        <div class="card stat-card"><span class="label">Hardest question</span><span class="value"><%= weakest ? weakest.pct + '%' : '—' %></span><span class="sub"><%= weakest ? 'got right · ' + (weakest.chapter || 'no chapter') : '' %></span></div>
+        <div class="card stat-card"><span class="label">Parent updates ready</span><span class="value"><%= withPhone %></span><span class="sub"><%= guests ? guests + ' joined as guests (not matched to your class list)' : 'All players matched to your class list' %></span></div>
+      </div>
+
+      <div class="card" style="overflow: hidden;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+          <span style="font-size: 14px; font-weight: 700;">Players</span>
+          <span style="font-size: 13px; color: var(--faint);">Tap “Send to parent” to open WhatsApp with the message ready.</span>
+        </div>
+        <div style="overflow-x: auto;">
+        <table class="plain">
+          <thead><tr><th>#</th><th>Name</th><th>Correct</th><th>Answers</th><th>Score</th><th>Parent update</th></tr></thead>
+          <tbody>
+            <% players.forEach(function (p) { %>
+              <tr>
+                <td><%= p.rank %></td>
+                <td><%= p.name %><% if (!p.student_id) { %> <span class="badge badge-neutral">guest</span><% } %></td>
+                <td><%= p.correct %>/<%= questions.length %></td>
+                <td><div class="dots"><% p.detail.forEach(function (d, i) { %><span class="dot <%= d.ok ? 'ok' : (d.c == null ? '' : 'bad') %>" title="Q<%= i + 1 %>: <%= d.ok ? 'correct' : (d.c == null ? 'no answer' : 'wrong') %>"></span><% }); %></div></td>
+                <td style="font-variant-numeric: tabular-nums;"><%= p.score %></td>
+                <td>
+                  <% if (p.waLink) { %>
+                    <a class="wa-btn" href="<%= p.waLink %>" target="_blank" rel="noopener" onclick="this.classList.add('sent'); this.textContent='✓ Opened';">Send to parent</a>
+                  <% } else if (p.student_id) { %>
+                    <span style="font-size: 12px; color: var(--faint);">No parent phone saved</span>
+                  <% } else { %>
+                    <span style="font-size: 12px; color: var(--faint);">—</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      <div class="card" style="overflow: hidden;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8; font-size: 14px; font-weight: 700;">Question by question</div>
+        <% questions.forEach(function (q, i) { %>
+          <div class="qrow">
+            <span style="color: var(--faint); font-weight: 700;"><%= i + 1 %></span>
+            <div>
+              <div class="txt"><%= q.text %></div>
+              <div class="ch"><%= q.chapter %><% if (q.pct < 50) { %> · <span style="color: var(--accent-deep); font-weight: 700;">re-teach</span><% } %></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-track"><div class="bar-fill" style="width: <%= q.pct %>%; background: <%= q.pct < 50 ? 'var(--accent)' : 'var(--good)' %>;"></div></div>
+              <span class="pct"><%= q.pct %>%</span>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

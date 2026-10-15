@@ -510,6 +510,33 @@ The demo ships **without** SMTP/AI keys configured, so:
     Worth building next if the simpler link-based version proves out —
     just say the word once you have (or want to set up) that account.
 
+## Live Quiz (Kahoot-style)
+
+Teachers open **⚡ Live Quiz** in the sidebar (or **Play live** next to any
+test), pick a test or a NEET-bank chapter set, and put the game lobby on a
+projector or smart TV. Students join on their phones at `/play` with the
+6-digit PIN, the QR code, or a link shared on WhatsApp. No app or login.
+
+- Correct answers score 500 plus up to 500 for speed. After each question
+  the class sees the answer split and a top-5 leaderboard.
+- Students logged in to ClassCoach are matched to their class record
+  (✓ in the lobby); everyone else plays as a guest.
+- The student page is a few KB with no web fonts or analytics, has an
+  English/Hindi switch, saves a tapped answer on the phone and resends it
+  if the network drops, and falls back to polling if the live stream is
+  blocked.
+- Results are saved when the game ends (**Live Quiz → Past live quizzes**),
+  with a per-question "re-teach" flag and a one-tap WhatsApp message to each
+  matched student's parent.
+- Free/trial accounts host up to 30 players per game; any active paid plan,
+  300 (see `routes/live.js`).
+
+How it works: games run in memory in `lib/live.js` and screens get updates
+over Server-Sent Events. That assumes a single app instance, which is how
+Railway runs it today. A redeploy during a game ends that game, so avoid
+deploying during class hours. Question text is shown as written; only the
+student interface is translated to Hindi.
+
 ## Gaps still open from the original feature spec
 
 Checked carefully against the full spec — these are real, not done yet:

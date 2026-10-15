@@ -37,6 +37,9 @@
                     <% } else { %><span class="badge badge-good">Published</span><% } %>
                   </td>
                   <td>
+                    <% if (t.questionCount > 0) { %>
+                      <a href="/live?test=<%= t.id %>" style="font-size: 13px; font-weight: 600; margin-right: 14px;">⚡ Play live</a>
+                    <% } %>
                     <% if (t.status === 'draft') { %>
                       <a href="/tests/<%= t.id %>/edit" style="font-size: 13px; font-weight: 600;">Continue editing →</a>
                     <% } else { %>

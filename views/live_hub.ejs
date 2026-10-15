@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Live Quiz — ClassCoach' }) %>
+<style>
+  .live-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .live-card { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .live-card h2 { font-size: 22px; }
+  .live-card p.lead { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .chapters { max-height: 240px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; background: #FFFFFF; }
+  .chapters .subj { font-size: 12px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; margin: 10px 0 4px; }
+  .chapters label { display: flex; gap: 8px; align-items: center; font-size: 14px; padding: 3px 0; }
+  .chapters label span { color: var(--faint); font-size: 12px; margin-left: auto; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .how div { font-size: 14px; color: var(--muted); line-height: 1.5; }
+  .how b { display: block; color: var(--ink); font-size: 14px; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'live' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">⚡ Live Quiz</h1>
+      <span style="font-size: 13px; color: var(--faint);">Up to <%= limit %> players per quiz<% if (limit < 300) { %> · <a href="/upgrade">upgrade for 300</a><% } %></span>
+    </div>
+    <div class="content">
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+
+      <div class="card" style="padding: 20px 24px;">
+        <div class="how">
+          <div><b>1. Start a quiz here</b>Pick one of your tests, put the next screen on the projector or smart TV.</div>
+          <div><b>2. Students join on their phones</b>Scan the QR on screen, type the PIN at <%= hostName %>/play, or tap the link you share on WhatsApp. No app, no login.</div>
+          <div><b>3. Play</b>Faster correct answers score more. The class sees the answer and leaderboard after each question.</div>
+          <div><b>4. Send parent updates</b>Results are saved. One tap sends each parent their child's score on WhatsApp.</div>
+        </div>
+      </div>
+
+      <div class="live-grid">
+        <form class="card live-card" method="POST" action="/live/start">
+          <input type="hidden" name="source" value="test">
+          <div>
+            <h2>Play one of your tests</h2>
+          </div>
+          <p class="lead">Only the multiple-choice questions are used. Students linked to your class are matched automatically, so their parents can get the result.</p>
+          <% if (!tests.length) { %>
+            <p class="lead">You don't have a test with multiple-choice questions yet. <a href="/classes">Create one from a class</a>.</p>
+          <% } else { %>
+            <div class="field">
+              <label for="test_id">Test</label>
+              <select id="test_id" name="test_id" required>
+                <% tests.forEach(function(t) { %>
+                  <option value="<%= t.id %>" <%= preselectTest === t.id ? 'selected' : '' %>><%= t.title %> · <%= t.batch_name %> (<%= t.mcq_count %> Qs)</option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="field">
+              <label for="seconds_t">Time per question</label>
+              <select id="seconds_t" name="seconds">
+                <% secondsChoices.forEach(function(s) { %><option value="<%= s %>" <%= s === 20 ? 'selected' : '' %>><%= s %> seconds</option><% }); %>
+              </select>
+            </div>
+            <button class="btn btn-primary" type="submit">Open game lobby →</button>
+          <% } %>
+        </form>
+
+        <% if (bank) { %>
+        <form class="card live-card" method="POST" action="/live/start">
+          <input type="hidden" name="source" value="bank">
+          <h2>Quick quiz from the NEET bank</h2>
+          <p class="lead">Random questions from the chapters you tick. Good for a 5-minute revision game at the start of class.</p>
+          <div class="chapters">
+            <% Object.keys(bank).forEach(function(subject) { %>
+              <div class="subj"><%= subject %></div>
+              <% bank[subject].forEach(function(c, i) { %>
+                <label><input type="checkbox" name="chapters" value="<%= c.chapter %>"> <%= c.chapter %> <span><%= c.n %></span></label>
+              <% }); %>
+            <% }); %>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="count">Questions</label>
+              <select id="count" name="count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select>
+            </div>
+            <div class="field">
+              <label for="seconds_b">Time each</label>
+              <select id="seconds_b" name="seconds">
+                <% secondsChoices.forEach(function(s) { %><option value="<%= s %>" <%= s === 30 ? 'selected' : '' %>><%= s %> sec</option><% }); %>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="batch_id">Class (to match students)</label>
+            <select id="batch_id" name="batch_id">
+              <option value="">No class</option>
+              <% batches.forEach(function(b) { %><option value="<%= b.id %>"><%= b.name %></option><% }); %>
+            </select>
+          </div>
+          <label style="display: flex; gap: 8px; font-size: 14px; align-items: center;"><input type="checkbox" name="pyq" value="1"> Previous-year questions only</label>
+          <button class="btn btn-primary" type="submit">Open game lobby →</button>
+        </form>
+        <% } %>
+      </div>
+
+      <div class="card" style="overflow: hidden;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8; font-size: 14px; font-weight: 700;">Past live quizzes</div>
+        <% if (!past.length) { %>
+          <div style="padding: 20px; font-size: 14px; color: var(--muted);">Results appear here after you end your first live quiz.</div>
+        <% } else { %>
+          <div style="overflow-x: auto;">
+          <table class="plain">
+            <thead><tr><th>Quiz</th><th>Class</th><th>Players</th><th>Date</th><th></th></tr></thead>
+            <tbody>
+              <% past.forEach(function(s) { %>
+                <tr>
+                  <td><%= s.title %></td>
+                  <td><%= s.batch_name || '—' %></td>
+                  <td><%= s.player_count %></td>
+                  <td><%= new Date(s.created_at + 'Z').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) %></td>
+                  <td><a href="/live/results/<%= s.id %>" style="font-size: 13px; font-weight: 600;">Results &amp; parent updates →</a></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
