@@ -81,7 +81,7 @@ app.get('/', (req, res) => {
     indexable: true,
     canonicalUrl,
     description:
-      'ClassCoach helps individual teachers and small coaching classes create AI-generated tests, auto-grade objective answers, track chapter-wise weaknesses, and share results with parents.'
+      'ClassCoach helps individual teachers and small coaching classes create AI-generated tests, run live quiz games in class, auto-grade objective answers, track chapter-wise weaknesses, and share results with parents.'
   });
 });
 
