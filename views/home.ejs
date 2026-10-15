@@ -5,15 +5,17 @@
 
   <!-- NAV -->
   <div style="position: sticky; top: 0; z-index: 20; background: rgba(251,246,238,0.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line);">
-    <div style="max-width: 1180px; margin: 0 auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <%- include('partials/logo', { size: 32 }) %>
         <span style="font-family: 'Newsreader', serif; font-size: 20px; color: var(--ink);">ClassCoach</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap;">
         <a href="/student/login" style="font-size: 14px; color: var(--muted);">Student login</a>
         <a href="/parent/login" style="font-size: 14px; color: var(--muted);">Parent login</a>
         <a href="/join" style="font-size: 14px; color: var(--muted);">Join a class</a>
+        <a href="/play" style="font-size: 14px; color: var(--muted);">Join a live quiz</a>
+        <a href="#live-quiz" style="font-size: 14px; color: var(--muted);">Live Quiz</a>
         <a href="#demo" style="font-size: 14px; color: var(--muted);">Demo</a>
         <a href="/admin/login" style="font-size: 13px; color: var(--faint);">Admin</a>
         <a href="/login" style="font-size: 14px; font-weight: 600; color: var(--muted);">Log in</a>
@@ -43,6 +45,43 @@
         <div class="bar-row"><span class="name">Kinematics</span><div class="bar-track"><div class="bar-fill" style="width: 84%; background: #6B8F71;"></div></div><span class="pct">84%</span></div>
         <div class="bar-row"><span class="name">Newton's Laws</span><div class="bar-track"><div class="bar-fill" style="width: 61%; background: #D8A24A;"></div></div><span class="pct">61%</span></div>
         <div class="bar-row"><span class="name">Gravitation</span><div class="bar-track"><div class="bar-fill" style="width: 38%; background: #B4501C;"></div></div><span class="pct">38%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE QUIZ -->
+  <div id="live-quiz" style="background: var(--ink); color: #FBF6EE;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px; display: flex; align-items: center; gap: 56px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 300px; max-width: 580px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: inline-flex; align-self: flex-start; padding: 6px 14px; border-radius: 100px; font-size: 13px; font-weight: 700; color: var(--ink); background: #F2C14E;">New · Live Quiz</div>
+        <h2 style="font-size: 34px; line-height: 1.15; color: #FBF6EE; margin: 0;">Turn any test into a live quiz game for your class</h2>
+        <p style="font-size: 16px; line-height: 1.6; color: #C9BEA9; margin: 0;">Put the game on your classroom screen. Students join on their own phones and race to answer. The whole class plays at once, and you get the results the moment it ends.</p>
+        <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.5;">
+          <li>📱 <strong>Join in seconds:</strong> students scan a QR code or type a game PIN at classcoach.in/play. No app to install.</li>
+          <li>⏱️ <strong>You set the pace:</strong> 10 to 60 seconds per question.</li>
+          <li>🏆 <strong>Speed counts:</strong> points for every right answer, bonus points for answering fast, and a live leaderboard after each question.</li>
+          <li>📊 <strong>Instant results:</strong> every student's score and rank, and which questions the class found hardest.</li>
+          <li>💬 <strong>Parents in one tap:</strong> send each parent their child's result and the chapters to practise, on WhatsApp.</li>
+          <li>🩺 <strong>NEET &amp; JEE coaches:</strong> start a 5-minute revision game straight from the question bank.</li>
+        </ul>
+        <p style="font-size: 13px; color: #A99F8C; margin: 0;">Uses the multiple-choice questions from your tests. Up to 30 players on the free trial, 300 on any paid plan.</p>
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <a href="/signup" class="btn btn-primary">Try Live Quiz free</a>
+          <a href="/play" style="font-size: 14px; font-weight: 600; color: #FBF6EE; border-bottom: 1px solid #FBF6EE; padding-bottom: 2px;">Student? Join a game →</a>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 280px; display: flex; justify-content: center;">
+        <div style="width: 100%; max-width: 360px; background: #FBF6EE; color: var(--ink); border-radius: 16px; padding: 22px; box-shadow: 0 16px 40px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--faint);">LEADERBOARD · Question 5 of 10</span>
+            <span style="font-size: 12px; font-weight: 700; color: var(--accent);">PIN 482 913</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 10px; background: #F2C14E; font-weight: 700;"><span>1. Ananya</span><span>4,620</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 10px; background: #EFE6D8; font-weight: 600;"><span>2. Rahul</span><span>4,410</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 10px; background: #EFE6D8; font-weight: 600;"><span>3. Fathima</span><span>3,980</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 10px; background: #EFE6D8;"><span>4. Karthik</span><span>3,700</span></div>
+          <span style="font-size: 12px; color: var(--faint);">24 of 26 students answered · 71% got it right</span>
+        </div>
       </div>
     </div>
   </div>
@@ -174,6 +213,10 @@
       });});
       </script>
       <% } %>
+      <div style="margin-top: 28px; padding: 18px 22px; border-radius: 12px; background: var(--accent-tint); display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+        <span style="font-size: 22px;">🎁</span>
+        <p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;"><strong>Refer &amp; earn:</strong> when two teachers you refer buy any plan, you get 3 months of ClassCoach free. Find your referral link in your dashboard.</p>
+      </div>
       <p style="font-size: 12px; color: var(--faint); margin-top: 20px;">Plans are assigned by the ClassCoach team after enrollment — sign up for the free trial to get started.</p>
     </div>
   </div>
@@ -194,6 +237,10 @@
         <div>
           <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">What if a student doesn't have reliable internet for a test?</h3>
           <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Download any test as a printable PDF question paper and run it on paper — you'll still get the same chapter-tagged question bank and answer key for your own reference.</p>
+        </div>
+        <div>
+          <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">How does Live Quiz work?</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Pick one of your tests (or, for NEET and JEE coaches, chapters from the question bank) and start the game. Students join on their phones with the QR code or game PIN shown on your screen, answer against the clock, and see a live leaderboard. When it ends you get each student's score and rank, and can send each parent the result on WhatsApp.</p>
         </div>
         <div>
           <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">Where does my data live?</h3>
@@ -238,7 +285,7 @@
   "name": "ClassCoach",
   "applicationCategory": "EducationalApplication",
   "operatingSystem": "Web",
-  "description": "AI-generated tests, automatic grading, chapter-wise weakness tracking, and parent reporting for individual teachers and small coaching classes.",
+  "description": "AI-generated tests, automatic grading, Kahoot-style live quiz games, chapter-wise weakness tracking, and parent reporting for individual teachers and small coaching classes.",
   "offers": [
     { "@type": "Offer", "name": "Free Trial", "price": "0", "priceCurrency": "INR" },
     { "@type": "Offer", "name": "Starter", "price": "499", "priceCurrency": "INR" },
@@ -266,6 +313,11 @@
       "@type": "Question",
       "name": "What if a student doesn't have reliable internet for a test?",
       "acceptedAnswer": { "@type": "Answer", "text": "Download any test as a printable PDF question paper and run it on paper — you'll still get the same chapter-tagged question bank and answer key for your own reference." }
+    },
+    {
+      "@type": "Question",
+      "name": "How does Live Quiz work?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Pick one of your tests (or, for NEET and JEE coaches, chapters from the question bank) and start the game. Students join on their phones with the QR code or game PIN shown on your screen, answer against the clock, and see a live leaderboard. When it ends you get each student's score and rank, and can send each parent the result on WhatsApp." }
     },
     {
       "@type": "Question",
