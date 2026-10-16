@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: title }) %>
+<link rel="stylesheet" href="/blog-content.css">
+<style>
+  .blog-content { --blog-ink: var(--ink); --blog-muted: var(--muted); --blog-accent: var(--accent-deep); --blog-line: var(--line); --blog-tint: var(--accent-tint); }
+  @media (max-width: 640px) { .post-wrap { padding-left: 18px !important; padding-right: 18px !important; } .post-wrap h1 { font-size: 28px !important; } }
+</style>
+<% if (post.cover_image_url) { %><meta property="og:image" content="<%= post.cover_image_url %>"><% } %>
+</head>
+<body>
+  <%- include('partials/public_nav') %>
+
+  <% if (isDraftPreview) { %>
+    <div class="flash flash-error" style="max-width: 760px; margin: 20px auto 0;">Draft preview — only you can see this. Publish it from the admin Blog page.</div>
+  <% } %>
+
+  <article class="post-wrap" style="max-width: 760px; margin: 0 auto; padding: 48px 32px 32px;">
+    <p style="font-size: 13px; margin: 0 0 14px;"><a href="/blog" style="color: var(--accent-deep); font-weight: 600;">← All articles</a></p>
+    <h1 style="font-size: 36px; line-height: 1.2; color: var(--ink); margin: 0 0 12px;"><%= post.title %></h1>
+    <p style="font-size: 14px; color: var(--faint); margin: 0 0 28px;"><%= post.date || 'Not published yet' %> · <%= post.minutes %> min read</p>
+    <% if (post.cover_image_url) { %>
+      <img src="<%= post.cover_image_url %>" alt="" style="width: 100%; border-radius: 10px; margin-bottom: 28px;">
+    <% } %>
+    <div class="blog-content"><%- post.body_html %></div>
+  </article>
+
+  <div style="max-width: 760px; margin: 0 auto; padding: 0 32px 48px;">
+    <div class="card" style="padding: 26px; border-color: var(--accent); display: flex; flex-direction: column; gap: 10px;">
+      <h2 style="font-size: 20px; color: var(--ink); margin: 0;">Try ClassCoach free for a month</h2>
+      <p style="font-size: 15px; color: var(--muted); line-height: 1.6; margin: 0;">Create tests, share them on WhatsApp, grade written answers faster and send parents clear progress reports.</p>
+      <a href="/signup" class="btn btn-primary" style="align-self: flex-start;">Start your free 1-month trial</a>
+    </div>
+  </div>
+
+  <% if (related.length) { %>
+  <div style="background: #FFFFFF; border-top: 1px solid var(--line);">
+    <div style="max-width: 760px; margin: 0 auto; padding: 44px 32px; display: flex; flex-direction: column; gap: 14px;">
+      <h2 style="font-size: 20px; color: var(--ink); margin: 0;">More from the blog</h2>
+      <% related.forEach(function (r) { %>
+        <a href="/blog/<%= r.slug %>" style="font-size: 16px; color: var(--accent-deep); font-weight: 600;"><%= r.title %></a>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <%- include('partials/public_footer', { current: 'blog' }) %>
+
+<script type="application/ld+json">
+<%- JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.title,
+  description: description,
+  url: canonicalUrl,
+  mainEntityOfPage: canonicalUrl,
+  datePublished: post.published_at || undefined,
+  dateModified: post.updated_at ? post.updated_at.replace(' ', 'T') + 'Z' : undefined,
+  image: post.cover_image_url || undefined,
+  author: { '@type': 'Organization', name: 'ClassCoach', url: siteOrigin + '/' },
+  publisher: { '@type': 'Organization', name: 'ClassCoach', url: siteOrigin + '/' }
+}).replace(/</g, '\\u003c') %>
+</script>
+</body>
+</html>

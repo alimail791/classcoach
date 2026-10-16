@@ -9,6 +9,7 @@
       <% Object.keys(LANDING_PAGES).forEach(function (s) { if (s === currentSlug) return; %>
       <a href="/<%= s %>" style="font-size: 13px; color: var(--muted);"><%= LANDING_PAGES[s].nav %></a>
       <% }) %>
+      <% if (currentSlug !== 'blog') { %><a href="/blog" style="font-size: 13px; color: var(--muted);">Blog</a><% } %>
     </nav>
     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
       <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink);">
