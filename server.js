@@ -19,6 +19,7 @@ const reportsHubRoutes = require('./routes/reports_hub');
 const neetBankRoutes = require('./routes/neet_bank');
 const internalRoutes = require('./routes/internal');
 const liveRoutes = require('./routes/live');
+const blogRoutes = require('./routes/blog');
 const { seedBank } = require('./lib/bank');
 const { startInactivityScheduler } = require('./lib/inactivity');
 const { trackEnabled, njTiers } = require('./lib/plans');
@@ -49,7 +50,9 @@ const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.classcoach.in';
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(express.urlencoded({ extended: true }));
+// Blog posts can be large, so /admin/blog parses its own form body (2 MB limit) in routes/blog.js.
+const formParser = express.urlencoded({ extended: true });
+app.use((req, res, next) => (req.path.startsWith('/admin/blog') ? next() : formParser(req, res, next)));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(
@@ -139,6 +142,11 @@ app.get('/sitemap.xml', (req, res) => {
       Object.keys(LANDING_PAGES)
         .map((slug) => `  <url>\n    <loc>${base}/${slug}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`)
         .join('') +
+      `  <url>\n    <loc>${base}/blog</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n` +
+      blogRoutes
+        .publishedPosts()
+        .map((p) => `  <url>\n    <loc>${base}/blog/${p.slug}</loc>\n    <lastmod>${String(p.updated_at || p.published_at).slice(0, 10)}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`)
+        .join('') +
       `</urlset>`
   );
 });
@@ -172,6 +180,7 @@ app.use('/', reportsHubRoutes);
 app.use('/', neetBankRoutes);
 app.use('/', internalRoutes);
 app.use('/', liveRoutes);
+app.use('/', blogRoutes);
 
 app.use((req, res) => {
   res.status(404).send('Page not found. <a href="/">Go home</a>');

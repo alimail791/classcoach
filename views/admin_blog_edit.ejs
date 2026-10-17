@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: (post && post.id ? 'Edit post' : 'New post') + ' — ClassCoach Admin' }) %>
+<link rel="stylesheet" href="/blog-content.css">
+<style>
+  .be-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0; background: #FBF6EE; }
+  .be-tool, #be-mode-toggle { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 6px 10px; font-size: 13px; cursor: pointer; color: var(--ink); }
+  .be-tool:hover, #be-mode-toggle:hover { border-color: var(--accent); }
+  #be-visual { min-height: 420px; padding: 20px 24px; border: 1px solid var(--line); border-radius: 0 0 8px 8px; background: #fff; outline: none;
+    --blog-ink: var(--ink); --blog-muted: var(--muted); --blog-accent: var(--accent-deep); --blog-line: var(--line); --blog-tint: var(--accent-tint); }
+  #be-visual:focus { border-color: var(--accent); }
+  #be-source { display: none; width: 100%; min-height: 420px; padding: 14px; border: 1px solid var(--line); border-radius: 0 0 8px 8px; font: 13px/1.5 ui-monospace, Menlo, Consolas, monospace; }
+  .hint { font-size: 12px; color: var(--faint); }
+</style>
+</head>
+<body>
+<div style="min-height: 100vh; display: flex; flex-direction: column;">
+  <div class="topbar">
+    <div class="crumbs">
+      <a href="/admin" style="font-family: 'Newsreader', serif; font-size: 18px; color: var(--ink); text-decoration: none;">ClassCoach Admin</a>
+      <a href="/admin/blog" style="color: var(--faint);">/ Blog</a>
+      <span style="color: var(--faint);">/ <%= post && post.id ? 'Edit post' : 'New post' %></span>
+    </div>
+    <% if (post && post.id && post.slug) { %>
+      <a href="/blog/<%= post.slug %>" class="btn btn-ghost" target="_blank" rel="noopener"><%= post.status === 'published' ? 'View post ↗' : 'Preview ↗' %></a>
+    <% } %>
+  </div>
+
+  <form class="content" method="POST" action="<%= post && post.id ? '/admin/blog/' + post.id : '/admin/blog' %>" style="max-width: 900px; margin: 0 auto; width: 100%;">
+    <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+
+    <div class="card" style="padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+      <span style="font-size: 14px; color: var(--muted);">Have a ready-made article file (.html)? Import it to fill everything in.</span>
+      <label class="btn btn-ghost" style="cursor: pointer;">Import article file<input type="file" id="be-import" accept=".html,.htm,text/html" style="display: none;"></label>
+    </div>
+
+    <div class="field">
+      <label for="be-title">Title</label>
+      <input id="be-title" name="title" required maxlength="200" value="<%= post ? post.title : '' %>" placeholder="e.g. How to Create Online Tests for Your Students">
+    </div>
+    <div class="field">
+      <label for="be-slug">URL slug</label>
+      <input id="be-slug" name="slug" maxlength="80" value="<%= post ? post.slug : '' %>" placeholder="filled in from the title">
+      <span class="hint">The post's web address: classcoach.in/blog/<em>your-slug</em>. Use lowercase words and dashes.</span>
+    </div>
+    <div class="field">
+      <label for="be-meta">Google description</label>
+      <textarea id="be-meta" name="meta_description" rows="2" maxlength="300" placeholder="One or two sentences shown under the title in Google results."><%= post ? post.meta_description : '' %></textarea>
+      <span class="hint" id="be-meta-count"></span>
+    </div>
+    <div class="field">
+      <label for="be-cover">Cover image address (optional)</label>
+      <input id="be-cover" name="cover_image_url" value="<%= post ? post.cover_image_url : '' %>" placeholder="https://…">
+    </div>
+
+    <div class="field">
+      <label>Article</label>
+      <div>
+        <div class="be-toolbar">
+          <button type="button" class="be-tool" data-cmd="formatBlock" data-arg="h2">Heading</button>
+          <button type="button" class="be-tool" data-cmd="formatBlock" data-arg="h3">Subheading</button>
+          <button type="button" class="be-tool" data-cmd="formatBlock" data-arg="p">Paragraph</button>
+          <button type="button" class="be-tool" data-cmd="bold"><strong>B</strong></button>
+          <button type="button" class="be-tool" data-cmd="italic"><em>I</em></button>
+          <button type="button" class="be-tool" data-cmd="insertUnorderedList">• List</button>
+          <button type="button" class="be-tool" data-cmd="insertOrderedList">1. List</button>
+          <button type="button" class="be-tool" data-cmd="createLink">Link</button>
+          <button type="button" class="be-tool" data-cmd="insertImage">Image</button>
+          <button type="button" class="be-tool" data-cmd="insertCta">Button box</button>
+          <button type="button" id="be-mode-toggle" style="margin-left: auto;">Edit HTML</button>
+        </div>
+        <div id="be-visual" class="blog-content" contenteditable="true"><%- post ? post.body_html : '' %></div>
+        <textarea id="be-source" spellcheck="false"></textarea>
+        <textarea id="be-body" name="body_html" hidden><%= post ? post.body_html : '' %></textarea>
+      </div>
+      <span class="hint">Paste from Word, Google Docs or a web page and the formatting comes with it. Images must be web links (https://…), not pasted pictures.</span>
+    </div>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+      <% if (post && post.status === 'published') { %>
+        <button type="submit" name="action" value="publish" class="btn btn-primary">Update post</button>
+        <button type="submit" name="action" value="unpublish" class="btn btn-ghost">Unpublish</button>
+      <% } else { %>
+        <button type="submit" name="action" value="publish" class="btn btn-primary">Publish</button>
+        <button type="submit" name="action" value="save" class="btn btn-ghost">Save draft</button>
+      <% } %>
+      <a href="/admin/blog" style="color: var(--faint); font-size: 14px; margin-left: 6px;">Cancel</a>
+    </div>
+  </form>
+
+  <% if (post && post.id) { %>
+  <form method="POST" action="/admin/blog/<%= post.id %>/delete" style="max-width: 900px; margin: 0 auto 40px; width: 100%; padding: 0 32px;"
+        onsubmit="return document.getElementById('del-confirm').value.trim().toLowerCase() === 'delete';">
+    <details>
+      <summary style="cursor: pointer; color: #8C3C13; font-size: 14px;">Delete this post</summary>
+      <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
+        <input id="del-confirm" placeholder="Type delete to confirm" style="padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px;">
+        <button type="submit" class="btn btn-ghost" style="color: #8C3C13;">Delete permanently</button>
+      </div>
+    </details>
+  </form>
+  <% } %>
+</div>
+<script src="/blog-editor.js"></script>
+</body>
+</html>

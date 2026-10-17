@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Blog — ClassCoach Admin' }) %></head>
+<body>
+<div style="min-height: 100vh; display: flex; flex-direction: column;">
+  <div class="topbar">
+    <div class="crumbs">
+      <a href="/admin" style="font-family: 'Newsreader', serif; font-size: 18px; color: var(--ink); text-decoration: none;">ClassCoach Admin</a>
+      <span style="color: var(--faint);">/ Blog</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="/blog" class="btn btn-ghost" target="_blank" rel="noopener">View blog ↗</a>
+      <a href="/admin/blog/new" class="btn btn-primary">+ New post</a>
+    </div>
+  </div>
+  <div class="content" style="max-width: 1000px; margin: 0 auto; width: 100%;">
+    <% if (saved) { %><div class="flash flash-ok">Post <%= saved %>.</div><% } %>
+    <% if (deleted) { %><div class="flash flash-ok">Post deleted.</div><% } %>
+
+    <% if (!posts.length) { %>
+      <div class="card" style="padding: 28px; display: flex; flex-direction: column; gap: 10px;">
+        <h2 style="font-size: 20px; margin: 0;">No posts yet</h2>
+        <p style="margin: 0; color: var(--muted);">Click <strong>New post</strong>. You can type the article, paste it, or import a ready-made .html article file.</p>
+      </div>
+    <% } else { %>
+      <div class="card" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <thead>
+            <tr style="text-align: left; border-bottom: 1px solid var(--line);">
+              <th style="padding: 12px 16px;">Title</th>
+              <th style="padding: 12px 16px;">Status</th>
+              <th style="padding: 12px 16px;">Date</th>
+              <th style="padding: 12px 16px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+          <% posts.forEach(function (p) { %>
+            <tr style="border-bottom: 1px solid var(--line);">
+              <td style="padding: 12px 16px;"><a href="/admin/blog/<%= p.id %>/edit" style="color: var(--ink); font-weight: 600;"><%= p.title %></a><br><span style="font-size: 12px; color: var(--faint);">/blog/<%= p.slug %></span></td>
+              <td style="padding: 12px 16px;">
+                <% if (p.status === 'published') { %>
+                  <span style="padding: 3px 10px; border-radius: 100px; background: var(--good-tint); color: #34502E; font-size: 12px; font-weight: 600;">Published</span>
+                <% } else { %>
+                  <span style="padding: 3px 10px; border-radius: 100px; background: #F0E6D6; color: var(--muted); font-size: 12px; font-weight: 600;">Draft</span>
+                <% } %>
+              </td>
+              <td style="padding: 12px 16px; color: var(--faint);"><%= p.date %></td>
+              <td style="padding: 12px 16px; text-align: right; white-space: nowrap;">
+                <a href="/blog/<%= p.slug %>" target="_blank" rel="noopener" style="color: var(--accent-deep); font-weight: 600; margin-right: 14px;"><%= p.status === 'published' ? 'View' : 'Preview' %></a>
+                <a href="/admin/blog/<%= p.id %>/edit" style="color: var(--accent-deep); font-weight: 600;">Edit</a>
+              </td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>
