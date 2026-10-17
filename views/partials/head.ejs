@@ -33,12 +33,23 @@
 <meta property="og:site_name" content="ClassCoach">
 <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'ClassCoach' %>">
 <meta property="og:description" content="<%= typeof description !== 'undefined' ? description : '' %>">
-<meta name="twitter:card" content="summary">
+<% const _origin = process.env.SITE_ORIGIN || 'https://www.classcoach.in'; const _ogImage = (typeof ogImage !== 'undefined' && ogImage) ? ogImage : _origin + '/og-image.png'; %>
+<meta property="og:image" content="<%= _ogImage %>">
+<meta property="og:image:secure_url" content="<%= _ogImage %>">
+<% if (typeof ogImage === 'undefined' || !ogImage) { %>
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ClassCoach logo: Grade less. Teach more. AI tests, instant grading and parent reports for teachers and tutors.">
+<% } %>
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="<%= _ogImage %>">
 <meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'ClassCoach' %>">
 <meta name="twitter:description" content="<%= typeof description !== 'undefined' ? description : '' %>">
 <% } %>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/favicon.svg">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#B4501C">
 <meta name="mobile-web-app-capable" content="yes">

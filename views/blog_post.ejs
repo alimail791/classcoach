@@ -1,13 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
-<%- include('partials/head', { title: title }) %>
+<%- include('partials/head', { title: title, ogImage: post.cover_image_url || '' }) %>
 <link rel="stylesheet" href="/blog-content.css">
 <style>
   .blog-content { --blog-ink: var(--ink); --blog-muted: var(--muted); --blog-accent: var(--accent-deep); --blog-line: var(--line); --blog-tint: var(--accent-tint); }
   @media (max-width: 640px) { .post-wrap { padding-left: 18px !important; padding-right: 18px !important; } .post-wrap h1 { font-size: 28px !important; } }
 </style>
-<% if (post.cover_image_url) { %><meta property="og:image" content="<%= post.cover_image_url %>"><% } %>
 </head>
 <body>
   <%- include('partials/public_nav') %>
