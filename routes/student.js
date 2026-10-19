@@ -54,6 +54,9 @@ router.get('/student/dashboard', requireStudent, (req, res) => {
   const materials = db
     .prepare('SELECT * FROM materials WHERE batch_id = ? AND shared = 1 ORDER BY created_at DESC')
     .all(req.student.batch_id);
+  const videos = db
+    .prepare('SELECT * FROM video_lessons WHERE batch_id = ? ORDER BY created_at DESC')
+    .all(req.student.batch_id);
 
   const homework = db
     .prepare('SELECT * FROM homework WHERE batch_id = ? ORDER BY due_date DESC, created_at DESC')
@@ -82,6 +85,7 @@ router.get('/student/dashboard', requireStudent, (req, res) => {
     batch,
     tests,
     materials,
+    videos,
     homework,
     chapterBreakdown,
     notifications,

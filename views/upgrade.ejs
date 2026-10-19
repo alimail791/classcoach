@@ -29,24 +29,25 @@
         <%- include('partials/nj_pricing', { tiers: njTiers, mode: 'buy', razorpayConfigured: razorpayConfigured }) %>
       <% } else { %>
       <div class="grid-3">
-          <% plans.forEach(function(p) { %>
+          <% genTiers.forEach(function(t) { %>
             <div class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
-              <span style="font-size: 15px; font-weight: 700;"><%= p.name %></span>
-              <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹<%= p.price %></span><span style="font-size: 13px; color: var(--faint);"> / <%= p.duration_months %> months</span></div>
+              <span style="font-size: 15px; font-weight: 700;"><%= t.name %></span>
               <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--muted);">
-                <li>Up to <%= p.max_students %> students</li>
-                <li><%= p.ai_limit_monthly %> AI generations / month</li>
+                <li>Up to <%= t.students %> students</li>
+                <li><%= t.ai %> AI generations / month</li>
               </ul>
-              <button
-                class="btn btn-primary"
-                style="margin-top: 8px;"
-                onclick="classcoachPay('<%= p.id %>', '<%= p.name %>', <%= p.price %>)"
-                <%= razorpayConfigured ? '' : 'disabled' %>
-              >Pay ₹<%= p.price %></button>
+              <div style="border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+                <div><span style="font-family: 'Newsreader', serif; font-size: 28px;">₹<%= t.short.price.toLocaleString('en-IN') %></span><span style="font-size: 13px; color: var(--faint);"> / <%= t.short.months %> months</span></div>
+                <button class="btn btn-ghost" onclick="classcoachPay('<%= t.short.id %>', '<%= t.name %> (<%= t.short.months %> months)', <%= t.short.price %>)" <%= razorpayConfigured ? '' : 'disabled' %>>Pay ₹<%= t.short.price.toLocaleString('en-IN') %> for <%= t.short.months %> months</button>
+              </div>
+              <div style="border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+                <div><span style="font-family: 'Newsreader', serif; font-size: 28px;">₹<%= t.yearly.price.toLocaleString('en-IN') %></span><span style="font-size: 13px; color: var(--faint);"> / year</span> <span class="badge badge-good" style="margin-left: 4px;">Save ₹<%= t.yearlySaving.toLocaleString('en-IN') %></span></div>
+                <button class="btn btn-primary" onclick="classcoachPay('<%= t.yearly.id %>', '<%= t.name %> (1 year)', <%= t.yearly.price %>)" <%= razorpayConfigured ? '' : 'disabled' %>>Pay ₹<%= t.yearly.price.toLocaleString('en-IN') %> for 1 year</button>
+              </div>
             </div>
           <% }); %>
         </div>
-  
+
       <% if (neetJeeEnabled && teacher.plan === 'trial' && !teacher.has_purchased) { %>
         <form method="POST" action="/upgrade/track" class="card" style="padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
           <input type="hidden" name="track" value="neet_jee">

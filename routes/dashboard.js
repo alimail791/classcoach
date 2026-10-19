@@ -208,8 +208,12 @@ router.get('/batches/:id', requireTeacher, (req, res) => {
   const students = db.prepare('SELECT * FROM students WHERE batch_id = ? ORDER BY roll_no').all(batch.id);
   const tests = db.prepare('SELECT * FROM tests WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
   const materials = db.prepare('SELECT * FROM materials WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
+  const videos = db.prepare('SELECT * FROM video_lessons WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
 
-  res.render('batch', { teacher: req.teacher, batch, students, tests, materials, error: null, importResult: null, notified: req.query.notified || null });
+  res.render('batch', {
+    teacher: req.teacher, batch, students, tests, materials, videos, error: null, importResult: null, notified: req.query.notified || null,
+    videoStatus: req.query.video || null, videoError: req.query.video_error || null
+  });
 });
 
 router.post('/batches/:id/students', requireTeacher, (req, res) => {
@@ -256,12 +260,14 @@ router.post('/batches/:id/students', requireTeacher, (req, res) => {
     const students = db.prepare('SELECT * FROM students WHERE batch_id = ? ORDER BY roll_no').all(batch.id);
     const tests = db.prepare('SELECT * FROM tests WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
     const materials = db.prepare('SELECT * FROM materials WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
+  const videos = db.prepare('SELECT * FROM video_lessons WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
     return res.render('batch', {
       teacher: req.teacher,
       batch,
       students,
       tests,
       materials,
+      videos,
       importResult: null,
       notified: null,
       error: 'That roll number is already used in this batch.'
@@ -343,12 +349,14 @@ router.post('/batches/:id/students/import', requireTeacher, (req, res, next) => 
   const students = db.prepare('SELECT * FROM students WHERE batch_id = ? ORDER BY roll_no').all(batch.id);
   const tests = db.prepare('SELECT * FROM tests WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
   const materials = db.prepare('SELECT * FROM materials WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
+  const videos = db.prepare('SELECT * FROM video_lessons WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
   res.render('batch', {
     teacher: req.teacher,
     batch,
     students,
     tests,
     materials,
+    videos,
     error: null,
     importResult: { imported, skipped },
     notified: null
@@ -360,7 +368,8 @@ function renderBatchWithError(req, res, message) {
   const students = db.prepare('SELECT * FROM students WHERE batch_id = ? ORDER BY roll_no').all(batch.id);
   const tests = db.prepare('SELECT * FROM tests WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
   const materials = db.prepare('SELECT * FROM materials WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
-  res.render('batch', { teacher: req.teacher, batch, students, tests, materials, error: message, importResult: null, notified: null });
+  const videos = db.prepare('SELECT * FROM video_lessons WHERE batch_id = ? ORDER BY created_at DESC').all(batch.id);
+  res.render('batch', { teacher: req.teacher, batch, students, tests, materials, videos, error: message, importResult: null, notified: null });
 }
 
 router.get('/batches/:batchId/students/:studentId/edit', requireTeacher, (req, res) => {
