@@ -169,8 +169,8 @@
   <!-- PRICING -->
   <div id="pricing" style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
     <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
-      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 12px;">Simple 3-month pricing, per teacher</h2>
-      <p style="font-size: 15px; color: var(--muted); margin: 0 0 40px;">Start free. No card needed.</p>
+      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 12px;">Simple pricing, per teacher</h2>
+      <p style="font-size: 15px; color: var(--muted); margin: 0 0 40px;">Start free. No card needed. Pay every 2 months, or save with a yearly plan.</p>
       <% if (neetJeeEnabled) { %>
       <div class="pt-tabs" style="display:inline-flex;background:#EFE6D8;border-radius:100px;padding:4px;gap:2px;margin-bottom:32px;">
         <button type="button" data-pt="gen" aria-pressed="true" style="border:none;padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;">School &amp; general</button>
@@ -187,17 +187,20 @@
         </div>
         <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px; border-color: var(--accent);">
           <span style="font-size: 15px; font-weight: 700; color: var(--accent-deep);">Starter</span>
-          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹499</span><span style="font-size: 13px; color: var(--faint);"> / 3 months</span></div>
+          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹499</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
+          <div style="font-size: 13px; color: var(--ink);">or <strong>₹2,499 / year</strong> <span class="badge badge-good">Save ₹495</span></div>
           <span style="font-size: 13px; color: var(--muted);">Up to 20 students</span>
         </div>
         <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
           <span style="font-size: 15px; font-weight: 700;">Growth</span>
-          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹999</span><span style="font-size: 13px; color: var(--faint);"> / 3 months</span></div>
+          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹999</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
+          <div style="font-size: 13px; color: var(--ink);">or <strong>₹4,999 / year</strong> <span class="badge badge-good">Save ₹995</span></div>
           <span style="font-size: 13px; color: var(--muted);">Up to 50 students</span>
         </div>
         <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
           <span style="font-size: 15px; font-weight: 700;">Pro</span>
-          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹1,999</span><span style="font-size: 13px; color: var(--faint);"> / 3 months</span></div>
+          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹1,999</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
+          <div style="font-size: 13px; color: var(--ink);">or <strong>₹9,999 / year</strong> <span class="badge badge-good">Save ₹1,995</span></div>
           <span style="font-size: 13px; color: var(--muted);">Up to 100 students</span>
         </div>
       </div>
@@ -318,7 +321,10 @@
     { "@type": "Offer", "name": "Free Trial", "price": "0", "priceCurrency": "INR" },
     { "@type": "Offer", "name": "Starter", "price": "499", "priceCurrency": "INR" },
     { "@type": "Offer", "name": "Growth", "price": "999", "priceCurrency": "INR" },
-    { "@type": "Offer", "name": "Pro", "price": "1999", "priceCurrency": "INR" }
+    { "@type": "Offer", "name": "Pro", "price": "1999", "priceCurrency": "INR" },
+    { "@type": "Offer", "name": "Starter - Yearly", "price": "2499", "priceCurrency": "INR" },
+    { "@type": "Offer", "name": "Growth - Yearly", "price": "4999", "priceCurrency": "INR" },
+    { "@type": "Offer", "name": "Pro - Yearly", "price": "9999", "priceCurrency": "INR" }
   ]
 }
 </script>

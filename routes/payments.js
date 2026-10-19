@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireTeacher } = require('../lib/auth');
-const { PLANS, getPlan, applyPurchasedPlan, paidPlansForTrack, trackEnabled } = require('../lib/plans');
+const { PLANS, getPlan, applyPurchasedPlan, paidPlansForTrack, trackEnabled, durationLabel } = require('../lib/plans');
 const razorpay = require('../lib/razorpay');
 const { markPurchasedAndCheckReferral } = require('../lib/referrals');
 const { notify } = require('../lib/notifications');
@@ -141,7 +141,7 @@ function applyAndFinalizePayment(payment, razorpayPaymentId) {
 
   const teacher = db.prepare('SELECT * FROM teachers WHERE id = ?').get(payment.teacher_id);
   const plan = getPlan(payment.plan_id);
-  const message = `Payment received — you're now on the ${plan.name} plan (${plan.max_students} students, ${plan.ai_limit_monthly} AI generations/month) for the next ${plan.duration_months} months.`;
+  const message = `Payment received — you're now on the ${plan.name} plan (${plan.max_students} students, ${plan.ai_limit_monthly} AI generations/month) for the next ${durationLabel(plan.duration_months)}.`;
   notify('teacher', teacher.id, message, 'ClassCoach');
   if (mailer.isConfigured()) {
     mailer

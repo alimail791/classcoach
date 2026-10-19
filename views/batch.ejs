@@ -17,6 +17,7 @@
         <a href="/batches/<%= batch.id %>/attendance" class="btn btn-ghost">📋 Attendance</a>
         <a href="/batches/<%= batch.id %>/homework" class="btn btn-ghost">✏️ Homework</a>
         <a href="/batches/<%= batch.id %>/materials/new" class="btn btn-ghost">+ Slides &amp; notes</a>
+        <a href="#videos" class="btn btn-ghost">▶ YouTube lesson</a>
         <a href="/batches/<%= batch.id %>/tests/new" class="btn btn-primary">+ Create test</a>
       </div>
     </div>
@@ -155,6 +156,58 @@
                     <td><%= m.type === 'slides' ? '🖥️ Slides' : '📝 Notes' %></td>
                     <td><% if (m.shared) { %><span class="badge badge-good">Shared</span><% } else { %><span class="badge badge-neutral">Draft</span><% } %></td>
                     <td><a href="/materials/<%= m.id %>/edit" style="font-size: 13px; font-weight: 600;">Open →</a></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+
+      <div id="videos">
+        <h2 style="font-size: 15px; color: var(--muted); margin-bottom: 14px; font-family: 'Karla', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">YouTube video lessons</h2>
+        <% var vids = typeof videos !== 'undefined' ? videos : []; %>
+        <% if (typeof videoStatus !== 'undefined' && videoStatus === 'added') { %><div class="flash flash-ok" style="margin-bottom: 12px;">Video lesson shared. Students in this class can watch it from their dashboard, and they've been notified.</div><% } %>
+        <% if (typeof videoStatus !== 'undefined' && videoStatus === 'removed') { %><div class="flash flash-ok" style="margin-bottom: 12px;">Video lesson removed.</div><% } %>
+        <% if (typeof videoError !== 'undefined' && videoError) { %><div class="flash flash-error" style="margin-bottom: 12px;"><%= videoError %></div><% } %>
+        <form method="POST" action="/batches/<%= batch.id %>/videos" class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px;">
+          <p style="margin: 0; font-size: 14px; color: var(--muted);">Paste a YouTube link (your own lesson or any helpful video). Every student in <%= batch.name %> can watch it from their dashboard.</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600;">YouTube link
+              <input type="text" inputmode="url" autocomplete="off" name="url" required placeholder="https://youtu.be/..." style="padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600;">Title
+              <input type="text" name="title" required maxlength="150" placeholder="e.g. Newton's laws explained" style="padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600;">Chapter (optional)
+              <input type="text" name="chapter" maxlength="100" placeholder="e.g. Laws of Motion" style="padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;">
+            </label>
+          </div>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600;">Note for students (optional)
+            <input type="text" name="note" maxlength="500" placeholder="e.g. Watch before Friday's test" style="padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;">
+          </label>
+          <div><button type="submit" class="btn btn-primary">Share with class</button></div>
+        </form>
+        <% if (vids.length > 0) { %>
+          <div class="card" style="overflow: hidden;">
+            <table class="plain">
+              <thead><tr><th>Video</th><th>Chapter</th><th>Shared</th><th></th></tr></thead>
+              <tbody>
+                <% vids.forEach(function(v) { %>
+                  <tr>
+                    <td>
+                      <a href="https://www.youtube.com/watch?v=<%= v.youtube_id %>" target="_blank" rel="noopener" style="display: flex; align-items: center; gap: 10px; color: var(--ink);">
+                        <img src="https://i.ytimg.com/vi/<%= v.youtube_id %>/mqdefault.jpg" alt="" width="80" height="45" style="border-radius: 4px; object-fit: cover; flex-shrink: 0;">
+                        <span style="font-weight: 600;"><%= v.title %></span>
+                      </a>
+                    </td>
+                    <td style="color: var(--muted);"><%= v.chapter || '—' %></td>
+                    <td style="color: var(--muted); font-size: 13px;"><%= new Date(v.created_at + 'Z').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) %></td>
+                    <td>
+                      <form method="POST" action="/videos/<%= v.id %>/delete" onsubmit="return confirm('Remove this video lesson for students?');" style="margin: 0;">
+                        <button type="submit" style="background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer;">Remove</button>
+                      </form>
+                    </td>
                   </tr>
                 <% }); %>
               </tbody>

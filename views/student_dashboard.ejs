@@ -90,6 +90,24 @@
       </div>
     <% } %>
 
+    <% if (typeof videos !== 'undefined' && videos.length > 0) { %>
+      <h2 style="font-size: 20px; margin: 32px 0 20px;">Video lessons</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;">
+        <% videos.forEach(function(v) { %>
+          <a href="/student/videos/<%= v.id %>" class="card" style="overflow: hidden; display: flex; flex-direction: column; text-decoration: none; color: var(--ink);">
+            <div style="position: relative; aspect-ratio: 16 / 9; background: #000;">
+              <img src="https://i.ytimg.com/vi/<%= v.youtube_id %>/mqdefault.jpg" alt="" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              <span aria-hidden="true" style="position: absolute; inset: 0; margin: auto; width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,0.65); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px;">▶</span>
+            </div>
+            <div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-size: 14px; font-weight: 600; line-height: 1.35;"><%= v.title %></span>
+              <% if (v.chapter) { %><span style="font-size: 12px; color: var(--faint);"><%= v.chapter %></span><% } %>
+            </div>
+          </a>
+        <% }); %>
+      </div>
+    <% } %>
+
     <% if (materials.length > 0) { %>
       <h2 style="font-size: 20px; margin: 32px 0 20px;">Class materials</h2>
       <div style="display: flex; flex-direction: column; gap: 12px;">

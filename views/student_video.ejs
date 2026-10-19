@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: video.title }) %></head>
+<body>
+  <div class="topbar">
+    <div class="crumbs">
+      <a href="/student/dashboard" style="font-size: 14px; color: var(--faint);">← My dashboard</a>
+      <div class="divider-v"></div>
+      <h1 style="font-size: 17px;"><%= video.title %></h1>
+    </div>
+  </div>
+  <div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 48px; display: flex; flex-direction: column; gap: 18px;">
+    <div style="position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden;">
+      <iframe
+        src="https://www.youtube-nocookie.com/embed/<%= video.youtube_id %>?rel=0&modestbranding=1"
+        title="<%= video.title %>"
+        style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h2 style="font-size: 22px; margin: 0;"><%= video.title %></h2>
+      <% if (video.chapter) { %><span style="font-size: 13px; color: var(--faint);">Chapter: <%= video.chapter %></span><% } %>
+      <% if (video.note) { %><p class="card" style="margin: 8px 0 0; padding: 14px 16px; font-size: 14px; line-height: 1.6;">📌 <%= video.note %></p><% } %>
+      <a href="https://www.youtube.com/watch?v=<%= video.youtube_id %>" target="_blank" rel="noopener" style="font-size: 13px; margin-top: 6px;">Video not playing? Open it on YouTube →</a>
+    </div>
+    <% if (others.length > 0) { %>
+      <h3 style="font-size: 17px; margin: 16px 0 0;">More video lessons</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+        <% others.forEach(function(v) { %>
+          <a href="/student/videos/<%= v.id %>" class="card" style="overflow: hidden; text-decoration: none; color: var(--ink);">
+            <img src="https://i.ytimg.com/vi/<%= v.youtube_id %>/mqdefault.jpg" alt="" loading="lazy" style="width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block;">
+            <span style="display: block; padding: 10px 12px; font-size: 13px; font-weight: 600;"><%= v.title %></span>
+          </a>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

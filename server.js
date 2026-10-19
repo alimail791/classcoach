@@ -20,9 +20,10 @@ const neetBankRoutes = require('./routes/neet_bank');
 const internalRoutes = require('./routes/internal');
 const liveRoutes = require('./routes/live');
 const blogRoutes = require('./routes/blog');
+const videoRoutes = require('./routes/videos');
 const { seedBank } = require('./lib/bank');
 const { startInactivityScheduler } = require('./lib/inactivity');
-const { trackEnabled, njTiers } = require('./lib/plans');
+const { trackEnabled, njTiers, genTiers } = require('./lib/plans');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.set('trust proxy', 1);
 // NEET/JEE category: off unless NEET_JEE_TRACK=1. Views read these as globals.
 app.locals.neetJeeEnabled = trackEnabled();
 app.locals.njTiers = njTiers();
+app.locals.genTiers = genTiers();
 // Public landing pages (see lib/landing_pages.js) — exposed to views so the
 // shared public footer can link them all.
 const { LANDING_PAGES } = require('./lib/landing_pages');
@@ -169,6 +171,7 @@ app.use('/', authRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', testRoutes);
 app.use('/', materialRoutes);
+app.use('/', videoRoutes);
 app.use('/', trackingRoutes);
 app.use('/', studentRoutes);
 app.use('/', parentRoutes);
