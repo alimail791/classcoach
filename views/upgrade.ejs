@@ -30,7 +30,10 @@
           Your account is part of <strong style="color: var(--ink);"><%= institute ? institute.name : 'your institute' %></strong>. Your institute admin manages the plan for all teachers, so there's nothing to buy here. If you need more students or AI generations, ask your admin to upgrade.
         </div>
       <% } else if (typeof instituteRole !== 'undefined' && instituteRole === 'owner') { %>
-        <%- include('partials/inst_pricing', { tiers: instTiers, mode: 'buy', razorpayConfigured: razorpayConfigured }) %>
+        <% if (discountPct) { %>
+          <div class="flash flash-ok" style="font-size: 15px;">🎁 <strong><%= discountPct %>% off</strong> your next plan, thanks to your referrals. It's applied automatically at checkout. You have <%= institute.referral_coupons %> coupon<%= institute.referral_coupons === 1 ? '' : 's' %>; one is used per purchase.</div>
+        <% } %>
+        <%- include('partials/inst_pricing', { tiers: instTiers, mode: 'buy', razorpayConfigured: razorpayConfigured, discountPct: discountPct }) %>
       <% } else if (isNJ) { %>
         <%- include('partials/nj_pricing', { tiers: njTiers, mode: 'buy', razorpayConfigured: razorpayConfigured }) %>
       <% } else { %>

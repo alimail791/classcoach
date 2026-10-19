@@ -3,6 +3,7 @@ const db = require('../lib/db');
 const { requireTeacher } = require('../lib/auth');
 const { PLANS, getPlan, applyPurchasedPlan, paidPlansForTrack, trackEnabled, durationLabel } = require('../lib/plans');
 const { instituteFor } = require('../lib/institutes');
+const { INSTITUTE_DISCOUNT_PCT } = require('../lib/referrals');
 const razorpay = require('../lib/razorpay');
 const { markPurchasedAndCheckReferral } = require('../lib/referrals');
 const { notify } = require('../lib/notifications');
@@ -24,6 +25,7 @@ router.get('/upgrade', requireTeacher, (req, res) => {
     teacher: req.teacher,
     planName,
     institute: instituteFor(req.teacher),
+    discountPct: req.teacher.institute_role === 'owner' && (instituteFor(req.teacher) || {}).referral_coupons > 0 ? INSTITUTE_DISCOUNT_PCT : 0,
     instituteRole: req.teacher.institute_id ? req.teacher.institute_role : null,
     plans: track ? paidPlansForTrack(track) : [],
     razorpayConfigured: razorpay.isConfigured(),
@@ -61,23 +63,28 @@ router.post('/upgrade/create-order', requireTeacher, express.json(), async (req,
     return res.status(400).json({ error: 'That plan is not available for your account category.' });
   }
 
+  // Institute Refer & earn: an unused coupon takes 40% off this purchase.
+  const inst = plan.track === 'institute' ? instituteFor(req.teacher) : null;
+  const discountPct = inst && inst.referral_coupons > 0 ? INSTITUTE_DISCOUNT_PCT : 0;
+  const amountRupees = discountPct ? Math.round((plan.price * (100 - discountPct)) / 100) : plan.price;
+
   try {
     const order = await razorpay.createOrder({
-      amountPaise: plan.price * 100,
+      amountPaise: amountRupees * 100,
       receipt: `teacher_${req.teacher.id}_${plan.id}_${Date.now()}`,
       notes: { teacher_id: String(req.teacher.id), plan_id: plan.id }
     });
 
     db.prepare(
-      'INSERT INTO payments (teacher_id, plan_id, amount, currency, razorpay_order_id, status) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(req.teacher.id, plan.id, order.amount, order.currency, order.id, 'created');
+      'INSERT INTO payments (teacher_id, plan_id, amount, currency, razorpay_order_id, status, discount_pct) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(req.teacher.id, plan.id, order.amount, order.currency, order.id, 'created', discountPct);
 
     res.json({
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
       keyId: process.env.RAZORPAY_KEY_ID,
-      planName: plan.name,
+      planName: discountPct ? `${plan.name} (${discountPct}% referral discount)` : plan.name,
       teacherName: req.teacher.name,
       teacherEmail: req.teacher.email,
       teacherPhone: req.teacher.phone
@@ -149,6 +156,13 @@ function applyAndFinalizePayment(payment, razorpayPaymentId) {
   if (fresh.status === 'paid') return; // already processed by the other path
 
   db.prepare("UPDATE payments SET status = 'paid', razorpay_payment_id = ? WHERE id = ?").run(razorpayPaymentId, payment.id);
+  // A discounted purchase uses up one of the institute's referral coupons.
+  if (fresh.discount_pct > 0) {
+    const buyer = db.prepare('SELECT institute_id FROM teachers WHERE id = ?').get(payment.teacher_id);
+    if (buyer && buyer.institute_id) {
+      db.prepare('UPDATE institutes SET referral_coupons = MAX(referral_coupons - 1, 0) WHERE id = ?').run(buyer.institute_id);
+    }
+  }
   applyPurchasedPlan(db, payment.teacher_id, payment.plan_id);
   markPurchasedAndCheckReferral(payment.teacher_id);
 
