@@ -33,6 +33,9 @@
         <div class="flash" style="background: var(--accent-tint); border: 1px solid #E8C9A6;">Free trial: <strong><%= daysLeft %> day<%= daysLeft === 1 ? '' : 's' %> left</strong>, for up to <%= institute.max_teachers %> teachers and <%= institute.max_students %> students. <a href="/upgrade">See institute plans →</a></div>
       <% } %>
 
+      <% if (institute.referral_coupons > 0) { %>
+        <div class="flash flash-ok">🎁 You have <strong><%= institute.referral_coupons %> × 40% off</strong> coupon<%= institute.referral_coupons === 1 ? '' : 's' %> from referrals. One is applied automatically to your next plan purchase. <a href="/upgrade">Use it now →</a></div>
+      <% } %>
       <div class="grid-4">
         <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 6px;">
           <span style="font-size: 12px; color: var(--faint); font-weight: 600;">PLAN</span>

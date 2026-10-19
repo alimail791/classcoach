@@ -66,7 +66,7 @@
                 <td style="font-size: 13px; color: var(--muted); white-space: nowrap;"><%= shortDate(p.created_at) %></td>
                 <td><%= p.teacher_name || 'Deleted account' %><div style="font-size: 12px; color: var(--faint);"><%= p.teacher_email || '' %></div></td>
                 <td style="font-size: 13px;"><%= p.planName %></td>
-                <td style="font-weight: 600;"><%= inr(p.amount / 100) %></td>
+                <td style="font-weight: 600;"><%= inr(p.amount / 100) %><% if (p.discount_pct) { %><div style="font-size: 11px; color: var(--faint); font-weight: 400;"><%= p.discount_pct %>% referral discount</div><% } %></td>
                 <td style="font-size: 13px;"><%= p.viaWhatsApp ? 'WhatsApp bot' : 'Website' %></td>
                 <td><% if (p.status === 'paid') { %><span class="badge badge-good">Paid</span><% } else if (p.status === 'failed') { %><span class="badge badge-warm">Failed</span><% } else { %><span class="badge badge-neutral">Not completed</span><% } %></td>
               </tr>
@@ -87,7 +87,7 @@
             <% institutes.forEach(function (i) { %>
               <tr>
                 <td><span style="font-weight: 600;"><%= i.name %></span><div style="font-size: 12px; color: var(--faint);">Admin: <%= i.owner_name || '—' %> · <%= i.owner_email || '' %><%= i.owner_phone ? ' · ' + i.owner_phone : '' %></div><div style="font-size: 12px; color: var(--faint);">Since <%= shortDate(i.created_at) %></div></td>
-                <td style="font-size: 13px;"><%= i.planName %></td>
+                <td style="font-size: 13px;"><%= i.planName %><% if (i.referral_coupons > 0) { %><div><span class="badge badge-good">🎁 <%= i.referral_coupons %> × 40% off</span></div><% } %></td>
                 <td><%= i.seatsUsed %> / <%= i.max_teachers %></td>
                 <td><%= i.studentsUsed %> / <%= i.max_students %></td>
                 <td><%= i.aiUsed %> / <%= i.ai_limit_monthly %></td>
@@ -122,7 +122,7 @@
       <div class="grid-4">
         <div class="card stat-card"><span class="label">Live Quiz games</span><span class="value"><%= usage.liveGames %></span><span class="sub"><%= usage.liveGames30 %> in 30 days · <%= usage.livePlayers %> players in total</span></div>
         <div class="card stat-card"><span class="label">YouTube lessons shared</span><span class="value"><%= usage.videos %></span><span class="sub"><%= usage.materials %> slides &amp; notes created</span></div>
-        <div class="card stat-card"><span class="label">Refer &amp; earn</span><span class="value"><%= usage.referralSignups %></span><span class="sub">referred signups · <%= usage.referralBuyers %> bought · <%= usage.referralRewards %> rewards given (2 months each)</span></div>
+        <div class="card stat-card"><span class="label">Refer &amp; earn</span><span class="value"><%= usage.referralSignups %></span><span class="sub">referred signups · <%= usage.referralBuyers %> bought · teachers: 2 months free per 2 buyers · institutes: 40% off per buyer</span></div>
         <div class="card stat-card"><span class="label">Blog</span><span class="value"><%= usage.blogPublished %></span><span class="sub">published · <%= usage.blogDrafts %> drafts · <a href="/admin/blog">Write a post →</a></span></div>
       </div>
 

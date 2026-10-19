@@ -2,6 +2,8 @@
   // Inputs: tiers (from instTiers()), mode: 'buy' (institute admin's upgrade page) or 'public' (landing page)
   var inr = function (n) { return '₹' + Number(n).toLocaleString('en-IN'); };
   var featured = 1; // middle tier is highlighted
+  var off = typeof discountPct !== 'undefined' && discountPct ? discountPct : 0;
+  var after = function (n) { return Math.round(n * (100 - off) / 100); };
 %>
 <style>
   .inp { --inp-accent: var(--accent); }
@@ -75,10 +77,14 @@
           <% if (mode === 'buy') { %>
             <button type="button" class="btn <%= i === featured ? 'btn-primary' : 'btn-dark' %>"
               data-id-m="<%= t.monthly.id %>" data-id-y="<%= t.yearly.id %>"
-              data-price-m="<%= t.monthly.price %>" data-price-y="<%= t.yearly.price %>"
+              data-price-m="<%= after(t.monthly.price) %>" data-price-y="<%= after(t.yearly.price) %>"
               data-size="<%= t.teachers %>"
               onclick="instPay(this)" <%= (typeof razorpayConfigured !== 'undefined' && !razorpayConfigured) ? 'disabled' : '' %>>
+              <% if (off) { %>
+              <span class="only-y">Get yearly · <s style="opacity:.6"><%= inr(t.yearly.price) %></s> <%= inr(after(t.yearly.price)) %></span><span class="only-m">Get monthly · <s style="opacity:.6"><%= inr(t.monthly.price) %></s> <%= inr(after(t.monthly.price)) %></span>
+              <% } else { %>
               <span class="only-y">Get yearly · <%= inr(t.yearly.price) %></span><span class="only-m">Get monthly · <%= inr(t.monthly.price) %></span>
+              <% } %>
             </button>
           <% } else { %>
             <a href="/signup?type=institute" class="btn <%= i === featured ? 'btn-primary' : 'btn-dark' %>">Start 14-day free trial</a>
