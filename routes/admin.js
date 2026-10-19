@@ -4,6 +4,7 @@ const db = require('../lib/db');
 const { requireAdminSession } = require('../lib/auth');
 const { getUsage, currentMonth } = require('../lib/usage');
 const { PLANS, getPlan, addMonths, daysUntil, isPlanActive } = require('../lib/plans');
+const { getInstitute, setInstitutePlan } = require('../lib/institutes');
 const mailer = require('../lib/mailer');
 
 const router = express.Router();
@@ -68,6 +69,7 @@ router.get('/admin', requireAdminSession, (req, res) => {
         testCount,
         aiUsed,
         planName: (getPlan(t.plan) || {}).name || t.plan,
+        instituteName: t.institute_id ? (db.prepare('SELECT name FROM institutes WHERE id = ?').get(t.institute_id) || {}).name : null,
         expiryDays: daysUntil(t.plan_expires_at),
         active_plan: isPlanActive(t)
       };
@@ -108,6 +110,26 @@ router.post('/admin/teachers/:id/plan', requireAdminSession, (req, res) => {
   if (!target) return res.status(404).send('Not found');
 
   const chosen = getPlan(req.body.plan_id);
+
+  // Institute accounts: the plan lives on the institute and applies to every
+  // teacher in it, so change it there (the chosen plan must be an institute plan).
+  if (target.institute_id) {
+    const i = getInstitute(target.institute_id);
+    let expiresAt = i.plan_expires_at;
+    if (req.body.extend_months) {
+      const months = parseInt(req.body.extend_months, 10) || 0;
+      const base = expiresAt && new Date(expiresAt) > new Date() ? expiresAt : new Date();
+      expiresAt = addMonths(base, months).toISOString();
+    } else if (req.body.clear_expiry === '1') {
+      expiresAt = null;
+    }
+    const planId = chosen && chosen.track === 'institute' ? chosen.id : i.plan;
+    setInstitutePlan(i.id, { planId, expiresAt });
+    if (planId !== 'inst_trial' && i.owner_teacher_id) markPurchasedAndCheckReferral(i.owner_teacher_id);
+    return res.redirect('/admin');
+  }
+  if (chosen && chosen.track === 'institute') return res.redirect('/admin');
+
   const maxStudents = chosen ? chosen.max_students : target.max_students;
   const aiLimit = chosen ? chosen.ai_limit_monthly : target.ai_limit_monthly;
   const planId = chosen ? chosen.id : target.plan;

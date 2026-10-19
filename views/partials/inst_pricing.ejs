@@ -1,0 +1,116 @@
+<%
+  // Inputs: tiers (from instTiers()), mode: 'buy' (institute admin's upgrade page) or 'public' (landing page)
+  var inr = function (n) { return '₹' + Number(n).toLocaleString('en-IN'); };
+  var featured = 1; // middle tier is highlighted
+%>
+<style>
+  .inp { --inp-accent: var(--accent); }
+  .inp-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+  .inp-title { font-family: 'Newsreader', Georgia, serif; font-size: 26px; margin: 0 0 6px; }
+  .inp-sub { font-size: 14px; color: var(--muted); margin: 0; max-width: 560px; line-height: 1.55; }
+  .inp-toggle { display: inline-flex; background: #EFE6D8; border-radius: 100px; padding: 4px; gap: 2px; }
+  .inp-toggle button { border: none; background: transparent; padding: 9px 18px; border-radius: 100px; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .inp-toggle button[aria-pressed="true"] { background: var(--ink); color: #FBF6EE; }
+  .inp-toggle .inp-save { background: var(--good); color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 100px; letter-spacing: .02em; }
+  .inp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; }
+  .inp-card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 28px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .inp-card.is-featured { border: 2px solid var(--inp-accent); box-shadow: 0 14px 34px rgba(140, 60, 19, 0.16); background: linear-gradient(180deg, #FFF8EE 0%, #FFFFFF 38%); }
+  .inp-ribbon { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--inp-accent); color: #FBF6EE; font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 100px; white-space: nowrap; letter-spacing: .03em; }
+  .inp-ribbon.is-alt { background: var(--good); }
+  .inp-size { font-size: 13px; font-weight: 700; color: var(--accent-deep); text-transform: uppercase; letter-spacing: .06em; }
+  .inp-price { display: flex; align-items: baseline; gap: 6px; }
+  .inp-amt { font-family: 'Newsreader', Georgia, serif; font-size: 44px; line-height: 1; color: var(--ink); }
+  .inp-per { font-size: 14px; color: var(--faint); }
+  .inp-note { font-size: 13px; color: var(--muted); min-height: 18px; }
+  .inp-note b { color: #34502E; }
+  .inp-pill { align-self: flex-start; background: var(--good-tint); color: #34502E; border: 1px solid var(--good-line); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 8px; }
+  .inp-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+  .inp-list li { display: flex; gap: 10px; align-items: flex-start; }
+  .inp-list li::before { content: '✓'; color: var(--good); font-weight: 800; flex: none; margin-top: 0; }
+  .inp-cta { margin-top: auto; padding-top: 6px; }
+  .inp-cta .btn { width: 100%; padding: 14px 22px; font-size: 15px; }
+  .inp-foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 26px; margin: 26px 0 0; font-size: 13px; color: var(--muted); }
+  .inp-foot span::before { content: '✓ '; color: var(--good); font-weight: 800; }
+  .inp[data-period="yearly"] .only-m, .inp[data-period="monthly"] .only-y { display: none; }
+  @media (max-width: 860px) { .inp-grid { grid-template-columns: 1fr; gap: 26px; } .inp-top { flex-direction: column; align-items: flex-start; } }
+</style>
+
+<div class="inp" data-period="yearly" data-mode="<%= mode %>">
+  <div class="inp-top">
+    <div>
+      <h2 class="inp-title">Institute pack</h2>
+      <p class="inp-sub">One plan for your whole coaching centre. You create a login for each teacher; teachers add their own classes and students. Every plan includes the NEET/JEE question bank.</p>
+    </div>
+    <div class="inp-toggle" role="group" aria-label="Billing period">
+      <button type="button" data-set="monthly" aria-pressed="false">Monthly</button>
+      <button type="button" data-set="yearly" aria-pressed="true">Yearly <span class="inp-save">SAVE UP TO <%= inr(Math.max.apply(null, tiers.map(function (t) { return t.yearlySaving; }))) %></span></button>
+    </div>
+  </div>
+
+  <div class="inp-grid">
+    <% tiers.forEach(function (t, i) { %>
+      <div class="inp-card<%= i === featured ? ' is-featured' : '' %>">
+        <% if (i === featured) { %><span class="inp-ribbon">MOST POPULAR</span><% } %>
+        <span class="inp-size"><%= t.teachers %> teachers · <%= t.students %> students</span>
+
+        <div class="inp-price only-y"><span class="inp-amt"><%= inr(t.yearly.price) %></span><span class="inp-per">/ year</span></div>
+        <div class="inp-price only-m"><span class="inp-amt"><%= inr(t.monthly.price) %></span><span class="inp-per">/ month</span></div>
+
+        <div class="inp-note only-y">That's about <b><%= inr(t.yearlyPerMonth) %> a month</b> — you save <b><%= inr(t.yearlySaving) %></b> vs paying monthly</div>
+        <div class="inp-note only-m">Or <b><%= inr(t.yearly.price) %> a year</b> and save <b><%= inr(t.yearlySaving) %></b></div>
+
+        <span class="inp-pill only-y">≈ ₹<%= Math.round(t.yearlyPerMonth / t.students * 10) / 10 %> per student / month</span>
+        <span class="inp-pill only-m">≈ ₹<%= Math.round(t.monthly.price / t.students * 10) / 10 %> per student / month</span>
+
+        <ul class="inp-list">
+          <li>Up to <%= t.teachers %> teacher logins, created and managed by you</li>
+          <li>Up to <%= t.students %> students across all teachers, each with their own login</li>
+          <li><%= t.ai.toLocaleString('en-IN') %> AI generations a month, shared by all teachers</li>
+          <li>NEET/JEE question bank with previous-year questions, and Live Quiz games</li>
+          <li>See every teacher's classes, results and weak chapters in one place</li>
+          <li>Parent reports, printable papers and YouTube video lessons</li>
+        </ul>
+
+        <div class="inp-cta">
+          <% if (mode === 'buy') { %>
+            <button type="button" class="btn <%= i === featured ? 'btn-primary' : 'btn-dark' %>"
+              data-id-m="<%= t.monthly.id %>" data-id-y="<%= t.yearly.id %>"
+              data-price-m="<%= t.monthly.price %>" data-price-y="<%= t.yearly.price %>"
+              data-size="<%= t.teachers %>"
+              onclick="instPay(this)" <%= (typeof razorpayConfigured !== 'undefined' && !razorpayConfigured) ? 'disabled' : '' %>>
+              <span class="only-y">Get yearly · <%= inr(t.yearly.price) %></span><span class="only-m">Get monthly · <%= inr(t.monthly.price) %></span>
+            </button>
+          <% } else { %>
+            <a href="/signup?type=institute" class="btn <%= i === featured ? 'btn-primary' : 'btn-dark' %>">Start 14-day free trial</a>
+          <% } %>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+
+  <div class="inp-foot">
+    <span>Cards, UPI &amp; netbanking via Razorpay</span>
+    <span>Renew early and the days you have left carry over</span>
+    <span>14-day free trial: 2 teachers and 20 students</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  document.querySelectorAll('.inp').forEach(function (root) {
+    root.querySelectorAll('.inp-toggle button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        root.setAttribute('data-period', b.getAttribute('data-set'));
+        root.querySelectorAll('.inp-toggle button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  });
+})();
+function instPay(btn) {
+  var root = btn.closest('.inp');
+  var yearly = root.getAttribute('data-period') === 'yearly';
+  var id = btn.getAttribute(yearly ? 'data-id-y' : 'data-id-m');
+  var price = Number(btn.getAttribute(yearly ? 'data-price-y' : 'data-price-m'));
+  classcoachPay(id, 'Institute ' + btn.getAttribute('data-size') + ' teachers (' + (yearly ? 'yearly' : 'monthly') + ')', price);
+}
+</script>

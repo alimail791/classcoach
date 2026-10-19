@@ -12,6 +12,12 @@
     </div>
     <div class="content">
 
+      <% if (teacher.must_change_password) { %>
+        <div class="flash" style="background: #F5E6D3; border: 1px solid #D8A87C; color: var(--accent-deep);">You're using a temporary password from your institute admin. <a href="/settings">Change it in Settings →</a></div>
+      <% } %>
+      <% if (typeof institute !== 'undefined' && institute) { %>
+        <div style="font-size: 13px; color: var(--muted);">🏢 <strong style="color: var(--ink);"><%= institute.name %></strong><%= teacher.institute_role === 'owner' ? ' · You are the institute admin · ' : ' · Plan managed by your institute admin' %><% if (teacher.institute_role === 'owner') { %><a href="/institute">Manage teachers →</a><% } %></div>
+      <% } %>
       <% if (!planActive) { %>
         <div class="flash flash-error">Your <%= planName %> plan expired <%= Math.abs(expiryDays) %> day<%= Math.abs(expiryDays) === 1 ? '' : 's' %> ago — no new students can be added and AI generation is paused until it's renewed. Everything else still works.</div>
       <% } else if (expiryDays !== null && expiryDays <= 7) { %>

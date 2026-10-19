@@ -10,6 +10,7 @@ const { createMagicLink } = require('../lib/magicLink');
 const { buildWhatsAppLink } = require('../lib/whatsapp');
 const { getFor, unreadCountFor, markAllRead, notifyAllStudentsInBatch, notifyAllParentsInBatch } = require('../lib/notifications');
 const { checkAndSendExpiryNotice } = require('../lib/expiryNotice');
+const { studentTotalFor, instituteFor } = require('../lib/institutes');
 const { sendDueDigests } = require('../lib/weeklyDigest');
 
 const router = express.Router();
@@ -149,6 +150,7 @@ router.get('/dashboard', requireTeacher, (req, res) => {
   res.render('dashboard', {
     showReferralPopup,
     teacher: req.teacher,
+    institute: instituteFor(req.teacher),
     batches,
     publishedTests,
     recentTests,
@@ -225,13 +227,7 @@ router.post('/batches/:id/students', requireTeacher, (req, res) => {
     return renderBatchWithError(req, res, 'Name, roll number, student phone, parent phone, and parent email are all required.');
   }
 
-  const totalStudents = db
-    .prepare(
-      `SELECT COUNT(*) AS c FROM students
-       JOIN batches ON batches.id = students.batch_id
-       WHERE batches.teacher_id = ?`
-    )
-    .get(req.teacher.id).c;
+  const totalStudents = studentTotalFor(req.teacher); // institute teachers share one total
   const limits = { maxStudents: effectiveMaxStudents(req.teacher, totalStudents) };
   if (totalStudents >= limits.maxStudents) {
     const msg = isPlanActive(req.teacher)
@@ -306,13 +302,7 @@ router.post('/batches/:id/students/import', requireTeacher, (req, res, next) => 
   const insert = db.prepare(
     'INSERT INTO students (batch_id, name, roll_no, pin, parent_pin, phone, parent_name, parent_phone, parent_contact) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
   );
-  const currentTotal = db
-    .prepare(
-      `SELECT COUNT(*) AS c FROM students
-       JOIN batches ON batches.id = students.batch_id
-       WHERE batches.teacher_id = ?`
-    )
-    .get(req.teacher.id).c;
+  const currentTotal = studentTotalFor(req.teacher); // institute teachers share one total
   const importLimits = { maxStudents: effectiveMaxStudents(req.teacher, currentTotal) };
   let remaining = Math.max(0, importLimits.maxStudents - currentTotal);
 

@@ -5,6 +5,9 @@
   </div>
   <div class="navlist">
     <a href="/dashboard" class="navitem <%= active === 'dashboard' ? 'active' : '' %>">⌂ Dashboard</a>
+    <% if (teacher.institute_id && teacher.institute_role === 'owner') { %>
+    <a href="/institute" class="navitem <%= active === 'institute' ? 'active' : '' %>">🏢 Institute</a>
+    <% } %>
     <a href="/classes" class="navitem <%= active === 'classes' ? 'active' : '' %>">🏫 Classes &amp; Batches</a>
     <a href="/tests" class="navitem <%= active === 'tests' ? 'active' : '' %>">📝 Tests &amp; Worksheets</a>
     <% if (typeof neetJeeEnabled !== 'undefined' && neetJeeEnabled && teacher.exam_track === 'neet_jee') { %>

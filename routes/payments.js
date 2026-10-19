@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../lib/db');
 const { requireTeacher } = require('../lib/auth');
 const { PLANS, getPlan, applyPurchasedPlan, paidPlansForTrack, trackEnabled, durationLabel } = require('../lib/plans');
+const { instituteFor } = require('../lib/institutes');
 const razorpay = require('../lib/razorpay');
 const { markPurchasedAndCheckReferral } = require('../lib/referrals');
 const { notify } = require('../lib/notifications');
@@ -9,12 +10,22 @@ const mailer = require('../lib/mailer');
 
 const router = express.Router();
 
+// Which plans this account may buy: institute admins buy institute plans;
+// teachers inside an institute buy nothing (their admin pays).
+function buyableTrack(teacher) {
+  if (teacher.institute_id) return teacher.institute_role === 'owner' ? 'institute' : null;
+  return teacher.exam_track;
+}
+
 router.get('/upgrade', requireTeacher, (req, res) => {
   const planName = (getPlan(req.teacher.plan) || {}).name || req.teacher.plan;
+  const track = buyableTrack(req.teacher);
   res.render('upgrade', {
     teacher: req.teacher,
     planName,
-    plans: paidPlansForTrack(req.teacher.exam_track),
+    institute: instituteFor(req.teacher),
+    instituteRole: req.teacher.institute_id ? req.teacher.institute_role : null,
+    plans: track ? paidPlansForTrack(track) : [],
     razorpayConfigured: razorpay.isConfigured(),
     razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
     error: req.query.error || null,
@@ -27,7 +38,7 @@ router.get('/upgrade', requireTeacher, (req, res) => {
 router.post('/upgrade/track', requireTeacher, (req, res) => {
   const track = req.body.track === 'neet_jee' ? 'neet_jee' : 'general';
   if (!trackEnabled() && track === 'neet_jee') return res.redirect('/upgrade');
-  if (req.teacher.plan !== 'trial' || req.teacher.has_purchased) {
+  if (req.teacher.institute_id || req.teacher.plan !== 'trial' || req.teacher.has_purchased) {
     return res.redirect('/upgrade?error=' + encodeURIComponent('Category can only be changed before your first purchase - contact us if you need help.'));
   }
   db.prepare('UPDATE teachers SET exam_track = ? WHERE id = ?').run(track, req.teacher.id);
@@ -43,7 +54,9 @@ router.post('/upgrade/create-order', requireTeacher, express.json(), async (req,
     return res.status(400).json({ error: 'Invalid plan selected.' });
   }
   // A teacher can only buy plans from their own category.
-  const allowed = paidPlansForTrack(req.teacher.exam_track).some((p) => p.id === plan.id);
+  const track = buyableTrack(req.teacher);
+  if (!track) return res.status(400).json({ error: 'Your institute admin manages your plan.' });
+  const allowed = paidPlansForTrack(track).some((p) => p.id === plan.id);
   if (!allowed) {
     return res.status(400).json({ error: 'That plan is not available for your account category.' });
   }
@@ -141,7 +154,10 @@ function applyAndFinalizePayment(payment, razorpayPaymentId) {
 
   const teacher = db.prepare('SELECT * FROM teachers WHERE id = ?').get(payment.teacher_id);
   const plan = getPlan(payment.plan_id);
-  const message = `Payment received — you're now on the ${plan.name} plan (${plan.max_students} students, ${plan.ai_limit_monthly} AI generations/month) for the next ${durationLabel(plan.duration_months)}.`;
+  const message =
+    plan.track === 'institute'
+      ? `Payment received — your institute is now on the ${plan.name} plan (${plan.max_teachers} teachers, ${plan.max_students} students, ${plan.ai_limit_monthly} AI generations/month shared) for the next ${durationLabel(plan.duration_months)}.`
+      : `Payment received — you're now on the ${plan.name} plan (${plan.max_students} students, ${plan.ai_limit_monthly} AI generations/month) for the next ${durationLabel(plan.duration_months)}.`;
   notify('teacher', teacher.id, message, 'ClassCoach');
   if (mailer.isConfigured()) {
     mailer

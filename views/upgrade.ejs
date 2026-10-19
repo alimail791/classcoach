@@ -15,7 +15,7 @@
 
       <div style="display: flex; flex-direction: column; gap: 6px;">
         <span style="font-size: 13px; color: var(--faint);">Current plan</span>
-        <span style="font-size: 16px; font-weight: 600;"><%= planName || teacher.plan %> · <%= teacher.max_students %> students · <%= teacher.ai_limit_monthly %> AI generations/month</span>
+        <span style="font-size: 16px; font-weight: 600;"><%= planName || teacher.plan %><% if (typeof institute !== 'undefined' && institute) { %> · <%= institute.max_teachers %> teachers<% } %> · <%= teacher.max_students %> students · <%= teacher.ai_limit_monthly %> AI generations/month<% if (typeof institute !== 'undefined' && institute) { %> (shared by the institute)<% } %></span>
       </div>
 
       <% if (!razorpayConfigured) { %>
@@ -25,7 +25,13 @@
       <% } %>
 
       <% var isNJ = neetJeeEnabled && teacher.exam_track === 'neet_jee'; %>
-      <% if (isNJ) { %>
+      <% if (typeof instituteRole !== 'undefined' && instituteRole === 'teacher') { %>
+        <div class="card" style="padding: 24px; font-size: 14px; color: var(--muted); line-height: 1.6;">
+          Your account is part of <strong style="color: var(--ink);"><%= institute ? institute.name : 'your institute' %></strong>. Your institute admin manages the plan for all teachers, so there's nothing to buy here. If you need more students or AI generations, ask your admin to upgrade.
+        </div>
+      <% } else if (typeof instituteRole !== 'undefined' && instituteRole === 'owner') { %>
+        <%- include('partials/inst_pricing', { tiers: instTiers, mode: 'buy', razorpayConfigured: razorpayConfigured }) %>
+      <% } else if (isNJ) { %>
         <%- include('partials/nj_pricing', { tiers: njTiers, mode: 'buy', razorpayConfigured: razorpayConfigured }) %>
       <% } else { %>
       <div class="grid-3">

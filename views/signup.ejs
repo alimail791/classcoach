@@ -9,20 +9,42 @@
       <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
       <form method="POST" action="/signup" style="display: flex; flex-direction: column; gap: 16px;">
         <input type="hidden" name="ref" value="<%= refCode %>">
+        <% var at = typeof accountType !== 'undefined' ? accountType : 'teacher'; %>
+        <div class="field"><label>Account type</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <label style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;font-size:14px;"><input type="radio" name="account_type" value="teacher" <%= at !== 'institute' ? 'checked' : '' %>> Individual teacher / tutor</label>
+            <label style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;font-size:14px;"><input type="radio" name="account_type" value="institute" <%= at === 'institute' ? 'checked' : '' %>> Institute / coaching centre</label>
+          </div>
+        </div>
+        <div class="field" id="inst-fields" <%= at === 'institute' ? '' : 'hidden' %>>
+          <label>Institute name</label><input name="institute_name" value="<%= typeof instituteName !== 'undefined' ? instituteName : '' %>" placeholder="e.g. Raise Academy">
+          <span style="font-size: 12px; color: var(--muted);">14-day free trial: you plus 2 teachers and 20 students, with the NEET/JEE question bank. You add your teachers' logins after signing up.</span>
+        </div>
         <% if (neetJeeEnabled) { %>
-        <div class="field"><label>I teach</label>
+        <div class="field" id="track-field" <%= at === 'institute' ? 'hidden' : '' %>><label>I teach</label>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <label style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;font-size:14px;"><input type="radio" name="exam_track" value="general" <%= track !== 'neet_jee' ? 'checked' : '' %>> School / general subjects</label>
             <label style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;font-size:14px;"><input type="radio" name="exam_track" value="neet_jee" <%= track === 'neet_jee' ? 'checked' : '' %>> NEET / JEE coaching</label>
           </div>
         </div>
         <% } %>
-        <div class="field"><label>Your name</label><input name="name" required></div>
+        <div class="field"><label id="name-label"><%= at === 'institute' ? 'Your name (institute admin)' : 'Your name' %></label><input name="name" required></div>
         <div class="field"><label>Email</label><input type="email" name="email" required></div>
         <div class="field"><label>Phone number</label><input type="tel" name="phone" placeholder="+91 9xxxxxxxxx" required></div>
         <div class="field"><label>Password</label><input type="password" name="password" required minlength="6"></div>
         <button type="submit" class="btn btn-primary">Create account</button>
       </form>
+      <script>
+      (function () {
+        function sync() {
+          var inst = document.querySelector('input[name=account_type][value=institute]').checked;
+          document.getElementById('inst-fields').hidden = !inst;
+          var tf = document.getElementById('track-field'); if (tf) tf.hidden = inst;
+          document.getElementById('name-label').textContent = inst ? 'Your name (institute admin)' : 'Your name';
+        }
+        document.querySelectorAll('input[name=account_type]').forEach(function (r) { r.addEventListener('change', sync); });
+      })();
+      </script>
       <span style="font-size: 13px; color: var(--faint);">Already have an account? <a href="/login">Log in</a></span>
     </div>
   </div>

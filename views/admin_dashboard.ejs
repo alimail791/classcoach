@@ -65,6 +65,7 @@
                 <td>
                   <span style="font-weight: 600;"><%= t.name %></span><br>
                   <span style="font-size: 12px; color: var(--faint);"><%= t.email %></span><br>
+                  <% if (t.instituteName) { %><span class="badge badge-warm" style="margin-right: 4px;">🏢 <%= t.instituteName %> · <%= t.institute_role === 'owner' ? 'admin' : 'teacher' %></span><% } %>
                   <span style="font-size: 12px; color: var(--faint);"><%= t.phone || '—' %></span>
                   <% if (t.email_verified) { %><span class="badge badge-good" style="margin-left: 4px;">Verified</span>
                   <% } else { %><span class="badge badge-neutral" style="margin-left: 4px;">Unverified</span><% } %>

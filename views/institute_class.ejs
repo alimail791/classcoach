@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: batch.name + ' — Institute report' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'institute' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/institute#classes" style="font-size: 14px; color: var(--faint);">← <%= institute.name %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size: 17px;"><%= batch.name %></h1>
+      </div>
+      <span style="font-size: 13px; color: var(--muted);">Teacher: <strong><%= batch.teacher_name %></strong></span>
+    </div>
+    <div class="content">
+      <h2 style="font-size: 18px;">Tests</h2>
+      <% if (tests.length === 0) { %>
+        <div class="card" style="padding: 20px; color: var(--muted); font-size: 14px;">No tests published in this class yet.</div>
+      <% } else { %>
+        <div class="card" style="overflow-x: auto;">
+          <table class="plain" style="min-width: 520px;">
+            <thead><tr><th>Test</th><th>Chapter</th><th>Attempts</th><th>Class average</th></tr></thead>
+            <tbody>
+              <% tests.forEach(function (t) { %>
+                <tr><td style="font-weight: 600;"><%= t.title %></td><td style="color: var(--muted);"><%= t.chapter || '—' %></td><td><%= t.attempt_count %></td><td><%= t.avg_pct === null ? '—' : t.avg_pct + '%' %></td></tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+
+      <h2 style="font-size: 18px;">Students (<%= students.length %>)</h2>
+      <% if (students.length === 0) { %>
+        <div class="card" style="padding: 20px; color: var(--muted); font-size: 14px;">No students in this class yet.</div>
+      <% } else { %>
+        <div class="card" style="overflow-x: auto;">
+          <table class="plain" style="min-width: 600px;">
+            <thead><tr><th>Roll</th><th>Student</th><th>Tests taken</th><th>Average</th><th>Weak chapters</th></tr></thead>
+            <tbody>
+              <% students.forEach(function (s) { %>
+                <tr>
+                  <td style="color: var(--faint);"><%= s.roll_no %></td>
+                  <td style="font-weight: 600;"><%= s.name %></td>
+                  <td><%= s.attempts %></td>
+                  <td><%= s.avg === null ? '—' : s.avg + '%' %></td>
+                  <td style="font-size: 13px; color: var(--muted);"><%= s.weak.length ? s.weak.map(function (w) { return w.chapter + ' (' + w.pct + '%)'; }).join(', ') : '—' %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+      <p style="font-size: 12px; color: var(--faint);">Read-only view for the institute admin. Weak chapters are those below 60% across the student's graded tests.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
