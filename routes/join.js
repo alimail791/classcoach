@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const db = require('../lib/db');
 const { effectiveMaxStudents, isPlanActive } = require('../lib/plans');
+const { studentTotalFor } = require('../lib/institutes');
 
 const router = express.Router();
 
@@ -35,13 +36,7 @@ router.post('/join/:code', (req, res) => {
     return renderError('Name, roll number, your phone number, parent phone, and parent email are all required.');
   }
 
-  const totalStudents = db
-    .prepare(
-      `SELECT COUNT(*) AS c FROM students
-       JOIN batches ON batches.id = students.batch_id
-       WHERE batches.teacher_id = ?`
-    )
-    .get(teacher.id).c;
+  const totalStudents = studentTotalFor(teacher); // institute teachers share one total
   const maxStudents = effectiveMaxStudents(teacher, totalStudents);
   if (totalStudents >= maxStudents) {
     return renderError("This teacher's class is full right now — ask them to make room or raise their plan limit.");

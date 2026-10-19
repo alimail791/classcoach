@@ -16,6 +16,7 @@
         <a href="/join" style="font-size: 14px; color: var(--muted);">Join a class</a>
         <a href="/play" style="font-size: 14px; color: var(--muted);">Join a live quiz</a>
         <a href="#live-quiz" style="font-size: 14px; color: var(--muted);">Live Quiz</a>
+        <a href="#institutes" style="font-size: 14px; color: var(--muted);">For institutes</a>
         <a href="#demo" style="font-size: 14px; color: var(--muted);">Demo</a>
         <a href="/admin/login" style="font-size: 13px; color: var(--faint);">Admin</a>
         <a href="/login" style="font-size: 14px; font-weight: 600; color: var(--muted);">Log in</a>
@@ -224,6 +225,13 @@
     </div>
   </div>
 
+  <!-- INSTITUTES -->
+  <div id="institutes">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
+      <%- include('partials/inst_pricing', { tiers: instTiers, mode: 'public' }) %>
+    </div>
+  </div>
+
   <!-- FAQ -->
   <div style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
     <div style="max-width: 780px; margin: 0 auto; padding: 72px 32px;">
@@ -324,7 +332,10 @@
     { "@type": "Offer", "name": "Pro", "price": "1999", "priceCurrency": "INR" },
     { "@type": "Offer", "name": "Starter - Yearly", "price": "2499", "priceCurrency": "INR" },
     { "@type": "Offer", "name": "Growth - Yearly", "price": "4999", "priceCurrency": "INR" },
-    { "@type": "Offer", "name": "Pro - Yearly", "price": "9999", "priceCurrency": "INR" }
+    { "@type": "Offer", "name": "Pro - Yearly", "price": "9999", "priceCurrency": "INR" },
+    { "@type": "Offer", "name": "Institute 10 teachers - Monthly", "price": "1999", "priceCurrency": "INR" },
+    { "@type": "Offer", "name": "Institute 20 teachers - Monthly", "price": "4999", "priceCurrency": "INR" },
+    { "@type": "Offer", "name": "Institute 30 teachers - Monthly", "price": "9999", "priceCurrency": "INR" }
   ]
 }
 </script>

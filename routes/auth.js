@@ -5,6 +5,7 @@ const db = require('../lib/db');
 const { requireTeacher } = require('../lib/auth');
 const { PLANS, trialExpiryFromNow, trackEnabled } = require('../lib/plans');
 const mailer = require('../lib/mailer');
+const { createInstitute } = require('../lib/institutes');
 
 const router = express.Router();
 
@@ -13,19 +14,25 @@ function generateOtp() {
 }
 
 router.get('/signup', (req, res) => {
-  res.render('signup', { error: null, refCode: req.query.ref || '', track: req.query.track === 'neet_jee' ? 'neet_jee' : 'general' });
+  res.render('signup', {
+    error: null,
+    refCode: req.query.ref || '',
+    track: req.query.track === 'neet_jee' ? 'neet_jee' : 'general',
+    accountType: req.query.type === 'institute' ? 'institute' : 'teacher',
+    instituteName: ''
+  });
 });
 
 router.post('/signup', (req, res) => {
   const { name, email, phone, password, ref } = req.body;
-  const examTrack = trackEnabled() && req.body.exam_track === 'neet_jee' ? 'neet_jee' : 'general';
-  if (!name || !email || !phone || !password) {
-    return res.render('signup', { error: 'All fields are required, including phone number.', refCode: ref || '', track: examTrack });
-  }
+  const accountType = req.body.account_type === 'institute' ? 'institute' : 'teacher';
+  const instituteName = String(req.body.institute_name || '').trim().slice(0, 120);
+  const examTrack = accountType === 'institute' || (trackEnabled() && req.body.exam_track === 'neet_jee') ? 'neet_jee' : 'general';
+  const again = (error) => res.render('signup', { error, refCode: ref || '', track: examTrack, accountType, instituteName });
+  if (!name || !email || !phone || !password) return again('All fields are required, including phone number.');
+  if (accountType === 'institute' && !instituteName) return again('Enter your institute or coaching centre name.');
   const existing = db.prepare('SELECT id FROM teachers WHERE email = ?').get(email.toLowerCase().trim());
-  if (existing) {
-    return res.render('signup', { error: 'An account with that email already exists.', refCode: ref || '', track: examTrack });
-  }
+  if (existing) return again('An account with that email already exists.');
   const hash = bcrypt.hashSync(password, 10);
   const trial = PLANS.trial;
   const otp = generateOtp();
@@ -70,6 +77,7 @@ router.post('/signup', (req, res) => {
       otpExpires,
       examTrack
     );
+  if (accountType === 'institute') createInstitute(Number(info.lastInsertRowid), instituteName);
   const signupToken = require('crypto').randomBytes(16).toString('hex');
   db.prepare('UPDATE teachers SET session_token = ? WHERE id = ?').run(signupToken, info.lastInsertRowid);
   req.session.sessionToken = signupToken;
@@ -87,7 +95,7 @@ router.post('/signup', (req, res) => {
         `Name: ${name.trim()}`,
         `Email: ${email.toLowerCase().trim()}`,
         `Phone: ${phone.trim()}`,
-        `Plan: ${trial.name} (free trial)`,
+        accountType === 'institute' ? `Institute: ${instituteName} (Institute Free Trial, 14 days)` : `Plan: ${trial.name} (free trial)`,
         `Signed up: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
       ].join('\n');
       mailer
@@ -325,7 +333,7 @@ router.post('/settings/password', requireTeacher, (req, res) => {
     return res.render('settings', { teacher: req.teacher, error: 'New password must be at least 6 characters.', saved: null, verificationSent: null, verificationError: null });
   }
   const hash = bcrypt.hashSync(new_password, 10);
-  db.prepare('UPDATE teachers SET password_hash = ? WHERE id = ?').run(hash, req.teacher.id);
+  db.prepare('UPDATE teachers SET password_hash = ?, must_change_password = 0 WHERE id = ?').run(hash, req.teacher.id);
   res.redirect('/settings?saved=password');
 });
 

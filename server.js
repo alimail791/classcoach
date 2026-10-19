@@ -21,9 +21,10 @@ const internalRoutes = require('./routes/internal');
 const liveRoutes = require('./routes/live');
 const blogRoutes = require('./routes/blog');
 const videoRoutes = require('./routes/videos');
+const instituteRoutes = require('./routes/institute');
 const { seedBank } = require('./lib/bank');
 const { startInactivityScheduler } = require('./lib/inactivity');
-const { trackEnabled, njTiers, genTiers } = require('./lib/plans');
+const { trackEnabled, njTiers, genTiers, instTiers } = require('./lib/plans');
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.set('trust proxy', 1);
 app.locals.neetJeeEnabled = trackEnabled();
 app.locals.njTiers = njTiers();
 app.locals.genTiers = genTiers();
+app.locals.instTiers = instTiers();
 // Public landing pages (see lib/landing_pages.js) — exposed to views so the
 // shared public footer can link them all.
 const { LANDING_PAGES } = require('./lib/landing_pages');
@@ -172,6 +174,7 @@ app.use('/', dashboardRoutes);
 app.use('/', testRoutes);
 app.use('/', materialRoutes);
 app.use('/', videoRoutes);
+app.use('/', instituteRoutes);
 app.use('/', trackingRoutes);
 app.use('/', studentRoutes);
 app.use('/', parentRoutes);

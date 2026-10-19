@@ -3,7 +3,7 @@ const QRCode = require('qrcode');
 const db = require('../lib/db');
 const live = require('../lib/live');
 const { requireTeacher } = require('../lib/auth');
-const { isPlanActive, trackEnabled } = require('../lib/plans');
+const { isPlanActive, trackEnabled, isTrialPlan } = require('../lib/plans');
 const { chapterIndex } = require('../lib/bank');
 const { buildWhatsAppLink } = require('../lib/whatsapp');
 
@@ -16,7 +16,7 @@ const SECONDS_CHOICES = [10, 20, 30, 45, 60];
 
 // Free and trial accounts host up to 30 players; any active paid plan, 300.
 function playerLimit(teacher) {
-  const paid = teacher.plan && !['free', 'trial'].includes(teacher.plan) && isPlanActive(teacher);
+  const paid = teacher.plan && !isTrialPlan(teacher.plan) && isPlanActive(teacher);
   return paid ? PAID_PLAYER_LIMIT : FREE_PLAYER_LIMIT;
 }
 

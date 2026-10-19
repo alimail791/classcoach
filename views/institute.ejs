@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Institute — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'institute' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">🏢 <%= institute.name %></h1>
+      <a href="/upgrade" class="btn <%= onTrial || !planActive ? 'btn-primary' : 'btn-ghost' %>"><%= onTrial ? 'Choose a plan' : 'Upgrade or renew' %></a>
+    </div>
+    <div class="content">
+
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <% if (message && message.password) { %>
+        <div class="flash flash-ok" style="display: flex; flex-direction: column; gap: 8px;">
+          <strong><%= message.kind === 'created' ? 'Teacher login created for ' + message.name : 'New password for ' + message.name %></strong>
+          <div style="font-family: ui-monospace, monospace; font-size: 14px; line-height: 1.7; background: #fff; border: 1px solid var(--good-line); border-radius: 8px; padding: 10px 14px;">
+            Login: <%= message.loginUrl %><br>Email: <%= message.email %><br>Password: <strong><%= message.password %></strong>
+          </div>
+          <span style="font-size: 13px;">Share these with the teacher now. This password won't be shown again<%= message.emailed ? ', and a copy has been emailed to them' : '' %>. They'll be asked to change it after logging in.</span>
+          <div><a href="<%= message.waLink %>" target="_blank" rel="noopener" class="btn btn-ghost" style="font-size: 13px;">Send on WhatsApp</a></div>
+        </div>
+      <% } else if (message && message.kind === 'deactivated') { %>
+        <div class="flash flash-ok"><%= message.name %> has been deactivated and signed out. Their classes and students stay, and you can reactivate them any time.</div>
+      <% } else if (message && message.kind === 'activated') { %>
+        <div class="flash flash-ok"><%= message.name %> can log in again.</div>
+      <% } %>
+
+      <% if (!planActive) { %>
+        <div class="flash flash-error">Your institute plan has expired. Teachers can still log in and see their classes, but no new students can join and AI generation is paused. <a href="/upgrade">Renew now →</a></div>
+      <% } else if (onTrial) { %>
+        <div class="flash" style="background: var(--accent-tint); border: 1px solid #E8C9A6;">Free trial: <strong><%= daysLeft %> day<%= daysLeft === 1 ? '' : 's' %> left</strong>, for up to <%= institute.max_teachers %> teachers and <%= institute.max_students %> students. <a href="/upgrade">See institute plans →</a></div>
+      <% } %>
+
+      <div class="grid-4">
+        <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 6px;">
+          <span style="font-size: 12px; color: var(--faint); font-weight: 600;">PLAN</span>
+          <span style="font-size: 16px; font-weight: 700;"><%= planName %></span>
+          <span style="font-size: 12px; color: var(--muted);"><%= institute.plan_expires_at ? (planActive ? 'Renews or ends ' : 'Ended ') + new Date(institute.plan_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '' %></span>
+        </div>
+        <% [['TEACHERS', seatsUsed, institute.max_teachers, 'Not counting you, the admin'], ['STUDENTS', studentsUsed, institute.max_students, 'Shared by every teacher'], ['AI THIS MONTH', aiUsed, institute.ai_limit_monthly, 'Shared monthly pool']].forEach(function (k) { var pct = k[2] ? Math.min(100, Math.round(k[1] * 100 / k[2])) : 0; %>
+        <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 6px;">
+          <span style="font-size: 12px; color: var(--faint); font-weight: 600;"><%= k[0] %></span>
+          <span style="font-size: 22px; font-family: 'Newsreader', serif;"><%= k[1] %> <span style="font-size: 14px; color: var(--faint);">/ <%= k[2] %></span></span>
+          <div style="height: 6px; background: #EFE6D8; border-radius: 99px; overflow: hidden;"><div style="height: 6px; width: <%= pct %>%; background: <%= pct >= 90 ? '#B4501C' : '#6B8F71' %>;"></div></div>
+          <span style="font-size: 12px; color: var(--muted);"><%= k[3] %></span>
+        </div>
+        <% }); %>
+      </div>
+
+      <div id="teachers" style="display: flex; flex-direction: column; gap: 14px;">
+        <h2 style="font-size: 20px;">Teachers</h2>
+        <form method="POST" action="/institute/teachers" class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-size: 14px; color: var(--muted);">Create a login for a teacher. They log in at classcoach.in with this email and password, then add their own classes and students.</span>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div class="field"><label for="t-name">Teacher's name</label><input id="t-name" name="name" required maxlength="100"></div>
+            <div class="field"><label for="t-email">Email</label><input id="t-email" type="email" name="email" required></div>
+            <div class="field"><label for="t-phone">Phone (for WhatsApp)</label><input id="t-phone" type="tel" name="phone" placeholder="9xxxxxxxxx"></div>
+            <div class="field"><label for="t-pass">Password (optional)</label><input id="t-pass" name="password" minlength="6" placeholder="Leave blank to create one"></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-primary" <%= seatsUsed >= institute.max_teachers || !planActive ? 'disabled' : '' %>>Create teacher login</button>
+            <span style="font-size: 13px; color: var(--faint);"><%= Math.max(0, institute.max_teachers - seatsUsed) %> of <%= institute.max_teachers %> teacher seats free</span>
+          </div>
+        </form>
+
+        <div class="card" style="overflow-x: auto;">
+          <table class="plain" style="min-width: 720px;">
+            <thead><tr><th>Teacher</th><th>Classes</th><th>Students</th><th>Last active</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <% members.forEach(function (m) { %>
+                <tr>
+                  <td><div style="font-weight: 600;"><%= m.name %><%= m.institute_role === 'owner' ? ' (admin, you)' : '' %></div><div style="font-size: 12px; color: var(--faint);"><%= m.email %><%= m.phone ? ' · ' + m.phone : '' %></div></td>
+                  <td><%= m.class_count %></td>
+                  <td><%= m.student_count %></td>
+                  <td style="font-size: 13px; color: var(--muted);"><%= m.last_active_at ? new Date(m.last_active_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Never' %></td>
+                  <td><% if (!m.active) { %><span class="badge badge-neutral">Deactivated</span><% } else if (m.must_change_password) { %><span class="badge badge-warm">Temporary password</span><% } else { %><span class="badge badge-good">Active</span><% } %></td>
+                  <td style="text-align: right; white-space: nowrap;">
+                    <% if (m.institute_role === 'teacher') { %>
+                      <form method="POST" action="/institute/teachers/<%= m.id %>/reset-password" style="display: inline;" onsubmit="return confirm('Create a new password for <%= m.name.replace(/'/g, '') %>? They will be signed out.');">
+                        <button type="submit" style="background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer;">Reset password</button>
+                      </form>
+                      <form method="POST" action="/institute/teachers/<%= m.id %>/toggle" style="display: inline;" <% if (m.active) { %>onsubmit="return confirm('Deactivate <%= m.name.replace(/'/g, '') %>? They will be signed out and cannot log in. Their classes and students stay.');"<% } %>>
+                        <button type="submit" style="background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer;"><%= m.active ? 'Deactivate' : 'Reactivate' %></button>
+                      </form>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="classes" style="display: flex; flex-direction: column; gap: 14px;">
+        <h2 style="font-size: 20px;">All classes</h2>
+        <% if (classes.length === 0) { %>
+          <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">No classes yet. Teachers create classes from their own dashboard. You can teach too: <a href="/classes">create your own class →</a></div>
+        <% } else { %>
+          <div class="card" style="overflow-x: auto;">
+            <table class="plain" style="min-width: 640px;">
+              <thead><tr><th>Class</th><th>Teacher</th><th>Students</th><th>Tests</th><th>Average score</th><th></th></tr></thead>
+              <tbody>
+                <% classes.forEach(function (c) { %>
+                  <tr>
+                    <td style="font-weight: 600;"><%= c.name %><% if (c.subject) { %><div style="font-size: 12px; color: var(--faint); font-weight: 400;"><%= c.subject %></div><% } %></td>
+                    <td><%= c.teacher_name %><%= c.teacher_active ? '' : ' (deactivated)' %></td>
+                    <td><%= c.student_count %></td>
+                    <td><%= c.test_count %></td>
+                    <td><%= c.avg_pct === null ? '—' : c.avg_pct + '%' %></td>
+                    <td><a href="/institute/classes/<%= c.id %>" style="font-size: 13px; font-weight: 600;">View report →</a></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+
+      <form method="POST" action="/institute/name" class="card" style="padding: 18px 20px; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+        <div class="field" style="flex: 1; min-width: 220px;"><label for="i-name">Institute name</label><input id="i-name" name="name" value="<%= institute.name %>" maxlength="120" required></div>
+        <button type="submit" class="btn btn-ghost">Save name</button>
+      </form>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>
