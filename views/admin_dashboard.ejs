@@ -3,11 +3,14 @@
 <head><%- include('partials/head', { title: 'Admin — ClassCoach' }) %></head>
 <body>
 <div style="min-height: 100vh; display: flex; flex-direction: column;">
-  <div class="topbar">
+  <div class="topbar" style="flex-wrap: wrap; gap: 10px;">
     <div class="crumbs">
       <span style="font-family: 'Newsreader', serif; font-size: 18px;">ClassCoach Admin</span>
     </div>
-    <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="#revenue" class="btn btn-ghost">₹ Revenue</a>
+      <a href="#institutes" class="btn btn-ghost">🏢 Institutes</a>
+      <a href="#teachers" class="btn btn-ghost">👥 Teachers</a>
       <a href="/admin/blog" class="btn btn-ghost">✎ Blog</a>
       <a href="/admin/export" class="btn btn-ghost">⬇ Export full backup</a>
       <form method="POST" action="/admin/logout"><button type="submit" class="btn btn-ghost">Log out</button></form>
@@ -23,41 +26,124 @@
           Email isn't configured — here's the reset link for <strong><%= resetFor %></strong> to send them yourself: <%= resetLink %>
         </div>
       <% } %>
-      <% if (deleteError) { %><div class="flash flash-error">Name didn't match — account not deleted.</div><% } %>
+      <% if (deleteError === 'owner') { %><div class="flash flash-error">That teacher is an institute admin with teachers under them. Deactivate the account instead, or remove the institute's teachers first.</div>
+      <% } else if (deleteError) { %><div class="flash flash-error">Name didn't match — account not deleted.</div><% } %>
+      <% if (saved) { %><div class="flash flash-ok">Plan saved for <%= saved %>.</div><% } %>
 
+      <% %>
+      <% function inr(n) { return '\u20b9' + Math.round(Number(n) || 0).toLocaleString('en-IN'); } %>
+      <% function shortDate(d) { return d ? new Date(String(d).replace(' ', 'T') + (String(d).length === 19 ? 'Z' : '')).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'; } %>
+
+      <h2 style="font-size: 20px;">Overview</h2>
       <div class="grid-4">
-        <div class="card stat-card">
-          <span class="label">Teachers</span>
-          <span class="value"><%= totals.teachers %></span>
-          <span class="sub"><%= totals.activeTeachers %> active</span>
-        </div>
-        <div class="card stat-card">
-          <span class="label">Students</span>
-          <span class="value"><%= totals.students %></span>
-          <span class="sub">Across all teachers</span>
-        </div>
-        <div class="card stat-card">
-          <span class="label">Tests created</span>
-          <span class="value"><%= totals.tests %></span>
-        </div>
-        <div class="card stat-card">
-          <span class="label">AI generations</span>
-          <span class="value"><%= totals.aiUsedThisMonth %></span>
-          <span class="sub">This month (<%= month %>)</span>
-        </div>
+        <div class="card stat-card"><span class="label">Teacher accounts</span><span class="value"><%= totals.teachers %></span><span class="sub"><%= totals.newThisWeek %> new this week · <%= totals.newThisMonth %> in 30 days</span></div>
+        <div class="card stat-card"><span class="label">Paying now</span><span class="value"><%= totals.paid %></span><span class="sub"><%= totals.onTrial %> on free trial · <%= totals.expired %> expired</span></div>
+        <div class="card stat-card"><span class="label">Expiring in 7 days</span><span class="value"><%= totals.expiringSoon %></span><span class="sub"><a href="/admin?f=expiring#teachers">See who →</a></span></div>
+        <div class="card stat-card"><span class="label">Active in last 7 days</span><span class="value"><%= totals.activeLast7 %></span><span class="sub"><%= totals.activeTeachers %> accounts enabled</span></div>
+        <div class="card stat-card"><span class="label">Students</span><span class="value"><%= totals.students %></span><span class="sub">Across all teachers</span></div>
+        <div class="card stat-card"><span class="label">Tests created</span><span class="value"><%= totals.tests %></span><span class="sub"><%= totals.attempts %> tests taken by students</span></div>
+        <div class="card stat-card"><span class="label">AI generations</span><span class="value"><%= totals.aiUsedThisMonth %></span><span class="sub">This month (<%= month %>)</span></div>
+        <div class="card stat-card"><span class="label">Institutes</span><span class="value"><%= institutes.length %></span><span class="sub"><%= institutes.filter(function (i) { return !i.isTrial && i.expiryDays !== null && i.expiryDays >= 0; }).length %> paying · <%= institutes.filter(function (i) { return i.isTrial; }).length %> on trial</span></div>
       </div>
 
-      <form method="GET" action="/admin" style="display: flex; gap: 10px; max-width: 400px;">
-        <input type="text" name="q" value="<%= q %>" placeholder="Search by name or email..." style="flex: 1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px;">
+      <h2 id="revenue" style="font-size: 20px;">Revenue</h2>
+      <div class="grid-4">
+        <div class="card stat-card"><span class="label">This month</span><span class="value"><%= inr(revenue.thisMonth) %></span><span class="sub"><%= month %></span></div>
+        <div class="card stat-card"><span class="label">Last 30 days</span><span class="value"><%= inr(revenue.last30) %></span><span class="sub"><%= revenue.abandoned %> unfinished checkouts in 30 days</span></div>
+        <div class="card stat-card"><span class="label">All time</span><span class="value"><%= inr(revenue.total) %></span><span class="sub"><%= revenue.count %> payments · <%= inr(revenue.viaWhatsApp) %> via WhatsApp</span></div>
+        <div class="card stat-card"><span class="label">By plan type (all time)</span><span class="sub" style="font-size: 13px; line-height: 1.7;">School &amp; general: <strong><%= inr(byPlanTrack.general) %></strong><br>NEET/JEE: <strong><%= inr(byPlanTrack.neet_jee) %></strong><br>Institutes: <strong><%= inr(byPlanTrack.institute) %></strong></span></div>
+      </div>
+      <div class="card" style="overflow-x: auto;">
+        <div style="padding: 14px 20px; border-bottom: 1px solid #EFE6D8; font-size: 14px; font-weight: 700;">Recent payments (last 25)</div>
+        <% if (payments.length === 0) { %>
+          <div style="padding: 20px; font-size: 14px; color: var(--muted);">No payments yet.</div>
+        <% } else { %>
+        <table class="plain" style="min-width: 760px;">
+          <thead><tr><th>Date</th><th>Teacher</th><th>Plan</th><th>Amount</th><th>Paid via</th><th>Status</th></tr></thead>
+          <tbody>
+            <% payments.forEach(function (p) { %>
+              <tr>
+                <td style="font-size: 13px; color: var(--muted); white-space: nowrap;"><%= shortDate(p.created_at) %></td>
+                <td><%= p.teacher_name || 'Deleted account' %><div style="font-size: 12px; color: var(--faint);"><%= p.teacher_email || '' %></div></td>
+                <td style="font-size: 13px;"><%= p.planName %></td>
+                <td style="font-weight: 600;"><%= inr(p.amount / 100) %></td>
+                <td style="font-size: 13px;"><%= p.viaWhatsApp ? 'WhatsApp bot' : 'Website' %></td>
+                <td><% if (p.status === 'paid') { %><span class="badge badge-good">Paid</span><% } else if (p.status === 'failed') { %><span class="badge badge-warm">Failed</span><% } else { %><span class="badge badge-neutral">Not completed</span><% } %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+        <% } %>
+      </div>
+
+      <h2 id="institutes" style="font-size: 20px;">Institutes</h2>
+      <div class="card" style="overflow-x: auto;">
+        <% if (institutes.length === 0) { %>
+          <div style="padding: 20px; font-size: 14px; color: var(--muted);">No institutes yet. Coaching centres sign up from the homepage's Institute pack section.</div>
+        <% } else { %>
+        <table class="plain" style="min-width: 980px;">
+          <thead><tr><th>Institute</th><th>Plan</th><th>Teachers</th><th>Students</th><th>AI this month</th><th>Expiry</th><th>Change plan</th></tr></thead>
+          <tbody>
+            <% institutes.forEach(function (i) { %>
+              <tr>
+                <td><span style="font-weight: 600;"><%= i.name %></span><div style="font-size: 12px; color: var(--faint);">Admin: <%= i.owner_name || '—' %> · <%= i.owner_email || '' %><%= i.owner_phone ? ' · ' + i.owner_phone : '' %></div><div style="font-size: 12px; color: var(--faint);">Since <%= shortDate(i.created_at) %></div></td>
+                <td style="font-size: 13px;"><%= i.planName %></td>
+                <td><%= i.seatsUsed %> / <%= i.max_teachers %></td>
+                <td><%= i.studentsUsed %> / <%= i.max_students %></td>
+                <td><%= i.aiUsed %> / <%= i.ai_limit_monthly %></td>
+                <td><% if (i.plan_expires_at === null) { %><span style="font-size: 12px; color: var(--faint);">No expiry</span><% } else if (i.expiryDays < 0) { %><span class="badge badge-warm">Expired <%= Math.abs(i.expiryDays) %>d ago</span><% } else { %><span style="font-size: 12px; color: var(--muted);"><%= i.expiryDays %>d left</span><% } %></td>
+                <td>
+                  <form method="POST" action="/admin/institutes/<%= i.id %>/plan" style="display: flex; flex-direction: column; gap: 6px; max-width: 220px;">
+                    <select name="plan_id" style="padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px;">
+                      <% planGroups[2].plans.forEach(function (p) { %>
+                        <option value="<%= p.id %>" <%= i.plan === p.id ? 'selected' : '' %>><%= p.name %> (<%= inr(p.price) %>)</option>
+                      <% }); %>
+                    </select>
+                    <select name="extend_months" style="padding: 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px;">
+                      <option value="">Don't change expiry</option>
+                      <option value="1">Extend 1 month</option>
+                      <option value="3">Extend 3 months</option>
+                      <option value="6">Extend 6 months</option>
+                      <option value="12">Extend 12 months</option>
+                    </select>
+                    <label style="font-size: 11px; color: var(--faint); display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="clear_expiry" value="1"> No expiry (never lock)</label>
+                    <button type="submit" class="btn btn-ghost" style="padding: 5px 10px; font-size: 11px; align-self: flex-start;">Save</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+        <% } %>
+      </div>
+      <p style="font-size: 12px; color: var(--faint); margin: 0;">An institute's plan applies to every teacher in it. Teacher seats don't count the institute admin.</p>
+
+      <h2 style="font-size: 20px;">Feature usage</h2>
+      <div class="grid-4">
+        <div class="card stat-card"><span class="label">Live Quiz games</span><span class="value"><%= usage.liveGames %></span><span class="sub"><%= usage.liveGames30 %> in 30 days · <%= usage.livePlayers %> players in total</span></div>
+        <div class="card stat-card"><span class="label">YouTube lessons shared</span><span class="value"><%= usage.videos %></span><span class="sub"><%= usage.materials %> slides &amp; notes created</span></div>
+        <div class="card stat-card"><span class="label">Refer &amp; earn</span><span class="value"><%= usage.referralSignups %></span><span class="sub">referred signups · <%= usage.referralBuyers %> bought · <%= usage.referralRewards %> rewards given (2 months each)</span></div>
+        <div class="card stat-card"><span class="label">Blog</span><span class="value"><%= usage.blogPublished %></span><span class="sub">published · <%= usage.blogDrafts %> drafts · <a href="/admin/blog">Write a post →</a></span></div>
+      </div>
+
+      <h2 id="teachers" style="font-size: 20px;">Teachers</h2>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <% [['all','All'],['paid','Paying'],['trial','On trial'],['expiring','Expiring in 7 days'],['expired','Expired'],['neet','NEET/JEE'],['institute','In an institute'],['inactive','Deactivated']].forEach(function (x) { %>
+          <a href="/admin?f=<%= x[0] %><%= q ? '&q=' + encodeURIComponent(q) : '' %>#teachers" class="btn <%= filter === x[0] ? 'btn-dark' : 'btn-ghost' %>" style="padding: 6px 12px; font-size: 12px;"><%= x[1] %></a>
+        <% }); %>
+      </div>
+      <form method="GET" action="/admin#teachers" style="display: flex; gap: 10px; max-width: 460px;">
+        <input type="hidden" name="f" value="<%= filter %>">
+        <input type="text" name="q" value="<%= q %>" placeholder="Search name, email, phone or institute..." style="flex: 1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px;">
         <button type="submit" class="btn btn-ghost">Search</button>
-        <% if (q) { %><a href="/admin" class="btn btn-ghost">Clear</a><% } %>
+        <% if (q) { %><a href="/admin?f=<%= filter %>#teachers" class="btn btn-ghost">Clear</a><% } %>
       </form>
 
-      <div class="card" style="overflow: hidden;">
+      <div class="card" style="overflow-x: auto;">
         <div style="padding: 16px 20px; border-bottom: 1px solid #EFE6D8;">
-          <span style="font-size: 14px; font-weight: 700;">All teacher accounts (<%= teachers.length %>)</span>
+          <span style="font-size: 14px; font-weight: 700;"><%= filter === 'all' ? 'All teacher accounts' : 'Matching accounts' %> (<%= teachers.length %>)</span>
         </div>
-        <table class="plain">
+        <table class="plain" style="min-width: 1000px;">
           <thead><tr><th>Teacher</th><th>Plan</th><th>Students</th><th>AI usage</th><th>Expiry</th><th>Status</th><th></th></tr></thead>
           <tbody>
             <% teachers.forEach(function(t) { %>
@@ -69,12 +155,23 @@
                   <span style="font-size: 12px; color: var(--faint);"><%= t.phone || '—' %></span>
                   <% if (t.email_verified) { %><span class="badge badge-good" style="margin-left: 4px;">Verified</span>
                   <% } else { %><span class="badge badge-neutral" style="margin-left: 4px;">Unverified</span><% } %>
+                  <% if (!t.institute_id) { %><span class="badge badge-neutral" style="margin-left: 4px;"><%= t.exam_track === 'neet_jee' ? 'NEET/JEE' : 'School & general' %></span><% } %>
+                  <div style="font-size: 11px; color: var(--faint); margin-top: 4px;">Joined <%= shortDate(t.created_at) %> · Last active <%= t.last_active_at ? shortDate(t.last_active_at) : 'never' %><%= t.referred ? ' · Referred ' + t.referred + ' (' + t.referredBought + ' bought)' : '' %></div>
+                  <div style="font-size: 11px; color: var(--faint);"><%= t.batchCount %> classes · <%= t.testCount %> tests</div>
                 </td>
                 <td>
-                  <form method="POST" action="/admin/teachers/<%= t.id %>/plan" style="display: flex; flex-direction: column; gap: 6px; max-width: 190px;">
+                  <% if (t.institute_id) { %>
+                    <span style="font-size: 13px;"><%= t.planName %></span>
+                    <div style="font-size: 11px; color: var(--faint);">Managed with the institute · <a href="#institutes">change there</a></div>
+                  <% } else { %>
+                  <form method="POST" action="/admin/teachers/<%= t.id %>/plan" style="display: flex; flex-direction: column; gap: 6px; max-width: 210px;">
                     <select name="plan_id" style="padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px;">
-                      <% plans.forEach(function(p) { %>
-                        <option value="<%= p.id %>" <%= t.plan === p.id ? 'selected' : '' %>><%= p.name %> (₹<%= p.price %>/<%= p.duration_months %>mo, <%= p.max_students %> students)</option>
+                      <% planGroups.slice(0, 2).forEach(function (g) { %>
+                        <optgroup label="<%= g.label %>">
+                          <% g.plans.forEach(function (p) { %>
+                            <option value="<%= p.id %>" <%= t.plan === p.id ? 'selected' : '' %>><%= p.name %> (<%= p.price ? inr(p.price) + ' / ' + durationLabel(p.duration_months) : 'free' %>, <%= p.max_students %> students)</option>
+                          <% }); %>
+                        </optgroup>
                       <% }); %>
                     </select>
                     <div style="display: flex; gap: 4px; align-items: center;">
@@ -92,9 +189,10 @@
                     </label>
                     <button type="submit" class="btn btn-ghost" style="padding: 5px 10px; font-size: 11px; align-self: flex-start;">Save</button>
                   </form>
+                  <% } %>
                 </td>
-                <td><%= t.studentCount %> / <%= t.max_students %></td>
-                <td><%= t.aiUsed %> / <%= t.ai_limit_monthly %></td>
+                <td><%= t.studentCount %><%= t.institute_id ? '' : ' / ' + t.max_students %></td>
+                <td><%= t.aiUsed %><%= t.institute_id ? '' : ' / ' + t.ai_limit_monthly %></td>
                 <td>
                   <% if (t.plan_expires_at === null) { %>
                     <span style="font-size: 12px; color: var(--faint);">No expiry</span>
@@ -140,7 +238,7 @@
       </div>
 
       <p style="font-size: 12px; color: var(--faint);">
-        Choosing a plan sets its student/AI limits immediately. Once a teacher's expiry date passes, their account freezes at its current student count and AI generation is blocked — nothing already there is deleted or hidden. "No expiry" exempts an account from this entirely.
+        For teachers in an institute, students and AI show this teacher's own share; the institute's totals and limits are in the Institutes table. Choosing a plan sets its student/AI limits immediately. Once a teacher's expiry date passes, their account freezes at its current student count and AI generation is blocked — nothing already there is deleted or hidden. "No expiry" exempts an account from this entirely.
       </p>
 
     </div>
