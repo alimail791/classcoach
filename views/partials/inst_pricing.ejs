@@ -94,10 +94,56 @@
     <% }); %>
   </div>
 
+
+  <% if (mode === 'buy') { %>
+  <div class="inp-custom" style="margin-top: 26px; background: var(--card); border: 1px dashed var(--accent); border-radius: 14px; padding: 22px 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+    <div style="flex: 1 1 100%;">
+      <h3 style="font-family: 'Newsreader', Georgia, serif; font-size: 20px; margin: 0 0 4px;">Need a different duration?</h3>
+      <p style="margin: 0; font-size: 14px; color: var(--muted);">Choose any number of months from 1 to 12. You pay the monthly price for each month; 12 months gets the yearly price.</p>
+    </div>
+    <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600;">Plan
+      <select id="cm-tier" style="min-height: 42px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: #fff;">
+        <% tiers.forEach(function (t, i) { %><option value="<%= t.key %>" data-m="<%= t.monthly.price %>" data-y="<%= t.yearly.price %>" data-t="<%= t.teachers %>" <%= i === featured ? 'selected' : '' %>><%= t.teachers %> teachers · <%= t.students %> students</option><% }); %>
+      </select>
+    </label>
+    <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600;">Months
+      <select id="cm-months" style="min-height: 42px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: #fff;">
+        <% for (var m = 1; m <= 12; m++) { %><option value="<%= m %>" <%= m === 6 ? 'selected' : '' %>><%= m %> month<%= m === 1 ? '' : 's' %></option><% } %>
+      </select>
+    </label>
+    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 150px;">
+      <span style="font-size: 12px; color: var(--faint); font-weight: 600;">TOTAL</span>
+      <span id="cm-total" style="font-family: 'Newsreader', Georgia, serif; font-size: 30px; line-height: 1.1;"></span>
+      <span id="cm-note" style="font-size: 12px; color: var(--muted);"></span>
+    </div>
+    <button type="button" class="btn btn-primary" id="cm-pay" style="min-height: 44px;" onclick="instCustomPay()" <%= (typeof razorpayConfigured !== 'undefined' && !razorpayConfigured) ? 'disabled' : '' %>>Pay</button>
+  </div>
+  <script>
+  (function () {
+    var off = <%= off %>;
+    var inr = function (n) { return '\u20b9' + Math.round(n).toLocaleString('en-IN'); };
+    function calc() {
+      var o = document.getElementById('cm-tier').selectedOptions[0];
+      var months = Number(document.getElementById('cm-months').value);
+      var full = months === 12 ? Number(o.dataset.y) : Number(o.dataset.m) * months;
+      var pay = off ? Math.round(full * (100 - off) / 100) : full;
+      document.getElementById('cm-total').innerHTML = off ? '<s style="opacity:.5;font-size:20px">' + inr(full) + '</s> ' + inr(pay) : inr(pay);
+      document.getElementById('cm-note').textContent = months === 12 ? 'Yearly price applied' : inr(Number(o.dataset.m)) + ' \u00d7 ' + months + ' month' + (months === 1 ? '' : 's') + (off ? ' \u00b7 ' + off + '% referral discount' : '');
+      document.getElementById('cm-pay').textContent = 'Pay ' + inr(pay);
+      return { id: o.value + '_c' + months, teachers: o.dataset.t, months: months, pay: pay };
+    }
+    window.instCustomPay = function () { var c = calc(); classcoachPay(c.id, 'Institute ' + c.teachers + ' teachers (' + c.months + ' month' + (c.months === 1 ? '' : 's') + ')', c.pay); };
+    document.getElementById('cm-tier').addEventListener('change', calc);
+    document.getElementById('cm-months').addEventListener('change', calc);
+    calc();
+  })();
+  </script>
+  <% } %>
   <div class="inp-foot">
     <span>Cards, UPI &amp; netbanking via Razorpay</span>
     <span>Renew early and the days you have left carry over</span>
     <span>14-day free trial: 2 teachers and 20 students</span>
+    <span>Or choose any duration from 1 to 12 months</span>
   </div>
 </div>
 
