@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Institute login — ClassCoach', description: 'Log in to your ClassCoach institute account: institute admins and institute teachers.' }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <%- include('partials/logo', { size: 34 }) %>
+        <span style="font-family: 'Newsreader', serif; font-size: 20px;">ClassCoach</span>
+        <span class="badge badge-warm" style="margin-left: auto;">🏢 Institutes</span>
+      </div>
+      <h1>Institute login</h1>
+      <p style="margin: 0; font-size: 14px; color: var(--muted); line-height: 1.55;">For institute admins and teachers whose login was created by their institute.</p>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <form method="POST" action="/institute/login" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="field"><label for="il-email">Email</label><input id="il-email" type="email" name="email" value="<%= typeof email !== 'undefined' ? email : '' %>" required autocomplete="username"></div>
+        <div class="field"><label for="il-pass">Password</label><input id="il-pass" type="password" name="password" required autocomplete="current-password"></div>
+        <button type="submit" class="btn btn-primary">Log in</button>
+      </form>
+      <a href="/forgot-password" style="font-size: 13px; color: var(--faint);">Forgot your password?</a>
+      <div style="font-size: 13px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 6px;">
+        <span>Teacher in an institute? Use the email and password your institute admin gave you. Your admin can reset it from their Institute page.</span>
+        <span>New institute? <a href="/signup?type=institute">Start a 14-day free trial</a></span>
+        <span>Individual teacher or tutor? <a href="/login">Log in here</a></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

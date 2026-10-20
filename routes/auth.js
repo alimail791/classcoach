@@ -226,29 +226,50 @@ router.post('/reset-password/:token', (req, res) => {
   res.render('login', { error: null, justReset: true });
 });
 
-router.get('/login', (req, res) => {
-  res.render('login', { error: req.query.moved ? 'You were signed out because this account was logged in on another device. Log in again to continue here.' : null });
-});
+const MOVED_MSG = 'You were signed out because this account was logged in on another device. Log in again to continue here.';
 
-router.post('/login', (req, res) => {
+// Shared by the teacher login (/login) and the institute login (/institute/login).
+function handleLogin(req, res, view) {
   const { email, password } = req.body;
   const teacher = db.prepare('SELECT * FROM teachers WHERE email = ?').get((email || '').toLowerCase().trim());
   if (!teacher || !bcrypt.compareSync(password || '', teacher.password_hash)) {
-    return res.render('login', { error: 'Incorrect email or password.' });
+    return res.render(view, { error: 'Incorrect email or password.', email: email || '' });
   }
   if (!teacher.active) {
-    return res.render('login', { error: 'This account has been deactivated. Contact support if you believe this is a mistake.' });
+    const msg = teacher.institute_id && teacher.institute_role === 'teacher'
+      ? 'This login has been deactivated by your institute admin. Please contact them.'
+      : 'This account has been deactivated. Contact support if you believe this is a mistake.';
+    return res.render(view, { error: msg, email: email || '' });
   }
   const token = require('crypto').randomBytes(16).toString('hex');
   db.prepare('UPDATE teachers SET session_token = ? WHERE id = ?').run(token, teacher.id);
   req.session.teacherId = teacher.id;
   req.session.sessionToken = token;
+  // Institute admins land on their institute page when they use the institute login.
+  if (view === 'institute_login' && teacher.institute_id && teacher.institute_role === 'owner') return res.redirect('/institute');
   res.redirect('/dashboard');
+}
+
+router.get('/login', (req, res) => {
+  res.render('login', { error: req.query.moved ? MOVED_MSG : null });
 });
 
+router.post('/login', (req, res) => handleLogin(req, res, 'login'));
+
+router.get('/institute/login', (req, res) => {
+  if (req.session.teacherId) {
+    const t = db.prepare('SELECT institute_id, institute_role, active FROM teachers WHERE id = ?').get(req.session.teacherId);
+    if (t && t.active) return res.redirect(t.institute_id && t.institute_role === 'owner' ? '/institute' : '/dashboard');
+  }
+  res.render('institute_login', { error: req.query.moved ? MOVED_MSG : null, email: '' });
+});
+
+router.post('/institute/login', (req, res) => handleLogin(req, res, 'institute_login'));
+
 router.post('/logout', (req, res) => {
+  const t = req.session.teacherId ? db.prepare('SELECT institute_id FROM teachers WHERE id = ?').get(req.session.teacherId) : null;
   req.session.teacherId = null;
-  res.redirect('/login');
+  res.redirect(t && t.institute_id ? '/institute/login' : '/login');
 });
 
 // Old link-based verification is kept only as a harmless fallback for any
