@@ -95,6 +95,7 @@
                 <td>
                   <form method="POST" action="/admin/institutes/<%= i.id %>/plan" style="display: flex; flex-direction: column; gap: 6px; max-width: 220px;">
                     <select name="plan_id" style="padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px;">
+                      <% if (!planGroups[2].plans.some(function (p) { return p.id === i.plan; })) { %><option value="<%= i.plan %>" selected><%= i.planName %> (current)</option><% } %>
                       <% planGroups[2].plans.forEach(function (p) { %>
                         <option value="<%= p.id %>" <%= i.plan === p.id ? 'selected' : '' %>><%= p.name %> (<%= inr(p.price) %>)</option>
                       <% }); %>
