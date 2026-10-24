@@ -9,6 +9,8 @@
       <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
       <form method="POST" action="/signup" style="display: flex; flex-direction: column; gap: 16px;">
         <input type="hidden" name="ref" value="<%= refCode %>">
+        <input type="hidden" name="ft" value="<%= typeof signupFormToken !== 'undefined' ? signupFormToken : '' %>">
+        <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
         <% var at = typeof accountType !== 'undefined' ? accountType : 'teacher'; %>
         <div class="field"><label>Account type</label>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">

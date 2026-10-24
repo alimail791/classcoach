@@ -6,8 +6,15 @@ const { requireTeacher } = require('../lib/auth');
 const { PLANS, trialExpiryFromNow, trackEnabled } = require('../lib/plans');
 const mailer = require('../lib/mailer');
 const { createInstitute } = require('../lib/institutes');
+const signupGuard = require('../lib/signupGuard');
 
 const router = express.Router();
+
+// Every render of the signup form carries a fresh signed "form loaded" token.
+router.use('/signup', (req, res, next) => {
+  res.locals.signupFormToken = signupGuard.issueFormToken();
+  next();
+});
 
 function generateOtp() {
   return String(crypto.randomInt(0, 1000000)).padStart(6, '0');
@@ -29,6 +36,14 @@ router.post('/signup', (req, res) => {
   const instituteName = String(req.body.institute_name || '').trim().slice(0, 120);
   const examTrack = accountType === 'institute' || (trackEnabled() && req.body.exam_track === 'neet_jee') ? 'neet_jee' : 'general';
   const again = (error) => res.render('signup', { error, refCode: ref || '', track: examTrack, accountType, instituteName });
+  signupGuard.cleanupUnverified();
+  const blocked = signupGuard.checkSignup(req);
+  if (blocked) {
+    console.log(`[Signup blocked] ${blocked} ip=${req.ip} email=${String(email || '').slice(0, 80)}`);
+    return again(blocked === 'ip-limit'
+      ? 'Too many signups from this network. Please try again in an hour, or WhatsApp us on +91 94434 24064.'
+      : 'Please check your details and try again. Use your real name.');
+  }
   if (!name || !email || !phone || !password) return again('All fields are required, including phone number.');
   if (accountType === 'institute' && !instituteName) return again('Enter your institute or coaching centre name.');
   const existing = db.prepare('SELECT id FROM teachers WHERE email = ?').get(email.toLowerCase().trim());
@@ -87,27 +102,31 @@ router.post('/signup', (req, res) => {
     mailer.sendOtpEmail({ to: email.toLowerCase().trim(), name: name.trim(), otp }).catch((err) => {
       console.error('OTP email failed to send:', err.message);
     });
-
-    if (process.env.ADMIN_NOTIFY_EMAIL) {
-      const notifyText = [
-        'A new teacher just registered on ClassCoach:',
-        '',
-        `Name: ${name.trim()}`,
-        `Email: ${email.toLowerCase().trim()}`,
-        `Phone: ${phone.trim()}`,
-        accountType === 'institute' ? `Institute: ${instituteName} (Institute Free Trial, 14 days)` : `Plan: ${trial.name} (free trial)`,
-        `Signed up: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
-      ].join('\n');
-      mailer
-        .sendPlainEmail({ to: process.env.ADMIN_NOTIFY_EMAIL, subject: `New ClassCoach signup: ${name.trim()}`, text: notifyText })
-        .catch((err) => console.error('Admin signup notification failed to send:', err.message));
-    }
   } else {
     console.log(`[Signup OTP] Email not configured. Code for ${email.toLowerCase().trim()}: ${otp}`);
   }
 
   res.redirect('/verify-otp');
 });
+
+// Tells the owner about a new signup once it has verified its email, so
+// bot signups that never verify don't fill the inbox.
+function notifyAdminOfSignup(teacher) {
+  if (!process.env.ADMIN_NOTIFY_EMAIL || !mailer.isConfigured()) return;
+  const inst = teacher.institute_id ? db.prepare('SELECT name FROM institutes WHERE id = ?').get(teacher.institute_id) : null;
+  const text = [
+    'A new teacher just registered on ClassCoach (email verified):',
+    '',
+    `Name: ${teacher.name}`,
+    `Email: ${teacher.email}`,
+    `Phone: ${teacher.phone}`,
+    inst ? `Institute: ${inst.name} (Institute Free Trial, 14 days)` : `Plan: ${PLANS.trial.name} (free trial)`,
+    `Signed up: ${new Date(teacher.created_at.replace(' ', 'T') + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+  ].join('\n');
+  mailer
+    .sendPlainEmail({ to: process.env.ADMIN_NOTIFY_EMAIL, subject: `New ClassCoach signup: ${teacher.name}`, text })
+    .catch((err) => console.error('Admin signup notification failed to send:', err.message));
+}
 
 const MAX_OTP_ATTEMPTS = 5;
 
@@ -142,6 +161,7 @@ router.post('/verify-otp', (req, res) => {
   }
 
   db.prepare('UPDATE teachers SET signup_verified = 1, email_verified = 1, email_otp = NULL, email_otp_expires = NULL, email_otp_attempts = 0 WHERE id = ?').run(teacher.id);
+  if (!teacher.signup_verified) notifyAdminOfSignup(teacher);
   res.redirect('/dashboard');
 });
 
