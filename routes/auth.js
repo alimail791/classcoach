@@ -109,6 +109,8 @@ router.post('/signup', (req, res) => {
   res.redirect('/verify-otp');
 });
 
+const MAX_OTP_ATTEMPTS = 5;
+
 router.get('/verify-otp', (req, res) => {
   if (!req.session.teacherId) return res.redirect('/login');
   const teacher = db.prepare('SELECT * FROM teachers WHERE id = ?').get(req.session.teacherId);
@@ -130,10 +132,16 @@ router.post('/verify-otp', (req, res) => {
     new Date(teacher.email_otp_expires) > new Date();
 
   if (!valid) {
+    const attempts = (teacher.email_otp_attempts || 0) + 1;
+    if (teacher.email_otp && attempts >= MAX_OTP_ATTEMPTS) {
+      db.prepare('UPDATE teachers SET email_otp = NULL, email_otp_expires = NULL, email_otp_attempts = 0 WHERE id = ?').run(teacher.id);
+      return res.render('verify_otp', { email: teacher.email, error: 'Too many wrong codes. For your security that code is cancelled. Tap "Resend code" below.', resent: null });
+    }
+    if (teacher.email_otp) db.prepare('UPDATE teachers SET email_otp_attempts = ? WHERE id = ?').run(attempts, teacher.id);
     return res.render('verify_otp', { email: teacher.email, error: 'That code is incorrect or has expired. Request a new one below.', resent: null });
   }
 
-  db.prepare('UPDATE teachers SET signup_verified = 1, email_verified = 1, email_otp = NULL, email_otp_expires = NULL WHERE id = ?').run(teacher.id);
+  db.prepare('UPDATE teachers SET signup_verified = 1, email_verified = 1, email_otp = NULL, email_otp_expires = NULL, email_otp_attempts = 0 WHERE id = ?').run(teacher.id);
   res.redirect('/dashboard');
 });
 
@@ -152,7 +160,7 @@ router.post('/verify-otp/resend', (req, res) => {
 
   const otp = generateOtp();
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-  db.prepare('UPDATE teachers SET email_otp = ?, email_otp_expires = ? WHERE id = ?').run(otp, otpExpires, teacher.id);
+  db.prepare('UPDATE teachers SET email_otp = ?, email_otp_expires = ?, email_otp_attempts = 0 WHERE id = ?').run(otp, otpExpires, teacher.id);
 
   if (mailer.isConfigured()) {
     mailer.sendOtpEmail({ to: teacher.email, name: teacher.name, otp }).catch((err) => {
@@ -287,7 +295,7 @@ router.post('/settings/resend-verification', requireTeacher, async (req, res) =>
 
   const otp = generateOtp();
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-  db.prepare('UPDATE teachers SET email_otp = ?, email_otp_expires = ? WHERE id = ?').run(otp, otpExpires, req.teacher.id);
+  db.prepare('UPDATE teachers SET email_otp = ?, email_otp_expires = ?, email_otp_attempts = 0 WHERE id = ?').run(otp, otpExpires, req.teacher.id);
 
   try {
     await mailer.sendOtpEmail({ to: req.teacher.email, name: req.teacher.name, otp });
@@ -327,7 +335,7 @@ router.post('/settings', requireTeacher, (req, res) => {
     const otp = generateOtp();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     db.prepare(
-      'UPDATE teachers SET name = ?, email = ?, phone = ?, email_verified = 0, email_otp = ?, email_otp_expires = ? WHERE id = ?'
+      'UPDATE teachers SET name = ?, email = ?, phone = ?, email_verified = 0, email_otp = ?, email_otp_expires = ?, email_otp_attempts = 0 WHERE id = ?'
     ).run(name.trim(), email.toLowerCase().trim(), (phone || '').trim(), otp, otpExpires, req.teacher.id);
     if (mailer.isConfigured()) {
       mailer.sendOtpEmail({ to: email.toLowerCase().trim(), name: name.trim(), otp }).catch(() => {});
