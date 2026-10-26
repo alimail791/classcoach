@@ -18,6 +18,30 @@ router.get('/admin/login', (req, res) => {
   res.render('admin_login', { error: null });
 });
 
+// Wrong-password limit: 5 wrong tries from one network within 15 minutes
+// locks that network out of the admin login for 30 minutes. The owner is
+// emailed (at most once an hour) when a network gets locked.
+const ADMIN_MAX_FAILS = 5;
+const ADMIN_FAIL_WINDOW_MS = 15 * 60 * 1000;
+const ADMIN_LOCK_MS = 30 * 60 * 1000;
+const adminFails = new Map(); // ip -> { times: [], lockedUntil }
+let lastLockAlert = 0;
+
+function adminLockState(ip) {
+  const now = Date.now();
+  const rec = adminFails.get(ip) || { times: [], lockedUntil: 0 };
+  rec.times = rec.times.filter((t) => now - t < ADMIN_FAIL_WINDOW_MS);
+  adminFails.set(ip, rec);
+  if (adminFails.size > 5000) adminFails.clear();
+  return rec;
+}
+
+const sameText = (a, b) => {
+  const x = crypto.createHash('sha256').update(String(a)).digest();
+  const y = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(x, y);
+};
+
 router.post('/admin/login', (req, res) => {
   const { email, password } = req.body;
   const adminEmail = (process.env.ADMIN_EMAIL || '').trim();
@@ -27,13 +51,47 @@ router.post('/admin/login', (req, res) => {
     return res.render('admin_login', { error: 'Admin login is not configured — set ADMIN_EMAIL and ADMIN_PASSWORD in .env.' });
   }
 
-  const emailMatches = (email || '').trim().toLowerCase() === adminEmail.toLowerCase();
-  const passwordMatches = (password || '') === adminPassword;
+  const ip = req.ip || 'unknown';
+  const rec = adminLockState(ip);
+  if (rec.lockedUntil > Date.now()) {
+    const mins = Math.ceil((rec.lockedUntil - Date.now()) / 60000);
+    console.log(`[Admin login] locked attempt ip=${ip}`);
+    return res.status(429).render('admin_login', { error: `Too many wrong attempts. Admin login is locked for ${mins} more minute${mins === 1 ? '' : 's'} on this network.` });
+  }
+
+  const emailMatches = sameText((email || '').trim().toLowerCase(), adminEmail.toLowerCase());
+  const passwordMatches = sameText(password || '', adminPassword);
 
   if (!emailMatches || !passwordMatches) {
+    rec.times.push(Date.now());
+    console.log(`[Admin login] failed ip=${ip} email=${String(email || '').slice(0, 80)} (${rec.times.length}/${ADMIN_MAX_FAILS})`);
+    if (rec.times.length >= ADMIN_MAX_FAILS) {
+      rec.lockedUntil = Date.now() + ADMIN_LOCK_MS;
+      rec.times = [];
+      console.log(`[Admin login] locked ip=${ip} for 30 minutes`);
+      if (process.env.ADMIN_NOTIFY_EMAIL && mailer.isConfigured() && Date.now() - lastLockAlert > 60 * 60 * 1000) {
+        lastLockAlert = Date.now();
+        mailer
+          .sendPlainEmail({
+            to: process.env.ADMIN_NOTIFY_EMAIL,
+            subject: 'ClassCoach admin login locked after wrong passwords',
+            text: [
+              `${ADMIN_MAX_FAILS} wrong admin passwords were tried from IP ${ip}, so that network is locked out of the admin login for 30 minutes.`,
+              '',
+              `Last email tried: ${String(email || '').slice(0, 80) || '(blank)'}`,
+              `Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`,
+              '',
+              'If this was not you, no action is needed. If it keeps happening, consider changing ADMIN_PASSWORD on Railway.'
+            ].join('\n')
+          })
+          .catch((err) => console.error('Admin lock alert failed to send:', err.message));
+      }
+      return res.status(429).render('admin_login', { error: 'Too many wrong attempts. Admin login is locked for 30 minutes on this network.' });
+    }
     return res.render('admin_login', { error: 'Incorrect email or password.' });
   }
 
+  adminFails.delete(ip);
   req.session.isAdminSession = true;
   res.redirect('/admin');
 });
