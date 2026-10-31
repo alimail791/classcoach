@@ -370,6 +370,9 @@ router.post('/settings', requireTeacher, (req, res) => {
       req.teacher.id
     );
   }
+  // A new phone number has to be confirmed on WhatsApp again.
+  const digits = (p) => String(p || '').replace(/\D/g, '').slice(-10);
+  if (digits(phone) !== digits(req.teacher.phone)) db.prepare('UPDATE teachers SET phone_verified = 0 WHERE id = ?').run(req.teacher.id);
   res.redirect('/settings?saved=profile');
 });
 
