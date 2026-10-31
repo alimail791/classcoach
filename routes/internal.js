@@ -45,6 +45,8 @@ function teacherSummary(t) {
     planActive: isPlanActive(t),
     hasPurchased: !!t.has_purchased,
     referralCode: t.referral_code || '',
+    phoneVerified: !!t.phone_verified,
+    emailVerified: !!t.email_verified,
     students: batches.reduce((n, b) => n + b.students, 0),
     batches
   };
@@ -80,6 +82,49 @@ router.post('/internal/wa/apply-plan', requireBotKey, express.json(), (req, res)
   applyPurchasedPlan(db, t.id, plan.id);
   markPurchasedAndCheckReferral(t.id);
   res.json({ ok: true, teacher: teacherSummary(db.prepare('SELECT * FROM teachers WHERE id = ?').get(t.id)) });
+});
+
+// Mark a teacher's phone as verified: the bot calls this when the teacher taps "Verify my number" or
+// messages it from the number on their account (a message from a number proves the number is theirs).
+router.post('/internal/wa/verify-phone', requireBotKey, express.json(), (req, res) => {
+  const t = findTeacherByPhone((req.body || {}).phone);
+  if (!t) return res.status(404).json({ found: false });
+  if (!t.phone_verified) db.prepare('UPDATE teachers SET phone_verified = 1 WHERE id = ?').run(t.id);
+  res.json({ ok: true, alreadyVerified: !!t.phone_verified, emailVerified: !!t.email_verified, name: t.name });
+});
+
+// Everyone the WhatsApp journey (welcome, verify, refer & earn, we miss you) may need to message: verified
+// signups with a phone, still active, who joined in the last 120 days or were active in that time.
+router.get('/internal/wa/journey', requireBotKey, (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT t.id, t.name, t.phone, t.email_verified, t.phone_verified, t.created_at, t.last_active_at, t.referral_code,
+              t.institute_id, t.institute_role, t.plan, t.plan_expires_at, t.has_purchased,
+              (SELECT COUNT(*) FROM students s JOIN batches b ON b.id = s.batch_id WHERE b.teacher_id = t.id) AS students,
+              (SELECT COUNT(*) FROM batches b WHERE b.teacher_id = t.id) AS classes
+       FROM teachers t
+       WHERE t.active = 1 AND t.signup_verified = 1 AND t.phone <> ''
+         AND (t.created_at >= datetime('now', '-120 days') OR t.last_active_at >= datetime('now', '-120 days'))`
+    )
+    .all();
+  const origin = process.env.SITE_ORIGIN || 'https://www.classcoach.in';
+  res.json({
+    teachers: rows.map((t) => ({
+      id: t.id,
+      name: t.name,
+      phone: t.phone,
+      emailVerified: !!t.email_verified,
+      phoneVerified: !!t.phone_verified,
+      createdAt: t.created_at ? t.created_at.replace(' ', 'T') + (t.created_at.includes('T') ? '' : 'Z') : null,
+      lastActiveAt: t.last_active_at || null,
+      kind: t.institute_id ? (t.institute_role === 'owner' ? 'institute_owner' : 'institute_teacher') : 'teacher',
+      referralUrl: t.referral_code ? `${origin}/signup?ref=${t.referral_code}` : null,
+      students: t.students,
+      classes: t.classes,
+      planActive: isPlanActive(t),
+      hasPurchased: !!t.has_purchased
+    }))
+  });
 });
 
 module.exports = router;

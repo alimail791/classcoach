@@ -34,7 +34,11 @@
               <label>Email <% if (teacher.email_verified) { %><span class="badge badge-good" style="margin-left: 6px;">Verified</span><% } else { %><span class="badge badge-neutral" style="margin-left: 6px;">Unverified</span><% } %></label>
               <input type="email" name="email" value="<%= teacher.email %>" required>
             </div>
-            <div class="field"><label>Phone number</label><input name="phone" value="<%= teacher.phone %>" placeholder="+91 9xxxxxxxxx"></div>
+            <div class="field">
+              <label>Phone number <% if (teacher.phone_verified) { %><span class="badge badge-good" style="margin-left: 6px;">Verified on WhatsApp</span><% } else if (teacher.phone) { %><span class="badge badge-neutral" style="margin-left: 6px;">Unverified</span><% } %></label>
+              <input name="phone" value="<%= teacher.phone %>" placeholder="+91 9xxxxxxxxx">
+              <% if (teacher.phone && !teacher.phone_verified) { %><a href="https://wa.me/919443424064?text=VERIFY" target="_blank" rel="noopener" style="font-size: 13px; color: var(--accent); margin-top: 4px;">Verify this number on WhatsApp →</a><% } %>
+            </div>
             <button type="submit" class="btn btn-dark" style="align-self: flex-start;">Save profile</button>
           </form>
           <p style="font-size: 12px; color: var(--faint); margin-top: 10px;">Changing your email will send a new verification code to the new address.</p>
