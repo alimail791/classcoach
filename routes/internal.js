@@ -108,6 +108,8 @@ router.get('/internal/wa/journey', requireBotKey, (req, res) => {
     )
     .all();
   const origin = process.env.SITE_ORIGIN || 'https://www.classcoach.in';
+  const totals = db.prepare("SELECT COUNT(*) AS all_t, SUM(active = 1 AND signup_verified = 1) AS ok_t, SUM(phone <> '') AS with_phone FROM teachers").get();
+  console.log(`[wa-journey] bot asked: ${rows.length} teachers to consider (accounts ${totals.all_t}, verified+active ${totals.ok_t || 0}, with phone ${totals.with_phone || 0})`);
   res.json({
     teachers: rows.map((t) => ({
       id: t.id,
