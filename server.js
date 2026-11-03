@@ -41,6 +41,8 @@ app.set('trust proxy', 1);
 app.locals.neetJeeEnabled = trackEnabled();
 app.locals.njTiers = njTiers();
 app.locals.genTiers = genTiers();
+app.locals.topupPacks = Object.values(require('./lib/credits').TOPUPS);
+app.locals.featureCredits = require('./lib/credits').FEATURE_CREDITS;
 app.locals.instTiers = instTiers();
 // Public landing pages (see lib/landing_pages.js) — exposed to views so the
 // shared public footer can link them all.
@@ -194,6 +196,8 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 startInactivityScheduler();
+
+try { require('./lib/creditsMigration').migrateToCredits(); } catch (e) { console.error('Credits migration failed:', e.message); }
 
 try { const n = seedBank(); if (n) console.log(`Loaded ${n} NEET bank questions`); } catch (e) { console.error('NEET bank load failed:', e.message); }
 

@@ -67,7 +67,7 @@
         <ul class="inp-list">
           <li>Up to <%= t.teachers %> teacher logins, created and managed by you</li>
           <li>Up to <%= t.students %> students across all teachers, each with their own login</li>
-          <li><%= t.ai.toLocaleString('en-IN') %> AI generations a month, shared by all teachers</li>
+          <li><span class="only-m"><%= t.ai.toLocaleString('en-IN') %></span><span class="only-y"><%= t.aiYearly.toLocaleString('en-IN') %></span> AI credits a month, shared by all teachers</li>
           <li>NEET/JEE question bank with previous-year questions, and Live Quiz games</li>
           <li>See every teacher's classes, results and weak chapters in one place</li>
           <li>Parent reports, printable papers and YouTube video lessons</li>

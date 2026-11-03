@@ -9,6 +9,7 @@ const { extractTextFromImage } = require('../lib/ocr');
 const mailer = require('../lib/mailer');
 const { generateTestPdf } = require('../lib/pdfExport');
 const { checkAiLimit, recordAiUsage } = require('../lib/usage');
+const { creditsFor } = require('../lib/credits');
 const { buildWhatsAppLink } = require('../lib/whatsapp');
 
 const router = express.Router();
@@ -127,9 +128,11 @@ router.post('/tests/:id/generate', requireTeacher, (req, res, next) => {
     res.render('test_edit', { teacher: req.teacher, test, batch, questions, error: null, aiError });
   };
 
-  const limitCheck = checkAiLimit(req.teacher);
+  const mcqCount = Math.max(1, Math.min(15, parseInt(count, 10) || 6));
+  const mcqCredits = creditsFor('mcq', { count: mcqCount });
+  const limitCheck = checkAiLimit(req.teacher, mcqCredits);
   if (!limitCheck.allowed) {
-    return renderCurrent(`You've used all ${limitCheck.limit} AI generations for this month. It resets next month, or ask your admin to raise the limit.`);
+    return renderCurrent(limitCheck.message);
   }
 
   let topicText = (syllabus_text || '').trim();
@@ -163,10 +166,12 @@ router.post('/tests/:id/generate', requireTeacher, (req, res, next) => {
   }
 
   try {
+    const meter = {};
     const generated = await generateQuestions({
       topicText,
-      count: Math.max(1, Math.min(15, parseInt(count, 10) || 6)),
-      chapterLabel: test.chapter
+      count: mcqCount,
+      chapterLabel: test.chapter,
+      meter
     });
     if (!generated.length) {
       return renderCurrent('The AI response could not be parsed into questions. Try again or shorten the text.');
@@ -178,7 +183,7 @@ router.post('/tests/:id/generate', requireTeacher, (req, res, next) => {
     generated.forEach((q, i) => {
       insert.run(test.id, 'mcq', q.text, JSON.stringify(q.options), q.correctIndex, q.chapter || test.chapter, maxPos + 1 + i);
     });
-    recordAiUsage(req.teacher.id);
+    recordAiUsage(req.teacher, { feature: 'mcq', credits: mcqCredits, meter });
     res.redirect(`/tests/${test.id}/edit`);
   } catch (err) {
     console.error('AI generation failed:', err.message);
@@ -313,18 +318,21 @@ router.post('/tests/:id/attempts/:attemptId/answers/:answerId/suggest-grade', re
   if (!answer) return res.status(404).json({ error: 'Answer not found' });
   if (answer.type !== 'descriptive') return res.status(400).json({ error: 'Only descriptive answers can be AI-suggested.' });
 
-  const limitCheck = checkAiLimit(req.teacher);
+  const gradeCredits = creditsFor('grade');
+  const limitCheck = checkAiLimit(req.teacher, gradeCredits);
   if (!limitCheck.allowed) {
-    return res.status(400).json({ error: `You've used all ${limitCheck.limit} AI generations for this month.` });
+    return res.status(400).json({ error: limitCheck.message });
   }
 
   try {
+    const meter = {};
     const suggestion = await suggestDescriptiveGrade({
       questionText: answer.question_text,
       studentAnswer: answer.text_answer,
-      maxMarks: answer.max_marks
+      maxMarks: answer.max_marks,
+      meter
     });
-    recordAiUsage(req.teacher.id);
+    recordAiUsage(req.teacher, { feature: 'grade', credits: gradeCredits, meter });
     res.json(suggestion);
   } catch (err) {
     res.status(500).json({ error: err.message });

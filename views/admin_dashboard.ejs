@@ -42,7 +42,7 @@
         <div class="card stat-card"><span class="label">Active in last 7 days</span><span class="value"><%= totals.activeLast7 %></span><span class="sub"><%= totals.activeTeachers %> accounts enabled</span></div>
         <div class="card stat-card"><span class="label">Students</span><span class="value"><%= totals.students %></span><span class="sub">Across all teachers</span></div>
         <div class="card stat-card"><span class="label">Tests created</span><span class="value"><%= totals.tests %></span><span class="sub"><%= totals.attempts %> tests taken by students</span></div>
-        <div class="card stat-card"><span class="label">AI generations</span><span class="value"><%= totals.aiUsedThisMonth %></span><span class="sub">This month (<%= month %>)</span></div>
+        <div class="card stat-card"><span class="label">AI credits used</span><span class="value"><%= totals.aiUsedThisMonth %></span><span class="sub">This month (<%= month %>)</span></div>
         <div class="card stat-card"><span class="label">Institutes</span><span class="value"><%= institutes.length %></span><span class="sub"><%= institutes.filter(function (i) { return !i.isTrial && i.expiryDays !== null && i.expiryDays >= 0; }).length %> paying · <%= institutes.filter(function (i) { return i.isTrial; }).length %> on trial</span></div>
       </div>
 
@@ -239,7 +239,7 @@
       </div>
 
       <p style="font-size: 12px; color: var(--faint);">
-        For teachers in an institute, students and AI show this teacher's own share; the institute's totals and limits are in the Institutes table. Choosing a plan sets its student/AI limits immediately. Once a teacher's expiry date passes, their account freezes at its current student count and AI generation is blocked — nothing already there is deleted or hidden. "No expiry" exempts an account from this entirely.
+        For teachers in an institute, students and AI show this teacher's own share; the institute's totals and limits are in the Institutes table. Choosing a plan sets its student/AI limits immediately. Once a teacher's expiry date passes, their account freezes at its current student count and AI is blocked — nothing already there is deleted or hidden. "No expiry" exempts an account from this entirely.
       </p>
 
     </div>

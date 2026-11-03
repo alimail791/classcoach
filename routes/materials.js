@@ -7,6 +7,7 @@ const { extractTextFromPdf } = require('../lib/pdf');
 const { extractTextFromImage } = require('../lib/ocr');
 const { generateMaterialPdf } = require('../lib/pdfExport');
 const { checkAiLimit, recordAiUsage } = require('../lib/usage');
+const { creditsFor } = require('../lib/credits');
 
 const router = express.Router();
 
@@ -63,9 +64,11 @@ router.post('/batches/:batchId/materials', requireTeacher, (req, res, next) => {
     return res.redirect(`/materials/${info.lastInsertRowid}/edit`);
   }
 
-  const limitCheck = checkAiLimit(req.teacher);
+  const materialFeature = materialType === 'notes' ? 'notes' : 'slides';
+  const materialCredits = creditsFor(materialFeature);
+  const limitCheck = checkAiLimit(req.teacher, materialCredits);
   if (!limitCheck.allowed) {
-    return renderError(`You've used all ${limitCheck.limit} AI generations for this month. It resets next month, or ask your admin to raise the limit.`);
+    return renderError(limitCheck.message);
   }
 
   let topicText = (source_text || '').trim();
@@ -93,12 +96,13 @@ router.post('/batches/:batchId/materials', requireTeacher, (req, res, next) => {
   if (!topicText) return renderError('Paste some source text, upload a PDF or photo, or choose "Start blank".');
 
   try {
-    const content = await generateMaterial({ type: materialType, topicText, chapterLabel: (chapter || '').trim() });
+    const meter = {};
+    const content = await generateMaterial({ type: materialType, topicText, chapterLabel: (chapter || '').trim(), meter });
     if (!content.length) return renderError('The AI response could not be parsed. Try again or shorten the text.');
     const info = db
       .prepare('INSERT INTO materials (teacher_id, batch_id, type, title, chapter, content_json) VALUES (?, ?, ?, ?, ?, ?)')
       .run(req.teacher.id, batch.id, materialType, title.trim(), (chapter || '').trim(), JSON.stringify(content));
-    recordAiUsage(req.teacher.id);
+    recordAiUsage(req.teacher, { feature: materialFeature, credits: materialCredits, meter });
     res.redirect(`/materials/${info.lastInsertRowid}/edit`);
   } catch (err) {
     console.error('Material generation failed:', err.message);
@@ -189,15 +193,18 @@ router.post('/batches/:batchId/students/:studentId/practice', requireTeacher, as
   const chapter = (req.body.chapter || '').trim();
   if (!chapter) return res.redirect(`/batches/${batch.id}/students/${student.id}?practiceError=No%20chapter%20specified`);
 
-  const limitCheck = checkAiLimit(req.teacher);
+  const practiceCredits = creditsFor('practice');
+  const limitCheck = checkAiLimit(req.teacher, practiceCredits);
   if (!limitCheck.allowed) {
     return res.redirect(
-      `/batches/${batch.id}/students/${student.id}?practiceError=${encodeURIComponent(`You've used all ${limitCheck.limit} AI generations for this month.`)}`
+      `/batches/${batch.id}/students/${student.id}?practiceError=${encodeURIComponent(limitCheck.message)}`
     );
   }
 
   try {
+    const meter = {};
     const content = await generateMaterial({
+      meter,
       type: 'notes',
       topicText: `Chapter: ${chapter}. Create a short self-study practice set for a student who is struggling with this chapter: 4 to 5 practice questions typical of this chapter, each immediately followed by its correct answer and a one-line explanation, at a level suitable for revision.`,
       chapterLabel: chapter
@@ -212,7 +219,7 @@ router.post('/batches/:batchId/students/:studentId/practice', requireTeacher, as
       info.lastInsertRowid,
       chapter
     );
-    recordAiUsage(req.teacher.id);
+    recordAiUsage(req.teacher, { feature: 'practice', credits: practiceCredits, meter });
 
     res.redirect(`/batches/${batch.id}/students/${student.id}?practiceGenerated=1`);
   } catch (err) {

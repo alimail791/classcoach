@@ -11,11 +11,12 @@
     <div class="content">
 
       <% if (upgraded) { %><div class="flash flash-ok">Payment received — your plan has been upgraded!</div><% } %>
+      <% if (typeof toppedUp !== 'undefined' && toppedUp) { %><div class="flash flash-ok">Payment received — your AI credits have been added!</div><% } %>
       <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
 
       <div style="display: flex; flex-direction: column; gap: 6px;">
         <span style="font-size: 13px; color: var(--faint);">Current plan</span>
-        <span style="font-size: 16px; font-weight: 600;"><%= planName || teacher.plan %><% if (typeof institute !== 'undefined' && institute) { %> · <%= institute.max_teachers %> teachers<% } %> · <%= teacher.max_students %> students · <%= teacher.ai_limit_monthly %> AI generations/month<% if (typeof institute !== 'undefined' && institute) { %> (shared by the institute)<% } %></span>
+        <span style="font-size: 16px; font-weight: 600;"><%= planName || teacher.plan %><% if (typeof institute !== 'undefined' && institute) { %> · <%= institute.max_teachers %> teachers<% } %> · <%= teacher.max_students %> students · <%= teacher.ai_limit_monthly %> AI credits/month<% if (typeof institute !== 'undefined' && institute) { %> (shared by the institute)<% } %></span>
       </div>
 
       <% if (!razorpayConfigured) { %>
@@ -27,7 +28,7 @@
       <% var isNJ = neetJeeEnabled && teacher.exam_track === 'neet_jee'; %>
       <% if (typeof instituteRole !== 'undefined' && instituteRole === 'teacher') { %>
         <div class="card" style="padding: 24px; font-size: 14px; color: var(--muted); line-height: 1.6;">
-          Your account is part of <strong style="color: var(--ink);"><%= institute ? institute.name : 'your institute' %></strong>. Your institute admin manages the plan for all teachers, so there's nothing to buy here. If you need more students or AI generations, ask your admin to upgrade.
+          Your account is part of <strong style="color: var(--ink);"><%= institute ? institute.name : 'your institute' %></strong>. Your institute admin manages the plan for all teachers, so there's nothing to buy here. If you need more students or AI credits, ask your admin to upgrade or buy a top-up.
         </div>
       <% } else if (typeof instituteRole !== 'undefined' && instituteRole === 'owner') { %>
         <% if (discountPct) { %>
@@ -43,7 +44,7 @@
               <span style="font-size: 15px; font-weight: 700;"><%= t.name %></span>
               <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--muted);">
                 <li>Up to <%= t.students %> students</li>
-                <li><%= t.ai %> AI generations / month</li>
+                <li><%= t.ai %> AI credits / month (<%= t.aiYearly %> on yearly)</li>
               </ul>
               <div style="border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
                 <div><span style="font-family: 'Newsreader', serif; font-size: 28px;">₹<%= t.short.price.toLocaleString('en-IN') %></span><span style="font-size: 13px; color: var(--faint);"> / <%= t.short.months %> months</span></div>
@@ -65,6 +66,26 @@
         </form>
       <% } %>
       <% } %>
+
+      <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-size: 15px; font-weight: 700;">AI credits</span>
+        <span style="font-size: 14px; color: var(--muted);">
+          This month: <b style="color: var(--ink);"><%= credits.used %> / <%= credits.limit %></b> used<% if (credits.topupLeft) { %> · <b style="color: var(--ink);"><%= credits.topupLeft %></b> top-up credits left<% } %> · <b style="color: var(--ink);"><%= credits.available %></b> available now
+        </span>
+        <span style="font-size: 13px; color: var(--faint);">
+          Each AI action costs: grading suggestion <%= featureCredits.grade %> · practice set <%= featureCredits.practice %> · MCQ set up to 10 <%= featureCredits.mcq %> (+1 per extra 10) · notes or slides <%= featureCredits.notes %>.
+          Monthly credits reset on the 1st and don't roll over. Top-up credits are used after monthly credits and last 6 months.
+        </span>
+        <% if (canBuyTopup) { %>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <% topupPacks.forEach(function (p) { %>
+              <button class="btn btn-ghost" onclick="classcoachPay('<%= p.id %>', '<%= p.name %>', <%= p.price %>)" <%= razorpayConfigured ? '' : 'disabled' %>>Buy <%= p.credits.toLocaleString('en-IN') %> credits · ₹<%= p.price %></button>
+            <% }); %>
+          </div>
+        <% } else if (!(typeof instituteRole !== 'undefined' && instituteRole === 'teacher')) { %>
+          <span style="font-size: 13px; color: var(--faint);">Top-up packs (100 for ₹99, 300 for ₹249, 1,000 for ₹699) are available once you're on a paid plan.</span>
+        <% } %>
+      </div>
 
       <p style="font-size: 12px; color: var(--faint);">Payments are handled by Razorpay — cards, UPI, netbanking. ClassCoach never sees or stores your card details.</p>
 
@@ -89,7 +110,7 @@ function classcoachPay(planId, planName, price) {
         amount: data.amount,
         currency: data.currency,
         name: 'ClassCoach',
-        description: planName + ' plan',
+        description: planName,
         order_id: data.orderId,
         prefill: { name: data.teacherName, email: data.teacherEmail, contact: data.teacherPhone },
         theme: { color: '#B4501C' },
@@ -106,7 +127,7 @@ function classcoachPay(planId, planName, price) {
             .then(function (r) { return r.json(); })
             .then(function (result) {
               if (result.success) {
-                window.location.href = '/upgrade?upgraded=1';
+                window.location.href = result.topup ? '/upgrade?toppedup=1' : '/upgrade?upgraded=1';
               } else {
                 window.location.href = '/upgrade?error=' + encodeURIComponent(result.error || 'Payment could not be verified.');
               }
