@@ -220,24 +220,28 @@
           <span style="font-size: 15px; font-weight: 700;">Free Trial</span>
           <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹0</span><span style="font-size: 13px; color: var(--faint);"> / 1 month</span></div>
           <span style="font-size: 13px; color: var(--muted);">Up to 10 students</span>
+          <span style="font-size: 13px; color: var(--muted);">50 AI credits</span>
         </div>
         <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px; border-color: var(--accent);">
           <span style="font-size: 15px; font-weight: 700; color: var(--accent-deep);">Starter</span>
           <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹499</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
           <div style="font-size: 13px; color: var(--ink);">or <strong>₹2,499 / year</strong> <span class="badge badge-good">Save ₹495</span></div>
           <span style="font-size: 13px; color: var(--muted);">Up to 20 students</span>
+          <span style="font-size: 13px; color: var(--muted);"><%= genTiers[0].ai %> AI credits / month (<%= genTiers[0].aiYearly %> on yearly)</span>
         </div>
         <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
           <span style="font-size: 15px; font-weight: 700;">Growth</span>
           <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹999</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
           <div style="font-size: 13px; color: var(--ink);">or <strong>₹4,999 / year</strong> <span class="badge badge-good">Save ₹995</span></div>
           <span style="font-size: 13px; color: var(--muted);">Up to 50 students</span>
+          <span style="font-size: 13px; color: var(--muted);"><%= genTiers[1].ai %> AI credits / month (<%= genTiers[1].aiYearly %> on yearly)</span>
         </div>
         <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
           <span style="font-size: 15px; font-weight: 700;">Pro</span>
           <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹1,999</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
           <div style="font-size: 13px; color: var(--ink);">or <strong>₹9,999 / year</strong> <span class="badge badge-good">Save ₹1,995</span></div>
           <span style="font-size: 13px; color: var(--muted);">Up to 100 students</span>
+          <span style="font-size: 13px; color: var(--muted);"><%= genTiers[2].ai %> AI credits / month (<%= genTiers[2].aiYearly %> on yearly)</span>
         </div>
       </div>
       <% if (neetJeeEnabled) { %>
@@ -256,7 +260,11 @@
         <span style="font-size: 22px;">🎁</span>
         <p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;"><strong>Refer &amp; earn:</strong> teachers get 2 months free when two teachers they refer buy any plan. Institutes get 40% off their next plan for every referral who buys. Find your referral link in your dashboard.</p>
       </div>
-      <p style="font-size: 12px; color: var(--faint); margin-top: 20px;">Plans are assigned by the ClassCoach team after enrollment — sign up for the free trial to get started.</p>
+      <div style="margin-top: 16px; padding: 18px 22px; border-radius: 12px; border: 1px solid var(--line); display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+        <span style="font-size: 22px;">⚡</span>
+        <p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;"><strong>How AI credits work:</strong> an MCQ set of up to 10 questions uses <%= featureCredits.mcq %> credits, notes or slides <%= featureCredits.notes %>, a student practice set <%= featureCredits.practice %>, and an AI grading suggestion <%= featureCredits.grade %>. Tests, auto-grading, Live Quiz, reports and the question bank don't use credits. Need more? Top-ups start at 100 credits for ₹99.</p>
+      </div>
+      <p style="font-size: 12px; color: var(--faint); margin-top: 20px;">Start with the free trial, then upgrade anytime from your dashboard — pay by UPI, card or netbanking.</p>
     </div>
   </div>
 
@@ -274,7 +282,7 @@
       <div style="display: flex; flex-direction: column; gap: 28px;">
         <div>
           <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">Does this work for descriptive/long-answer questions?</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Yes. Objective answers (MCQ, fill-in-the-blank) are graded automatically the moment a student submits. Descriptive answers are graded by you on a simple marking screen, with the final score updating once you're done.</p>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Yes. Objective answers (MCQ, fill-in-the-blank) are graded automatically the moment a student submits. Descriptive answers are graded by you on a simple marking screen — AI can suggest a mark for each answer — with the final score updating once you're done.</p>
         </div>
         <div>
           <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">How do parents get the report?</h3>
@@ -287,6 +295,10 @@
         <div>
           <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">How does Live Quiz work?</h3>
           <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Pick one of your tests (or, for NEET and JEE coaches, chapters from the question bank) and start the game. Students join on their phones with the QR code or game PIN shown on your screen, answer against the clock, and see a live leaderboard. When it ends you get each student's score and rank, and can send each parent the result on WhatsApp.</p>
+        </div>
+        <div>
+          <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">What are AI credits?</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Every plan includes AI credits each month for AI work: an MCQ set of up to 10 questions uses 2 credits, notes or slides 3, a student practice set 2, and an AI grading suggestion 1. Monthly credits reset each month. If you run out, buy a top-up (100 credits for ₹99) — or keep working, because tests, auto-grading, Live Quiz and reports never use credits.</p>
         </div>
         <div>
           <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">Where does my data live?</h3>
@@ -379,6 +391,11 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What are AI credits?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Every plan includes AI credits each month for AI work: an MCQ set of up to 10 questions uses 2 credits, notes or slides 3, a student practice set 2, and an AI grading suggestion 1. Monthly credits reset each month. If you run out, buy a top-up (100 credits for ₹99). Tests, auto-grading, Live Quiz and reports never use credits." }
+    },
     {
       "@type": "Question",
       "name": "Does this work for descriptive/long-answer questions?",
