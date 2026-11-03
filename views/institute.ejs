@@ -42,7 +42,7 @@
           <span style="font-size: 16px; font-weight: 700;"><%= planName %></span>
           <span style="font-size: 12px; color: var(--muted);"><%= institute.plan_expires_at ? (planActive ? 'Renews or ends ' : 'Ended ') + new Date(institute.plan_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '' %></span>
         </div>
-        <% [['TEACHERS', seatsUsed, institute.max_teachers, 'Not counting you, the admin'], ['STUDENTS', studentsUsed, institute.max_students, 'Shared by every teacher'], ['AI THIS MONTH', aiUsed, institute.ai_limit_monthly, 'Shared monthly pool']].forEach(function (k) { var pct = k[2] ? Math.min(100, Math.round(k[1] * 100 / k[2])) : 0; %>
+        <% [['TEACHERS', seatsUsed, institute.max_teachers, 'Not counting you, the admin'], ['STUDENTS', studentsUsed, institute.max_students, 'Shared by every teacher'], ['AI CREDITS THIS MONTH', aiUsed, institute.ai_limit_monthly, 'Shared monthly pool']].forEach(function (k) { var pct = k[2] ? Math.min(100, Math.round(k[1] * 100 / k[2])) : 0; %>
         <div class="card" style="padding: 18px 20px; display: flex; flex-direction: column; gap: 6px;">
           <span style="font-size: 12px; color: var(--faint); font-weight: 600;"><%= k[0] %></span>
           <span style="font-size: 22px; font-family: 'Newsreader', serif;"><%= k[1] %> <span style="font-size: 14px; color: var(--faint);">/ <%= k[2] %></span></span>

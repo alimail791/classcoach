@@ -1,13 +1,16 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireTeacher } = require('../lib/auth');
-const { PLANS, getPlan, applyPurchasedPlan, paidPlansForTrack, trackEnabled, durationLabel } = require('../lib/plans');
+const { PLANS, getPlan, applyPurchasedPlan, paidPlansForTrack, trackEnabled, durationLabel, addMonths } = require('../lib/plans');
 const { instituteFor } = require('../lib/institutes');
 const { INSTITUTE_DISCOUNT_PCT } = require('../lib/referrals');
 const razorpay = require('../lib/razorpay');
 const { markPurchasedAndCheckReferral } = require('../lib/referrals');
 const { notify } = require('../lib/notifications');
 const mailer = require('../lib/mailer');
+const { getTopup, TOPUP_VALID_MONTHS } = require('../lib/credits');
+const { creditSummary } = require('../lib/usage');
+const { isTrialPlan, isPlanActive } = require('../lib/plans');
 
 const router = express.Router();
 
@@ -16,6 +19,13 @@ const router = express.Router();
 function buyableTrack(teacher) {
   if (teacher.institute_id) return teacher.institute_role === 'owner' ? 'institute' : null;
   return teacher.exam_track;
+}
+
+// Top-ups are for accounts on an active paid plan: individual teachers, or
+// institute admins (credits go to the shared institute pool).
+function canBuyTopup(teacher) {
+  if (teacher.institute_id && teacher.institute_role !== 'owner') return false;
+  return isPlanActive(teacher) && !isTrialPlan(teacher.plan);
 }
 
 router.get('/upgrade', requireTeacher, (req, res) => {
@@ -31,7 +41,10 @@ router.get('/upgrade', requireTeacher, (req, res) => {
     razorpayConfigured: razorpay.isConfigured(),
     razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
     error: req.query.error || null,
-    upgraded: req.query.upgraded || null
+    upgraded: req.query.upgraded || null,
+    toppedUp: req.query.toppedup || null,
+    credits: creditSummary(req.teacher),
+    canBuyTopup: canBuyTopup(req.teacher)
   });
 });
 
@@ -51,6 +64,36 @@ router.post('/upgrade/create-order', requireTeacher, express.json(), async (req,
   if (!razorpay.isConfigured()) {
     return res.status(400).json({ error: 'Payments are not configured yet. Ask your admin to add Razorpay keys to .env.' });
   }
+  const topup = getTopup(req.body.plan_id);
+  if (topup) {
+    if (!canBuyTopup(req.teacher)) {
+      return res.status(400).json({ error: req.teacher.institute_id && req.teacher.institute_role !== 'owner' ? 'Your institute admin buys credits for the institute.' : 'Top-up packs need an active paid plan. Choose a plan first.' });
+    }
+    try {
+      const order = await razorpay.createOrder({
+        amountPaise: topup.price * 100,
+        receipt: `teacher_${req.teacher.id}_${topup.id}_${Date.now()}`,
+        notes: { teacher_id: String(req.teacher.id), plan_id: topup.id }
+      });
+      db.prepare(
+        'INSERT INTO payments (teacher_id, plan_id, amount, currency, razorpay_order_id, status, discount_pct) VALUES (?, ?, ?, ?, ?, ?, 0)'
+      ).run(req.teacher.id, topup.id, order.amount, order.currency, order.id, 'created');
+      return res.json({
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        planName: topup.name,
+        teacherName: req.teacher.name,
+        teacherEmail: req.teacher.email,
+        teacherPhone: req.teacher.phone
+      });
+    } catch (err) {
+      console.error('Razorpay order creation failed:', err.message);
+      return res.status(500).json({ error: 'Could not start payment: ' + err.message });
+    }
+  }
+
   const plan = getPlan(req.body.plan_id);
   if (!plan || plan.id === 'trial') {
     return res.status(400).json({ error: 'Invalid plan selected.' });
@@ -117,7 +160,7 @@ router.post('/upgrade/verify', requireTeacher, express.json(), (req, res) => {
   }
 
   applyAndFinalizePayment(payment, razorpay_payment_id);
-  res.json({ success: true });
+  res.json({ success: true, topup: !!getTopup(payment.plan_id) });
 });
 
 // Webhook backstop: fires server-to-server from Razorpay even if the
@@ -156,6 +199,28 @@ function applyAndFinalizePayment(payment, razorpayPaymentId) {
   if (fresh.status === 'paid') return; // already processed by the other path
 
   db.prepare("UPDATE payments SET status = 'paid', razorpay_payment_id = ? WHERE id = ?").run(razorpayPaymentId, payment.id);
+
+  const topup = getTopup(fresh.plan_id);
+  if (topup) {
+    const buyer = db.prepare('SELECT * FROM teachers WHERE id = ?').get(payment.teacher_id);
+    const expires = addMonths(new Date(), TOPUP_VALID_MONTHS).toISOString();
+    db.prepare('INSERT INTO credit_topups (teacher_id, institute_id, credits, remaining, expires_at, payment_id) VALUES (?, ?, ?, ?, ?, ?)').run(
+      buyer.institute_id ? null : buyer.id,
+      buyer.institute_id || null,
+      topup.credits,
+      topup.credits,
+      expires,
+      payment.id
+    );
+    const msg = `Payment received — ${topup.credits.toLocaleString('en-IN')} AI credits added${buyer.institute_id ? ' to your institute' : ''}. They're used after your monthly credits run out and stay valid for ${TOPUP_VALID_MONTHS} months.`;
+    notify('teacher', buyer.id, msg, 'ClassCoach');
+    if (mailer.isConfigured()) {
+      mailer
+        .sendPlainEmail({ to: buyer.email, subject: 'AI credits added', text: `Hi ${buyer.name},\n\n${msg}\n\n— ClassCoach` })
+        .catch((err) => console.error('Top-up confirmation email failed:', err.message));
+    }
+    return;
+  }
   // A discounted purchase uses up one of the institute's referral coupons.
   if (fresh.discount_pct > 0) {
     const buyer = db.prepare('SELECT institute_id FROM teachers WHERE id = ?').get(payment.teacher_id);
@@ -170,8 +235,8 @@ function applyAndFinalizePayment(payment, razorpayPaymentId) {
   const plan = getPlan(payment.plan_id);
   const message =
     plan.track === 'institute'
-      ? `Payment received — your institute is now on the ${plan.name} plan (${plan.max_teachers} teachers, ${plan.max_students} students, ${plan.ai_limit_monthly} AI generations/month shared) for the next ${durationLabel(plan.duration_months)}.`
-      : `Payment received — you're now on the ${plan.name} plan (${plan.max_students} students, ${plan.ai_limit_monthly} AI generations/month) for the next ${durationLabel(plan.duration_months)}.`;
+      ? `Payment received — your institute is now on the ${plan.name} plan (${plan.max_teachers} teachers, ${plan.max_students} students, ${plan.ai_limit_monthly} AI credits/month shared) for the next ${durationLabel(plan.duration_months)}.`
+      : `Payment received — you're now on the ${plan.name} plan (${plan.max_students} students, ${plan.ai_limit_monthly} AI credits/month) for the next ${durationLabel(plan.duration_months)}.`;
   notify('teacher', teacher.id, message, 'ClassCoach');
   if (mailer.isConfigured()) {
     mailer
