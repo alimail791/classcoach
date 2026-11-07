@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Career Test — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'career' }) %>
+  <div class="main">
+    <div class="topbar"><h1 style="font-size: 17px;">Career Aptitude Test</h1></div>
+    <div class="content">
+      <p style="margin:0;font-size:14px;color:var(--muted);max-width:720px;line-height:1.6;">
+        A 40-minute aptitude, interest and work-style test for students after Class 10 (which stream to take) and after Class 12 (which course or career).
+        Each student gets a personal report to share with parents, and you get a class summary for the principal. One seat is used when a student finishes the test.
+      </p>
+      <% if (bought) { %><div class="flash flash-ok">Payment received. Your seats have been added.</div><% } %>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+
+      <div class="grid-3">
+        <% tiers.forEach(function (t) { %>
+          <div class="card stat-card">
+            <span class="label"><%= t.name %> seats · ₹<%= t.price %>/student</span>
+            <span class="value"><%= seats[t.key] %></span>
+            <span class="sub"><%= t.blurb %><% if (t.bulk) { %><br><strong>School price:</strong> <% t.bulk.slice().reverse().forEach(function (b, i) { %><%= i ? ', ' : '' %>₹<%= b.price %> each for <%= b.min %>+<% }) %><% } %></span>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="grid-2" style="align-items: start;">
+        <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 14px;">
+          <h2 style="font-size: 19px;">Start a new assessment</h2>
+          <form method="POST" action="/career/batches" style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="field"><label>Name</label><input name="title" required maxlength="120" placeholder="e.g. Class 10 A — 2026"></div>
+            <div class="field"><label>School (shown on reports)</label><input name="school" maxlength="160" placeholder="e.g. St. Mary's Higher Secondary School"></div>
+            <div class="grid-2" style="gap: 12px;">
+              <div class="field"><label>Version</label>
+                <select name="level"><option value="10">After Class 10 — stream choice</option><option value="12">After Class 12 — course &amp; career</option></select></div>
+              <div class="field"><label>Report</label>
+                <select name="tier"><% tiers.forEach(function (t) { %><option value="<%= t.key %>" <%= t.key === 'standard' ? 'selected' : '' %>><%= t.name %> (<%= seats[t.key] %> seats)</option><% }) %></select></div>
+            </div>
+            <div class="field"><label>Default report language</label>
+              <select name="language"><% languages.forEach(function (l) { %><option><%= l %></option><% }) %></select>
+              <span style="font-size: 12px; color: var(--faint);">Students can change it. Basic reports are in English only.</span></div>
+            <div><button class="btn btn-primary" type="submit">Create and get the test link</button></div>
+          </form>
+        </div>
+
+        <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 14px;">
+          <h2 style="font-size: 19px;">Buy seats</h2>
+          <% if (!canBuy) { %>
+            <p style="font-size: 14px; color: var(--muted); margin: 0;">Your institute admin buys seats for the institute. You can use the institute's seats.</p>
+          <% } else if (!razorpayConfigured) { %>
+            <p style="font-size: 14px; color: var(--muted); margin: 0;">Online payment isn't set up yet. Message us on WhatsApp to buy seats for your school.</p>
+          <% } else { %>
+            <div class="grid-2" style="gap: 12px;">
+              <div class="field"><label>Report</label>
+                <select id="buy-tier"><% tiers.forEach(function (t) { %><option value="<%= t.key %>" <%= t.key === 'standard' ? 'selected' : '' %>><%= t.name %></option><% }) %></select></div>
+              <div class="field"><label>Students</label><input id="buy-qty" type="number" min="1" max="<%= maxQty %>" value="30"></div>
+            </div>
+            <div style="font-size: 15px;"><span id="buy-unit"></span> × <span id="buy-n"></span> = <strong id="buy-total" style="font-size: 20px;"></strong></div>
+            <div id="buy-hint" style="font-size: 12px; color: var(--good);"></div>
+            <div><button class="btn btn-dark" type="button" id="buy-btn">Pay with Razorpay</button></div>
+            <p style="font-size: 12px; color: var(--faint); margin: 0;">Seats don't expire. Schools paying by bank transfer can message us and we'll add the seats.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <h2 style="font-size: 20px;">Your assessments</h2>
+        <% if (!batches.length) { %>
+          <div class="card" style="padding: 20px; font-size: 14px; color: var(--muted);">No assessments yet. Create one above, then share the link or QR code with students.</div>
+        <% } else { %>
+          <div class="card" style="overflow-x: auto;">
+            <table class="plain">
+              <thead><tr><th>Assessment</th><th>Version</th><th>Report</th><th>Code</th><th>Completed</th><th>Status</th></tr></thead>
+              <tbody>
+                <% batches.forEach(function (b) { %>
+                  <tr>
+                    <td><a href="/career/batches/<%= b.id %>" style="font-weight: 600;"><%= b.title %></a><% if (b.school) { %><div style="font-size: 12px; color: var(--faint);"><%= b.school %></div><% } %></td>
+                    <td style="font-size: 13px;">Class <%= b.level %></td>
+                    <td style="font-size: 13px; text-transform: capitalize;"><%= b.tier %></td>
+                    <td><code><%= b.code %></code></td>
+                    <td><%= b.done %><% if (b.locked) { %> <span class="badge badge-warm"><%= b.locked %> need seats</span><% } %><% if (b.started) { %><div style="font-size: 12px; color: var(--faint);"><%= b.started %> in progress</div><% } %></td>
+                    <td><span class="badge <%= b.open ? 'badge-good' : 'badge-neutral' %>"><%= b.open ? 'Open' : 'Closed' %></span></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<% if (canBuy && razorpayConfigured) { %>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+(function () {
+  var TIERS = <%- JSON.stringify(tiers) %>;
+  var MAX = <%= maxQty %>;
+  var tierEl = document.getElementById('buy-tier'), qtyEl = document.getElementById('buy-qty');
+  function unit(t, q) {
+    var band = (t.bulk || []).find(function (b) { return q >= b.min; });
+    return band ? band.price : t.price;
+  }
+  function inr(n) { return '₹' + n.toLocaleString('en-IN'); }
+  function current() {
+    var t = TIERS.find(function (x) { return x.key === tierEl.value; });
+    var q = Math.max(1, Math.min(MAX, parseInt(qtyEl.value, 10) || 1));
+    return { t: t, q: q, u: unit(t, q) };
+  }
+  function render() {
+    var c = current();
+    document.getElementById('buy-unit').textContent = inr(c.u);
+    document.getElementById('buy-n').textContent = c.q;
+    document.getElementById('buy-total').textContent = inr(c.u * c.q);
+    var next = (c.t.bulk || []).slice().reverse().find(function (b) { return c.q < b.min; });
+    document.getElementById('buy-hint').textContent = next ? 'Buy ' + next.min + ' or more and pay ' + inr(next.price) + ' per student.' : '';
+  }
+  tierEl.addEventListener('change', render);
+  qtyEl.addEventListener('input', render);
+  render();
+
+  document.getElementById('buy-btn').addEventListener('click', function () {
+    var c = current();
+    fetch('/upgrade/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan_id: 'career_' + c.t.key + '_' + c.q }) })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error) { alert(data.error); return; }
+        var rzp = new Razorpay({
+          key: data.keyId, amount: data.amount, currency: data.currency, name: 'ClassCoach', description: data.planName, order_id: data.orderId,
+          prefill: { name: data.teacherName, email: data.teacherEmail, contact: data.teacherPhone },
+          theme: { color: '#B4501C' },
+          handler: function (response) {
+            fetch('/upgrade/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(response) })
+              .then(function (r) { return r.json(); })
+              .then(function (result) {
+                window.location.href = result.success ? '/career?bought=1' : '/career?error=' + encodeURIComponent(result.error || 'Payment could not be verified.');
+              });
+          }
+        });
+        rzp.on('payment.failed', function (resp) { alert('Payment failed: ' + ((resp.error && resp.error.description) || 'unknown error')); });
+        rzp.open();
+      })
+      .catch(function () { alert('Could not start payment — check your connection and try again.'); });
+  });
+})();
+</script>
+<% } %>
+</body>
+</html>

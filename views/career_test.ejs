@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Career Aptitude Test' }) %>
+<style>
+  body { background: var(--bg); }
+  .ct-wrap { max-width: 760px; margin: 0 auto; padding: 18px 16px 120px; display: flex; flex-direction: column; gap: 16px; }
+  .ct-head { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+  .ct-bar { height: 6px; background: #EFE6D8; border-radius: 3px; }
+  .ct-bar div { height: 6px; background: var(--accent); border-radius: 3px; width: 0; transition: width .2s; }
+  .ct-step { display: none; flex-direction: column; gap: 14px; }
+  .ct-step.on { display: flex; }
+  .ct-q { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .ct-q .t { font-size: 15px; line-height: 1.45; }
+  .ct-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ct-opts label, .ct-lk label { display: flex; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 14px; cursor: pointer; }
+  .ct-opts input:checked + span, .ct-lk input:checked + span { font-weight: 700; }
+  .ct-opts label:has(input:checked), .ct-lk label:has(input:checked) { border-color: var(--accent); background: var(--accent-tint); }
+  .ct-lk { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .ct-lk label { flex-direction: column; gap: 2px; padding: 8px 4px; text-align: center; font-size: 11px; }
+  .ct-lk input { margin: 0; }
+  .ct-nav { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); padding: 12px 16px; display: flex; justify-content: center; gap: 10px; }
+  .ct-intro { background: var(--accent-tint); border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.5; }
+  @media (max-width: 520px) { .ct-opts { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<%
+  var steps = [];
+  sections.aptitude.forEach(function (s) { steps.push({ kind: 'apt', title: s.label, items: s.items }); });
+  var chunk = function (arr, n) { var out = []; for (var i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
+  chunk(sections.interests, 12).forEach(function (c, i, all) { steps.push({ kind: 'int', title: 'Interests (' + (i + 1) + ' of ' + all.length + ')', items: c }); });
+  steps.push({ kind: 'trait', title: 'Work style', items: sections.traits });
+  var enjoy = ['Not at all', 'A little', 'Somewhat', 'Quite a lot', 'Very much'];
+  var trueOf = ['Not at all true', 'Rarely true', 'Sometimes', 'Mostly true', 'Very true'];
+%>
+<form method="POST" action="/c/t/<%= attempt.token %>" id="ct-form">
+<div class="ct-wrap">
+  <div class="ct-head">
+    <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--muted);">
+      <span><strong><%= attempt.student_name %></strong> · Career Aptitude Test</span>
+      <span id="ct-count"></span>
+    </div>
+    <div class="ct-bar"><div id="ct-bar"></div></div>
+    <h2 id="ct-title" style="font-size: 20px;"></h2>
+  </div>
+
+  <% steps.forEach(function (st, si) { %>
+    <div class="ct-step" data-title="<%= st.title %>">
+      <% if (si === 0) { %><div class="ct-intro"><strong>Part 1 — Aptitude (4 short sections).</strong> Pick the best answer. Aim for about 6 minutes per section. If you don't know, make your best guess or skip it.</div><% } %>
+      <% if (st.kind === 'int' && st.title.indexOf('(1 ') > -1) { %><div class="ct-intro"><strong>Part 2 — Interests.</strong> How much would you <em>enjoy</em> each activity? Don't think about marks or what others expect.</div><% } %>
+      <% if (st.kind === 'trait') { %><div class="ct-intro"><strong>Part 3 — Work style.</strong> How true is each statement about you?</div><% } %>
+      <% st.items.forEach(function (it, i) { %>
+        <div class="ct-q" data-q="<%= it.id %>">
+          <% if (st.kind === 'apt') { %>
+            <div class="t"><strong><%= i + 1 %>.</strong> <%= it.q %></div>
+            <div class="ct-opts">
+              <% it.o.forEach(function (opt, oi) { %><label><input type="radio" name="<%= it.id %>" value="<%= oi %>"><span><%= String.fromCharCode(65 + oi) %>. <%= opt %></span></label><% }) %>
+            </div>
+          <% } else { %>
+            <div class="t"><%= it.t %></div>
+            <div class="ct-lk">
+              <% (st.kind === 'int' ? enjoy : trueOf).forEach(function (lab, li) { %><label><input type="radio" name="<%= it.id %>" value="<%= li + 1 %>"><span><%= lab %></span></label><% }) %>
+            </div>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% }) %>
+  <div id="ct-msg" class="flash flash-error" hidden></div>
+</div>
+<div class="ct-nav">
+  <button type="button" class="btn btn-ghost" id="ct-prev">Back</button>
+  <button type="button" class="btn btn-primary" id="ct-next">Next</button>
+  <button type="submit" class="btn btn-primary" id="ct-submit" hidden>Submit and see my report</button>
+</div>
+</form>
+<script>
+(function () {
+  var KEY = 'cc_career_<%= attempt.token %>';
+  var form = document.getElementById('ct-form');
+  var steps = Array.prototype.slice.call(document.querySelectorAll('.ct-step'));
+  var cur = 0;
+  var store = {};
+  try { store = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  Object.keys(store).forEach(function (k) {
+    if (k === '_step') return;
+    var el = form.querySelector('input[name="' + k + '"][value="' + store[k] + '"]');
+    if (el) el.checked = true;
+  });
+  if (store._step) cur = Math.min(steps.length - 1, store._step);
+
+  function save() { try { store._step = cur; localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+  form.addEventListener('change', function (e) { if (e.target.name) { store[e.target.name] = e.target.value; save(); count(); } });
+
+  var total = document.querySelectorAll('.ct-q').length;
+  function count() {
+    var n = document.querySelectorAll('.ct-q input:checked').length;
+    document.getElementById('ct-count').textContent = n + ' / ' + total + ' answered';
+    document.getElementById('ct-bar').style.width = Math.round((n / total) * 100) + '%';
+  }
+  function unanswered(step) {
+    return Array.prototype.filter.call(step.querySelectorAll('.ct-q'), function (q) { return !q.querySelector('input:checked'); });
+  }
+  function show(i) {
+    cur = i;
+    steps.forEach(function (s, j) { s.classList.toggle('on', j === i); });
+    document.getElementById('ct-title').textContent = steps[i].getAttribute('data-title');
+    document.getElementById('ct-prev').style.visibility = i === 0 ? 'hidden' : 'visible';
+    document.getElementById('ct-next').hidden = i === steps.length - 1;
+    document.getElementById('ct-submit').hidden = i !== steps.length - 1;
+    document.getElementById('ct-msg').hidden = true;
+    window.scrollTo(0, 0);
+    save();
+  }
+  document.getElementById('ct-prev').addEventListener('click', function () { if (cur > 0) show(cur - 1); });
+  document.getElementById('ct-next').addEventListener('click', function () {
+    var isApt = cur < 4;
+    var missing = unanswered(steps[cur]);
+    // Aptitude questions may be skipped; interest and work-style answers are needed for a good report.
+    if (missing.length && !isApt) {
+      var m = document.getElementById('ct-msg');
+      m.textContent = 'Please answer every statement on this page (' + missing.length + ' left). There are no wrong answers.';
+      m.hidden = false;
+      missing[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    show(cur + 1);
+  });
+  form.addEventListener('submit', function (e) {
+    var missing = unanswered(steps[cur]);
+    if (missing.length) {
+      e.preventDefault();
+      var m = document.getElementById('ct-msg');
+      m.textContent = 'Please answer every statement on this page (' + missing.length + ' left).';
+      m.hidden = false;
+      missing[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    document.getElementById('ct-submit').disabled = true;
+    document.getElementById('ct-submit').textContent = 'Submitting…';
+    try { localStorage.removeItem(KEY); } catch (err) {}
+  });
+  count();
+  show(cur);
+})();
+</script>
+</body>
+</html>

@@ -11,6 +11,7 @@ const mailer = require('../lib/mailer');
 const { getTopup, TOPUP_VALID_MONTHS } = require('../lib/credits');
 const { creditSummary } = require('../lib/usage');
 const { isTrialPlan, isPlanActive } = require('../lib/plans');
+const careerSeats = require('../lib/career/seats');
 
 const router = express.Router();
 
@@ -94,6 +95,38 @@ router.post('/upgrade/create-order', requireTeacher, express.json(), async (req,
     }
   }
 
+  // Career test seats (routes/career.js). Any teacher can buy them except
+  // teachers inside an institute, whose admin buys for the institute.
+  const career = careerSeats.parseProduct(req.body.plan_id);
+  if (career) {
+    if (req.teacher.institute_id && req.teacher.institute_role !== 'owner') {
+      return res.status(400).json({ error: 'Your institute admin buys career test seats for the institute.' });
+    }
+    try {
+      const order = await razorpay.createOrder({
+        amountPaise: career.total * 100,
+        receipt: `teacher_${req.teacher.id}_career_${Date.now()}`,
+        notes: { teacher_id: String(req.teacher.id), plan_id: req.body.plan_id }
+      });
+      db.prepare(
+        'INSERT INTO payments (teacher_id, plan_id, amount, currency, razorpay_order_id, status, discount_pct) VALUES (?, ?, ?, ?, ?, ?, 0)'
+      ).run(req.teacher.id, req.body.plan_id, order.amount, order.currency, order.id, 'created');
+      return res.json({
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        planName: career.name,
+        teacherName: req.teacher.name,
+        teacherEmail: req.teacher.email,
+        teacherPhone: req.teacher.phone
+      });
+    } catch (err) {
+      console.error('Razorpay order creation failed:', err.message);
+      return res.status(500).json({ error: 'Could not start payment: ' + err.message });
+    }
+  }
+
   const plan = getPlan(req.body.plan_id);
   if (!plan || plan.id === 'trial') {
     return res.status(400).json({ error: 'Invalid plan selected.' });
@@ -160,7 +193,7 @@ router.post('/upgrade/verify', requireTeacher, express.json(), (req, res) => {
   }
 
   applyAndFinalizePayment(payment, razorpay_payment_id);
-  res.json({ success: true, topup: !!getTopup(payment.plan_id) });
+  res.json({ success: true, topup: !!getTopup(payment.plan_id), career: !!careerSeats.parseProduct(payment.plan_id) });
 });
 
 // Webhook backstop: fires server-to-server from Razorpay even if the
@@ -199,6 +232,20 @@ function applyAndFinalizePayment(payment, razorpayPaymentId) {
   if (fresh.status === 'paid') return; // already processed by the other path
 
   db.prepare("UPDATE payments SET status = 'paid', razorpay_payment_id = ? WHERE id = ?").run(razorpayPaymentId, payment.id);
+
+  const career = careerSeats.parseProduct(fresh.plan_id);
+  if (career) {
+    const buyer = db.prepare('SELECT * FROM teachers WHERE id = ?').get(payment.teacher_id);
+    careerSeats.addSeats({ teacher: buyer, tier: career.tier, qty: career.qty, paymentId: payment.id });
+    const msg = `Payment received — ${career.name} added${buyer.institute_id ? ' to your institute' : ''}. Each student who finishes the test uses one seat.`;
+    notify('teacher', buyer.id, msg, 'ClassCoach');
+    if (mailer.isConfigured()) {
+      mailer
+        .sendPlainEmail({ to: buyer.email, subject: 'Career test seats added', text: `Hi ${buyer.name},\n\n${msg}\n\n— ClassCoach` })
+        .catch((err) => console.error('Career seats confirmation email failed:', err.message));
+    }
+    return;
+  }
 
   const topup = getTopup(fresh.plan_id);
   if (topup) {

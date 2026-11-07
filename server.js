@@ -22,6 +22,7 @@ const liveRoutes = require('./routes/live');
 const blogRoutes = require('./routes/blog');
 const videoRoutes = require('./routes/videos');
 const instituteRoutes = require('./routes/institute');
+const careerRoutes = require('./routes/career');
 const { seedBank } = require('./lib/bank');
 const { startInactivityScheduler } = require('./lib/inactivity');
 const { trackEnabled, njTiers, genTiers, instTiers } = require('./lib/plans');
@@ -75,7 +76,7 @@ app.use(
 // for students, parents and tokenised links (reports, join, password reset,
 // magic links) are excluded so children's activity and secret URLs are never
 // sent to Google.
-const NO_ANALYTICS = /^\/(student|parent|r|join|reset-password|report|m|magic|unsubscribe|play|live)(\/|$)/;
+const NO_ANALYTICS = /^\/(student|parent|r|join|reset-password|report|m|magic|unsubscribe|play|live|c|career-report)(\/|$)/;
 app.use((req, res, next) => {
   res.locals.gaId = NO_ANALYTICS.test(req.path) ? '' : 'G-XVCD3VF3BY';
   next();
@@ -128,6 +129,8 @@ app.get('/robots.txt', (req, res) => {
       'Disallow: /settings',
       'Disallow: /admin',
       'Disallow: /live',
+      'Disallow: /career',
+      'Disallow: /c/',
       'Disallow: /play',
       'Disallow: /student',
       'Disallow: /parent',
@@ -189,6 +192,7 @@ app.use('/', neetBankRoutes);
 app.use('/', internalRoutes);
 app.use('/', liveRoutes);
 app.use('/', blogRoutes);
+app.use('/', careerRoutes);
 
 app.use((req, res) => {
   res.status(404).send('Page not found. <a href="/">Go home</a>');
