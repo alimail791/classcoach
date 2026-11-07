@@ -24,6 +24,7 @@ const videoRoutes = require('./routes/videos');
 const instituteRoutes = require('./routes/institute');
 const careerRoutes = require('./routes/career');
 const paperRoutes = require('./routes/papers');
+const omrRoutes = require('./routes/omr');
 const { seedBank } = require('./lib/bank');
 const { startInactivityScheduler } = require('./lib/inactivity');
 const { trackEnabled, njTiers, genTiers, instTiers } = require('./lib/plans');
@@ -196,6 +197,7 @@ app.use('/', liveRoutes);
 app.use('/', blogRoutes);
 app.use('/', careerRoutes);
 app.use('/', paperRoutes);
+app.use('/', omrRoutes);
 
 app.use((req, res) => {
   res.status(404).send('Page not found. <a href="/">Go home</a>');

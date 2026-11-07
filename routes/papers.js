@@ -148,7 +148,7 @@ router.get('/papers/:id', requireTeacher, (req, res) => {
   if (!paper) return res.status(404).send('Paper not found');
   const view = P.setView(paper, 0);
   const batches = db.prepare('SELECT id, name FROM batches WHERE teacher_id = ? ORDER BY name').all(req.teacher.id);
-  res.render('paper_view', { teacher: req.teacher, paper, view, batches, letters: P.SET_LETTERS.slice(0, paper.sets), notice: req.query.notice || null, error: req.query.error || null });
+  res.render('paper_view', { teacher: req.teacher, paper, view, batches, letters: P.SET_LETTERS.slice(0, paper.sets), omrEnabled: view.key.length > 0 && view.key.length <= 125, notice: req.query.notice || null, error: req.query.error || null });
 });
 
 router.post('/papers/:id/remove', requireTeacher, (req, res) => {
