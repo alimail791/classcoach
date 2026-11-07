@@ -4,6 +4,10 @@
 //   node broadcast.js leads.csv     — imports the CSV, then sends
 //   node broadcast.js               — no CSV given, just sends to
 //                                      whatever's already pending
+//   node broadcast.js schools.csv --campaign=schools
+//                                   — same, for the school campaign
+//                                     (career test, papers, OMR). Each
+//                                     campaign keeps its own pending list.
 //
 // Safe to re-run: already-sent and unsubscribed leads are always skipped,
 // and importing the same CSV twice won't create duplicates (matched by
@@ -27,9 +31,20 @@ const APP_URL = process.env.APP_URL || 'https://www.classcoach.in';
 const MAX_SENDS_PER_RUN = parseInt(process.env.MAX_SENDS_PER_RUN, 10) || 90;
 const DELAY_MS = 600; // keeps us safely under Resend's 2 req/sec limit
 
-const SUBJECT = 'Cut your grading time in half — free ClassCoach trial';
+const CAMPAIGN = (process.argv.find((a) => a.startsWith('--campaign=')) || '--campaign=tutors').split('=')[1];
+const CAMPAIGNS = ['tutors', 'schools'];
+if (!CAMPAIGNS.includes(CAMPAIGN)) {
+  console.error(`Unknown campaign "${CAMPAIGN}". Use one of: ${CAMPAIGNS.join(', ')}`);
+  process.exit(1);
+}
+
+const SUBJECTS = {
+  tutors: 'Cut your grading time in half — free ClassCoach trial',
+  schools: 'Stream choice after Class 10: a free career test for 10 of your students'
+};
 
 function emailBody(name) {
+  if (CAMPAIGN === 'schools') return schoolEmailBody(name);
   const greeting = name ? `Hi ${name},` : 'Hi,';
   return `${greeting}
 
@@ -46,6 +61,31 @@ ${APP_URL}
 
 ---
 You're receiving this because you're a teacher or coaching centre we thought this might help.
+Don't want these emails? Unsubscribe here: UNSUBSCRIBE_URL_PLACEHOLDER`;
+}
+
+function schoolEmailBody(name) {
+  const greeting = name ? `Dear ${name},` : 'Dear Principal,';
+  return `${greeting}
+
+In the next few months your Class 10 students will choose a stream, and your Class 12 students a course. Many of them will decide based on what their friends pick.
+
+The ClassCoach Career Aptitude Test helps them decide on evidence. In about 40 minutes on a phone or in your computer lab, it measures aptitude, interests and work style. Every student then gets a personal report: the stream (or, after Class 12, the courses and entrance exams) that fits them, with a note for parents. Reports can be in English, Tamil, Hindi, Telugu, Kannada, Malayalam and more.
+
+You get a one-page class summary: how the class splits across PCB, PCM, Commerce and Humanities, and which students need a conversation with a counsellor.
+
+See a sample student report: ${APP_URL}/sample-career-report
+See a sample class summary: ${APP_URL}/sample-class-summary
+
+Try it free with one section: every new school account gets 10 free reports.
+${APP_URL}/aptitude-test-for-class-10-and-12
+
+After that it is ₹599 per student, ₹249 for 100+ students and ₹199 for 300+. Reply to this email or message us on WhatsApp at +91 94434 24064 to book a short demo.
+
+— Akbar, Raise Academy (ClassCoach)
+
+---
+You're receiving this because your school's contact details are publicly listed.
 Don't want these emails? Unsubscribe here: UNSUBSCRIBE_URL_PLACEHOLDER`;
 }
 
@@ -84,13 +124,13 @@ function importLeads(csvPath) {
   const text = fs.readFileSync(csvPath, 'utf8');
   const rows = parseCsv(text).filter((r) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email));
 
-  const insert = db.prepare('INSERT INTO email_leads (email, name) VALUES (?, ?) ON CONFLICT(email) DO NOTHING');
+  const insert = db.prepare('INSERT INTO email_leads (email, name, campaign) VALUES (?, ?, ?) ON CONFLICT(email) DO NOTHING');
   let imported = 0;
   rows.forEach((r) => {
-    const info = insert.run(r.email, r.name);
+    const info = insert.run(r.email, r.name, CAMPAIGN);
     if (info.changes > 0) imported += 1;
   });
-  console.log(`Imported ${imported} new lead(s) from ${csvPath} (${rows.length - imported} were already in the list).`);
+  console.log(`Imported ${imported} new ${CAMPAIGN} lead(s) from ${csvPath} (${rows.length - imported} were already in the list).`);
 }
 
 // --- Sending ---
@@ -106,7 +146,7 @@ async function sendOne(lead) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: FROM_ADDRESS, to: [lead.email], subject: SUBJECT, text })
+    body: JSON.stringify({ from: FROM_ADDRESS, to: [lead.email], subject: SUBJECTS[CAMPAIGN], text })
   });
 
   if (!res.ok) {
@@ -127,9 +167,9 @@ async function sendPending() {
     process.exit(1);
   }
 
-  const pending = db.prepare("SELECT * FROM email_leads WHERE status = 'pending' LIMIT ?").all(MAX_SENDS_PER_RUN);
+  const pending = db.prepare("SELECT * FROM email_leads WHERE status = 'pending' AND campaign = ? LIMIT ?").all(CAMPAIGN, MAX_SENDS_PER_RUN);
   if (pending.length === 0) {
-    const remaining = db.prepare("SELECT COUNT(*) c FROM email_leads WHERE status = 'pending'").get().c;
+    const remaining = db.prepare("SELECT COUNT(*) c FROM email_leads WHERE status = 'pending' AND campaign = ?").get(CAMPAIGN).c;
     console.log(remaining === 0 ? 'No pending leads — everyone has been sent to or unsubscribed.' : 'Nothing to send (unexpected).');
     return;
   }
@@ -159,9 +199,9 @@ async function sendPending() {
          SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) AS sent,
          SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
          SUM(CASE WHEN status = 'unsubscribed' THEN 1 ELSE 0 END) AS unsubscribed
-       FROM email_leads`
+       FROM email_leads WHERE campaign = ?`
     )
-    .get();
+    .get(CAMPAIGN);
 
   console.log(`\nThis run: ${sent} sent, ${failed} failed.`);
   console.log(`Overall: ${totals.pending} pending, ${totals.sent} sent, ${totals.failed} failed, ${totals.unsubscribed} unsubscribed.`);
@@ -171,7 +211,7 @@ async function sendPending() {
 }
 
 async function main() {
-  const csvPath = process.argv[2];
+  const csvPath = process.argv.slice(2).find((a) => !a.startsWith('--'));
   if (csvPath) {
     if (!fs.existsSync(csvPath)) {
       console.error(`File not found: ${csvPath}`);
