@@ -28,6 +28,12 @@
 </head>
 <body>
 <div class="cr">
+  <% if (typeof sample !== 'undefined' && sample) { %>
+    <div class="no-print" style="background: var(--ink); color: #FBF6EE; border-radius: 10px; padding: 14px 18px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; font-size: 14px;">
+      <span><strong>Sample report.</strong> This is what each student and parent receives (Standard report). <a href="/sample-class-summary" style="color: #F5C9A0;">See the principal's class summary →</a></span>
+      <a href="/aptitude-test-for-class-10-and-12" class="btn btn-primary" style="padding: 8px 14px;">Get 10 free reports</a>
+    </div>
+  <% } %>
   <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
     <div style="display: flex; align-items: center; gap: 10px;"><%- include('partials/logo', { size: 30 }) %><span style="font-family: 'Newsreader', serif; font-size: 19px;">ClassCoach Career Report</span></div>
     <div class="cr-actions">

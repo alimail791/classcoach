@@ -100,9 +100,15 @@ app.get('/', (req, res) => {
 Object.keys(LANDING_PAGES).forEach((slug) => {
   app.get(`/${slug}`, (req, res) => {
     const page = LANDING_PAGES[slug];
+    // "Book a free demo" opens WhatsApp with a message naming the product.
+    const salesNumber = String(process.env.SALES_WHATSAPP || process.env.CAREER_COUNSEL_WHATSAPP || '').replace(/\D/g, '');
+    const demoLink = salesNumber
+      ? `https://wa.me/${salesNumber}?text=${encodeURIComponent(`Hi, I'd like a free demo of the ClassCoach ${page.nav} for my school / institute.`)}`
+      : null;
     res.render('landing', {
       page,
       slug,
+      demoLink,
       indexable: true,
       canonicalUrl: `${SITE_ORIGIN}/${slug}`,
       description: page.description
