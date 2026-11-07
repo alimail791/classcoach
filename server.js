@@ -23,6 +23,7 @@ const blogRoutes = require('./routes/blog');
 const videoRoutes = require('./routes/videos');
 const instituteRoutes = require('./routes/institute');
 const careerRoutes = require('./routes/career');
+const paperRoutes = require('./routes/papers');
 const { seedBank } = require('./lib/bank');
 const { startInactivityScheduler } = require('./lib/inactivity');
 const { trackEnabled, njTiers, genTiers, instTiers } = require('./lib/plans');
@@ -130,6 +131,7 @@ app.get('/robots.txt', (req, res) => {
       'Disallow: /admin',
       'Disallow: /live',
       'Disallow: /career',
+      'Disallow: /papers',
       'Disallow: /c/',
       'Disallow: /play',
       'Disallow: /student',
@@ -193,6 +195,7 @@ app.use('/', internalRoutes);
 app.use('/', liveRoutes);
 app.use('/', blogRoutes);
 app.use('/', careerRoutes);
+app.use('/', paperRoutes);
 
 app.use((req, res) => {
   res.status(404).send('Page not found. <a href="/">Go home</a>');
