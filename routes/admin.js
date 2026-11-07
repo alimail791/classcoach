@@ -7,6 +7,8 @@ const { PLANS, getPlan, addMonths, daysUntil, isPlanActive, isTrialPlan, duratio
 const { getInstitute, setInstitutePlan, teacherSeatsUsed } = require('../lib/institutes');
 const mailer = require('../lib/mailer');
 
+const careerSeats = require('../lib/career/seats');
+
 const router = express.Router();
 
 // --- Admin login: a completely separate credential from teacher accounts ---
@@ -177,15 +179,15 @@ router.get('/admin', requireAdminSession, (req, res) => {
     viaWhatsApp: one(`SELECT COALESCE(SUM(amount), 0) AS c FROM payments WHERE ${paid} AND substr(razorpay_order_id, 1, 3) = 'wa_'`).c / 100,
     abandoned: one("SELECT COUNT(*) AS c FROM payments WHERE status != 'paid' AND created_at >= ?", daysAgo(30)).c
   };
-  const byPlanTrack = { general: 0, neet_jee: 0, institute: 0 };
+  const byPlanTrack = { general: 0, neet_jee: 0, institute: 0, career: 0 };
   all(`SELECT plan_id, SUM(amount) AS amt FROM payments WHERE ${paid} GROUP BY plan_id`).forEach((r) => {
-    const tr = (getPlan(r.plan_id) || {}).track || 'general';
+    const tr = careerSeats.parseProduct(r.plan_id) ? 'career' : (getPlan(r.plan_id) || {}).track || 'general';
     byPlanTrack[tr] = (byPlanTrack[tr] || 0) + r.amt / 100;
   });
   const payments = all(
     `SELECT p.*, t.name AS teacher_name, t.email AS teacher_email FROM payments p LEFT JOIN teachers t ON t.id = p.teacher_id
      ORDER BY p.created_at DESC LIMIT 25`
-  ).map((p) => ({ ...p, planName: (getPlan(p.plan_id) || {}).name || p.plan_id, viaWhatsApp: String(p.razorpay_order_id).startsWith('wa_') }));
+  ).map((p) => ({ ...p, planName: (getPlan(p.plan_id) || careerSeats.parseProduct(p.plan_id) || {}).name || p.plan_id, viaWhatsApp: String(p.razorpay_order_id).startsWith('wa_') }));
 
   const institutes = all('SELECT i.*, t.name AS owner_name, t.email AS owner_email, t.phone AS owner_phone FROM institutes i LEFT JOIN teachers t ON t.id = i.owner_teacher_id ORDER BY i.created_at DESC').map((i) => ({
     ...i,
@@ -222,6 +224,19 @@ router.get('/admin', requireAdminSession, (req, res) => {
     totals,
     revenue,
     byPlanTrack,
+    career: {
+      seatsSold: one('SELECT COALESCE(SUM(qty), 0) AS c FROM career_seats').c,
+      seatsLeft: one('SELECT COALESCE(SUM(remaining), 0) AS c FROM career_seats').c,
+      tests: one("SELECT COUNT(*) AS c FROM career_attempts WHERE status = 'done'").c,
+      locked: one("SELECT COUNT(*) AS c FROM career_attempts WHERE status = 'locked'").c,
+      grants: all(
+        `SELECT s.*, COALESCE(t.name, i.name) AS owner_name FROM career_seats s LEFT JOIN teachers t ON t.id = s.teacher_id
+         LEFT JOIN institutes i ON i.id = s.institute_id ORDER BY s.created_at DESC LIMIT 15`
+      ),
+      tiers: Object.values(careerSeats.TIERS)
+    },
+    careerSaved: req.query.careerSaved || null,
+    careerError: req.query.careerError || null,
     payments,
     institutes,
     usage,
@@ -257,6 +272,19 @@ router.post('/admin/institutes/:id/plan', requireAdminSession, (req, res) => {
   setInstitutePlan(i.id, { planId, expiresAt });
   if (planId !== 'inst_trial' && i.owner_teacher_id) markPurchasedAndCheckReferral(i.owner_teacher_id);
   res.redirect('/admin?saved=' + encodeURIComponent(i.name) + '#institutes');
+});
+
+// Career test seats for schools that paid offline (bank transfer, cheque,
+// WhatsApp). Seats go to the teacher, or to their institute if they're in one.
+router.post('/admin/career-seats', requireAdminSession, (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const teacher = db.prepare('SELECT * FROM teachers WHERE lower(email) = ?').get(email);
+  const tier = careerSeats.getTier(req.body.tier) ? req.body.tier : null;
+  const qty = parseInt(req.body.qty, 10);
+  if (!teacher) return res.redirect('/admin?careerError=' + encodeURIComponent(`No teacher with email ${email}`) + '#career');
+  if (!tier || !(qty >= 1 && qty <= 5000)) return res.redirect('/admin?careerError=' + encodeURIComponent('Pick a tier and a quantity between 1 and 5000') + '#career');
+  careerSeats.addSeats({ teacher, tier, qty, note: String(req.body.note || 'Offline payment').slice(0, 200) });
+  res.redirect('/admin?careerSaved=' + encodeURIComponent(`${qty} ${careerSeats.TIERS[tier].name} seats added for ${teacher.name}`) + '#career');
 });
 
 router.post('/admin/teachers/:id/toggle-active', requireAdminSession, (req, res) => {

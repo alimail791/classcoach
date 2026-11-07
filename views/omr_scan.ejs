@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'OMR scanning — ' + paper.title }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'papers' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs"><a href="/papers/<%= paper.id %>" style="font-size:14px;">← <%= paper.title %></a><span class="divider-v"></span><h1 style="font-size:17px;">OMR scanning</h1></div>
+      <% if (scans.length) { %><a class="btn btn-ghost" href="/papers/<%= paper.id %>/omr/export.csv" style="padding:9px 14px;">Download CSV</a><% } %>
+    </div>
+    <div class="content">
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <% if (!count) { %>
+        <div class="flash flash-error">This paper has no multiple choice questions, so there is nothing to scan.</div>
+      <% } else if (tooMany) { %>
+        <div class="flash flash-error">An OMR sheet holds up to 125 MCQs; this paper has <%= count %>. Remove some questions from the paper first.</div>
+      <% } else { %>
+
+      <div class="grid-2" style="align-items:start;">
+        <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <h2 style="font-size:18px;">1. Print OMR sheets</h2>
+          <p style="font-size:13px;color:var(--muted);margin:0;">Each set has its own sheet; the QR code tells the scanner which set it is. Print at 100% ("actual size") on A4. Photocopies are fine.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;"><% letters.forEach(function (L) { %><a class="btn btn-ghost" style="padding:8px 14px;" target="_blank" href="/papers/<%= paper.id %>/omr-sheet?set=<%= L %>">Set <%= L %> sheet</a><% }) %></div>
+          <form method="POST" action="/papers/<%= paper.id %>/omr/settings" style="display:flex;gap:8px;align-items:center;font-size:13px;flex-wrap:wrap;">
+            Marks taken off per wrong answer: <input name="negative" type="number" step="0.25" min="0" max="10" value="<%= paper.omr_negative %>" style="width:80px;padding:6px;border:1px solid var(--line);border-radius:6px;">
+            <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;">Save &amp; re-mark</button>
+            <span style="color:var(--faint);">e.g. 1 for NEET-style (+4 / −1, if MCQs carry 4 marks)</span>
+          </form>
+        </div>
+
+        <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <h2 style="font-size:18px;">2. Scan filled sheets</h2>
+          <p style="font-size:13px;color:var(--muted);margin:0;">Photograph each sheet flat, in good light, with all 4 black corner squares in view. Select all the photos at once. Uses <%= perTen %> AI credit per 10 sheets.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="field"><label>Match roll numbers to batch</label>
+              <select id="omr-batch"><option value="">Don't match</option><% batches.forEach(function (b) { %><option value="<%= b.id %>"><%= b.name %></option><% }) %></select></div>
+            <div class="field"><label>Set if QR can't be read</label>
+              <select id="omr-set"><% letters.forEach(function (L) { %><option><%= L %></option><% }) %></select></div>
+          </div>
+          <input type="file" id="omr-files" accept="image/jpeg,image/png" multiple style="font-size:14px;">
+          <div><button class="btn btn-primary" id="omr-go" type="button">Scan sheets</button></div>
+          <div id="omr-progress" style="font-size:13px;color:var(--muted);"></div>
+          <div id="omr-live" style="display:flex;flex-direction:column;gap:4px;font-size:13px;"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;">
+          <h2 style="font-size:20px;">Results <span style="font-size:14px;color:var(--faint);">(<%= scans.length %> sheets · out of <%= maxScore %>)</span></h2>
+          <% if (scans.length && batches.length) { %>
+            <form method="POST" action="/papers/<%= paper.id %>/omr/to-results" style="display:flex;gap:8px;align-items:center;font-size:13px;">
+              Save matched marks to class results:
+              <select name="batch_id" style="padding:8px;border:1px solid var(--line);border-radius:6px;"><% batches.forEach(function (b) { %><option value="<%= b.id %>"><%= b.name %></option><% }) %></select>
+              <button class="btn btn-dark" style="padding:8px 14px;">Save</button>
+            </form>
+          <% } %>
+        </div>
+        <% if (!scans.length) { %>
+          <div class="card" style="padding:20px;font-size:14px;color:var(--muted);">No sheets scanned yet.</div>
+        <% } else { %>
+        <div class="card" style="overflow-x:auto;">
+          <table class="plain">
+            <thead><tr><th>Roll</th><th>Student</th><th>Set</th><th>Score</th><th>✓ / ✗ / blank</th><th>Check</th><th></th></tr></thead>
+            <tbody>
+              <% var rollCount = {}; scans.forEach(function (x) { if (x.roll) rollCount[x.roll] = (rollCount[x.roll] || 0) + 1; }); %>
+              <% scans.forEach(function (s) { var dup = s.roll && rollCount[s.roll] > 1; var str = s.answers.map(function (a) { return a === null ? '-' : a === 'M' ? '*' : 'ABCD'[a]; }).join(''); %>
+                <tr id="scan-<%= s.id %>">
+                  <td><strong><%= s.roll || '—' %></strong></td>
+                  <td style="font-size:13px;"><%= s.student_name || '' %><% if (!s.student_name && s.roll) { %><span style="color:var(--faint);">not matched</span><% } %></td>
+                  <td><%= s.set_letter %></td>
+                  <td><strong><%= s.score %></strong></td>
+                  <td style="font-size:13px;"><%= s.correct %> / <%= s.wrong %> / <%= s.blank %></td>
+                  <td style="font-size:12px;"><% if (dup || s.multiple || s.blank > count / 2 || !s.roll || s.roll.indexOf('?') > -1) { %><span class="badge badge-warm"><%= [dup ? 'roll scanned twice' : '', s.multiple ? s.multiple + ' double-marked' : '', s.blank > count / 2 ? 'mostly blank' : '', !s.roll || s.roll.indexOf('?') > -1 ? 'roll unclear' : ''].filter(Boolean).join(', ') %></span><% } %></td>
+                  <td>
+                    <details><summary style="font-size:12px;cursor:pointer;color:var(--accent);">Edit</summary>
+                      <form method="POST" action="/papers/<%= paper.id %>/omr/<%= s.id %>/edit" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;min-width:300px;">
+                        <label style="font-size:12px;">Roll <input name="roll" value="<%= s.roll %>" style="width:90px;padding:4px;border:1px solid var(--line);border-radius:4px;"></label>
+                        <label style="font-size:12px;">Set <select name="set"><% letters.forEach(function (L) { %><option <%= L === s.set_letter ? 'selected' : '' %>><%= L %></option><% }) %></select></label>
+                        <label style="font-size:12px;">Answers (A-D, "-" blank, "*" double)<textarea name="answers" rows="2" style="width:100%;font-family:monospace;padding:4px;border:1px solid var(--line);border-radius:4px;"><%= str %></textarea></label>
+                        <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;align-self:flex-start;">Save</button>
+                      </form>
+                      <form method="POST" action="/papers/<%= paper.id %>/omr/<%= s.id %>/delete" onsubmit="return confirm('Delete this sheet?');"><button style="border:none;background:none;color:var(--faint);font-size:12px;cursor:pointer;padding:4px 0;">Delete sheet</button></form>
+                    </details>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var go = document.getElementById('omr-go');
+  if (!go) return;
+  var prog = document.getElementById('omr-progress'), live = document.getElementById('omr-live');
+  // Shrinks big phone photos before upload and applies the photo's rotation.
+  function shrink(file) {
+    if (!window.createImageBitmap) return Promise.resolve(file);
+    return createImageBitmap(file, { imageOrientation: 'from-image' }).then(function (bmp) {
+      var s = Math.min(1, 2200 / Math.max(bmp.width, bmp.height));
+      var c = document.createElement('canvas');
+      c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      return new Promise(function (res) { c.toBlob(function (b) { res(b || file); }, 'image/jpeg', 0.9); });
+    }).catch(function () { return file; });
+  }
+  function line(html, bad) {
+    var d = document.createElement('div');
+    d.innerHTML = html;
+    d.style.color = bad ? '#8C3C13' : '';
+    live.appendChild(d);
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  go.addEventListener('click', function () {
+    var files = Array.prototype.slice.call(document.getElementById('omr-files').files);
+    if (!files.length) { prog.textContent = 'Choose the photos first.'; return; }
+    go.disabled = true; live.innerHTML = '';
+    fetch('/papers/<%= paper.id %>/omr/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: files.length }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error) { prog.textContent = d.error; go.disabled = false; return; }
+        var i = 0, ok = 0;
+        function next() {
+          if (i >= files.length) {
+            prog.textContent = 'Done: ' + ok + ' of ' + files.length + ' sheets read. Refreshing…';
+            setTimeout(function () { location.reload(); }, 1500);
+            return;
+          }
+          var f = files[i++];
+          prog.textContent = 'Reading sheet ' + i + ' of ' + files.length + '…';
+          shrink(f).then(function (blob) {
+            var fd = new FormData();
+            fd.append('sheet', blob, f.name);
+            fd.append('batch_id', document.getElementById('omr-batch').value);
+            fd.append('set', document.getElementById('omr-set').value);
+            return fetch('/papers/<%= paper.id %>/omr/scan', { method: 'POST', body: fd }).then(function (r) { return r.json(); });
+          }).then(function (r) {
+            if (r.ok) {
+              ok++;
+              line('✓ ' + esc(f.name) + ' — roll <strong>' + esc(r.roll || '?') + '</strong>' + (r.student ? ' (' + esc(r.student) + ')' : '') + ', set ' + r.set + (r.setFromQr ? '' : ' (QR not read)') + ': <strong>' + r.score + '</strong> · ' + r.correct + ' right, ' + r.wrong + ' wrong, ' + r.blank + ' blank' + (r.multiple ? ', ' + r.multiple + ' double-marked' : ''));
+            } else line('✗ ' + esc(f.name) + ' — ' + esc(r.error || 'failed'), true);
+          }).catch(function () { line('✗ ' + esc(f.name) + ' — upload failed', true); }).then(next);
+        }
+        next();
+      });
+  });
+})();
+</script>
+</body>
+</html>

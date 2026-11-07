@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: batch.title + ' — Career Test' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'career' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs"><a href="/career" style="font-size: 14px;">← Career Test</a><span class="divider-v"></span><h1 style="font-size: 17px;"><%= batch.title %></h1></div>
+      <div style="display: flex; gap: 8px;">
+        <a class="btn btn-ghost" href="/career/batches/<%= batch.id %>/summary" target="_blank" style="padding: 9px 14px;">Principal summary</a>
+        <a class="btn btn-ghost" href="/career/batches/<%= batch.id %>/export.csv" style="padding: 9px 14px;">Download CSV</a>
+      </div>
+    </div>
+    <div class="content">
+      <% if (unlocked) { %><div class="flash flash-ok"><%= unlocked %> report<%= unlocked == 1 ? '' : 's' %> unlocked.</div><% } %>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <% var locked = attempts.filter(function (a) { return a.status === 'locked'; }).length; %>
+      <% if (locked) { %>
+        <div class="flash flash-error" style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+          <span><strong><%= locked %> student<%= locked === 1 ? '' : 's' %></strong> finished the test but there were no <%= tier.name %> seats left. You have <%= seats[batch.tier] %> now.</span>
+          <form method="POST" action="/career/batches/<%= batch.id %>/unlock"><button class="btn btn-primary" style="padding: 8px 14px;">Unlock reports</button></form>
+        </div>
+      <% } else if (batch.open && seats[batch.tier] < 5) { %>
+        <div class="flash flash-error">Only <%= seats[batch.tier] %> <%= tier.name %> seat<%= seats[batch.tier] === 1 ? '' : 's' %> left. Students can still take the test, but their reports stay locked until you <a href="/career">buy seats</a>.</div>
+      <% } %>
+
+      <div class="grid-2" style="align-items: start;">
+        <div class="card" style="padding: 22px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+          <img src="<%= qr %>" alt="QR code for the test" width="160" height="160" style="border: 1px solid var(--line); border-radius: 8px;">
+          <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1;">
+            <span style="font-size: 13px; color: var(--faint);">Students open this link (or scan the QR) on a phone or a lab computer:</span>
+            <input readonly value="<%= link %>" onclick="this.select()" style="padding: 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; width: 100%;">
+            <span style="font-size: 13px;">Or go to <strong>classcoach.in/c</strong> and enter code <strong style="font-size: 18px; letter-spacing: 2px;"><%= batch.code %></strong></span>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <a class="btn btn-ghost" style="padding: 8px 12px; font-size: 13px;" target="_blank" href="https://wa.me/?text=<%= encodeURIComponent('Take your career aptitude test (about 40 minutes): ' + link) %>">Share on WhatsApp</a>
+              <form method="POST" action="/career/batches/<%= batch.id %>/toggle"><button class="btn btn-ghost" style="padding: 8px 12px; font-size: 13px;"><%= batch.open ? 'Close the test' : 'Reopen the test' %></button></form>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <h2 style="font-size: 18px;">Class at a glance</h2>
+            <span style="font-size: 12px; color: var(--faint);">Class <%= batch.level %> · <%= tier.name %> report · <%= batch.open ? 'Open' : 'Closed' %></span>
+          </div>
+          <% if (!summary.total) { %>
+            <p style="font-size: 14px; color: var(--muted); margin: 0;">Results show here as students finish.</p>
+          <% } else { %>
+            <span style="font-size: 13px; color: var(--muted);"><strong><%= summary.total %></strong> completed · <strong><%= summary.counselling %></strong> flagged for counselling</span>
+            <% summary.split.forEach(function (s) { %>
+              <div style="display: flex; flex-direction: column; gap: 3px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px;"><span><%= s.name %></span><span><%= s.n %> (<%= s.pct %>%)</span></div>
+                <div style="height: 8px; background: #EFE6D8; border-radius: 4px;"><div style="height: 8px; width: <%= s.pct %>%; background: var(--accent); border-radius: 4px;"></div></div>
+              </div>
+            <% }) %>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card" style="overflow-x: auto;">
+        <% if (!attempts.length) { %>
+          <div style="padding: 20px; font-size: 14px; color: var(--muted);">No students yet.</div>
+        <% } else { %>
+        <table class="plain">
+          <thead><tr><th>Student</th><% if (batch.level === '12') { %><th>Stream</th><% } %><th>Own goal</th><th>Top recommendation</th><th>Counselling</th><th>Report</th></tr></thead>
+          <tbody>
+            <% attempts.forEach(function (a) { %>
+              <tr>
+                <td><span style="font-weight: 600;"><%= a.student_name %></span><div style="font-size: 12px; color: var(--faint);"><%= [a.section, a.roll_no && ('Roll ' + a.roll_no)].filter(Boolean).join(' · ') %></div></td>
+                <% if (batch.level === '12') { %><td style="font-size: 13px;"><%= (a.current_stream || '').toUpperCase().replace('_', ' + ') %></td><% } %>
+                <td style="font-size: 13px;"><%= a.aspiration || '—' %></td>
+                <td style="font-size: 13px;">
+                  <% if (a.result && a.result.top[0]) { %><%= a.result.top[0].name %> <span style="color: var(--faint);">(<%= a.result.top[0].fit %>)</span><% } else { %>—<% } %>
+                </td>
+                <td style="font-size: 12px;"><% if (a.needs_counselling && a.result) { %><span class="badge badge-warm">Yes</span><div style="color: var(--faint); margin-top: 3px;"><%= a.result.counselReasons.join('; ') %></div><% } else if (a.result) { %>—<% } %></td>
+                <td style="font-size: 13px;">
+                  <% if (a.status === 'in_progress') { %><span class="badge badge-neutral">Taking test</span>
+                  <% } else if (a.status === 'locked') { %><span class="badge badge-warm">Needs seat</span>
+                  <% } else { %>
+                    <a href="/career-report/<%= a.token %>" target="_blank">Open</a>
+                    <% if (tier.ai && a.ai_status === 'pending') { %><div style="font-size: 11px; color: var(--faint);">AI report writing…</div><% } %>
+                    <% if (tier.ai && (a.ai_status === 'failed' || a.ai_status === 'none')) { %>
+                      <form method="POST" action="/career/attempts/<%= a.id %>/retry-ai"><button style="border: none; background: none; color: var(--accent); font-size: 11px; padding: 0; cursor: pointer;">Retry AI report</button></form>
+                    <% } %>
+                    <% if (a.parent_phone) { %><div><a style="font-size: 12px;" target="_blank" href="https://wa.me/<%= a.parent_phone.replace(/\D/g, '').length === 10 ? '91' + a.parent_phone.replace(/\D/g, '') : a.parent_phone.replace(/\D/g, '') %>?text=<%= encodeURIComponent(a.student_name + "'s career test report: " + link.replace('/c/' + batch.code, '/career-report/' + a.token)) %>">Send to parent</a></div><% } %>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

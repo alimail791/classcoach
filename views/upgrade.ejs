@@ -73,7 +73,7 @@
           This month: <b style="color: var(--ink);"><%= credits.used %> / <%= credits.limit %></b> used<% if (credits.topupLeft) { %> · <b style="color: var(--ink);"><%= credits.topupLeft %></b> top-up credits left<% } %> · <b style="color: var(--ink);"><%= credits.available %></b> available now
         </span>
         <span style="font-size: 13px; color: var(--faint);">
-          Each AI action costs: grading suggestion <%= featureCredits.grade %> · practice set <%= featureCredits.practice %> · MCQ set up to 10 <%= featureCredits.mcq %> (+1 per extra 10) · notes or slides <%= featureCredits.notes %>.
+          Each AI action costs: grading suggestion <%= featureCredits.grade %> · practice set <%= featureCredits.practice %> · MCQ set up to 10 <%= featureCredits.mcq %> (+1 per extra 10) · notes or slides <%= featureCredits.notes %> · question paper AI questions <%= featureCredits.paper %> (+1 per 10) · OMR scanning <%= featureCredits.omr %> per 10 sheets.
           Monthly credits reset on the 1st and don't roll over. Top-up credits are used after monthly credits and last 6 months.
         </span>
         <% if (canBuyTopup) { %>

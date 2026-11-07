@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Question Papers — ClassCoach' }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'papers' }) %>
+  <div class="main">
+    <div class="topbar"><h1 style="font-size: 17px;">Question Paper Generator</h1></div>
+    <div class="content">
+      <p style="margin:0;font-size:14px;color:var(--muted);max-width:720px;line-height:1.6;">
+        Set the sections and marks, pick chapters, and ClassCoach builds a print-ready paper with your school header and an answer key — in up to 4 shuffled sets (A/B/C/D) to stop copying.
+        Questions come from your question bank first<% if (bankIndex) { %> and the NEET bank<% } %>, which is free. AI writes only the missing questions (<%= featureCredits.paper %> credits + 1 per 10 questions).
+      </p>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+
+      <form method="POST" action="/papers" style="display:flex;flex-direction:column;gap:20px;">
+        <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:14px;">
+          <h2 style="font-size:18px;">1. Paper header</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
+            <div class="field"><label>School / institute name</label><input name="school" maxlength="160" value="<%= header.school || '' %>"></div>
+            <div class="field"><label>Exam name *</label><input name="exam" required maxlength="160" placeholder="e.g. Half-yearly exam 2026" value="<%= header.exam || '' %>"></div>
+            <div class="field"><label>Class</label><input name="className" maxlength="60" placeholder="e.g. 10" value="<%= header.className || '' %>"></div>
+            <div class="field"><label>Subject</label><input name="subject" maxlength="80" placeholder="e.g. Science" value="<%= header.subject || '' %>"></div>
+            <div class="field"><label>Time (minutes)</label><input name="duration" type="number" min="5" max="600" value="<%= header.duration || 60 %>"></div>
+          </div>
+          <div class="field"><label>Instructions (one per line)</label><textarea name="instructions" rows="3"><%= header.instructions || '' %></textarea></div>
+        </div>
+
+        <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:14px;">
+          <h2 style="font-size:18px;">2. Sections &amp; marks</h2>
+          <table class="plain" style="max-width:720px;">
+            <thead><tr><th>Section</th><th>Heading on paper</th><th>Questions</th><th>Marks each</th></tr></thead>
+            <tbody>
+              <tr><td>MCQ</td><td><input name="mcq_title" placeholder="Multiple choice questions" style="padding:8px;border:1px solid var(--line);border-radius:6px;width:100%;"></td><td><input class="pp-n" name="mcq_count" type="number" min="0" max="150" value="20" style="width:80px;padding:8px;border:1px solid var(--line);border-radius:6px;"></td><td><input class="pp-m" name="mcq_marks" type="number" min="1" max="20" value="1" style="width:70px;padding:8px;border:1px solid var(--line);border-radius:6px;"></td></tr>
+              <tr><td>Short answer</td><td><input name="short_title" placeholder="Short answer questions" style="padding:8px;border:1px solid var(--line);border-radius:6px;width:100%;"></td><td><input class="pp-n" name="short_count" type="number" min="0" max="60" value="5" style="width:80px;padding:8px;border:1px solid var(--line);border-radius:6px;"></td><td><input class="pp-m" name="short_marks" type="number" min="1" max="20" value="2" style="width:70px;padding:8px;border:1px solid var(--line);border-radius:6px;"></td></tr>
+              <tr><td>Long answer</td><td><input name="long_title" placeholder="Long answer questions" style="padding:8px;border:1px solid var(--line);border-radius:6px;width:100%;"></td><td><input class="pp-n" name="long_count" type="number" min="0" max="30" value="2" style="width:80px;padding:8px;border:1px solid var(--line);border-radius:6px;"></td><td><input class="pp-m" name="long_marks" type="number" min="1" max="30" value="5" style="width:70px;padding:8px;border:1px solid var(--line);border-radius:6px;"></td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:14px;">Total: <strong id="pp-total"></strong></div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+            <div class="field"><label>Easy %</label><input name="mix_easy" type="number" min="0" max="100" value="30" style="width:90px;"></div>
+            <div class="field"><label>Medium %</label><input name="mix_medium" type="number" min="0" max="100" value="50" style="width:90px;"></div>
+            <div class="field"><label>Hard %</label><input name="mix_hard" type="number" min="0" max="100" value="20" style="width:90px;"></div>
+            <div class="field"><label>Sets</label><select name="sets"><option value="1">1 (Set A)</option><option value="2">2 (A, B)</option><option value="3">3 (A–C)</option><option value="4" selected>4 (A–D)</option></select></div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:14px;">
+          <h2 style="font-size:18px;">3. Chapters</h2>
+          <% if (ownChapters.length) { %>
+            <div><strong style="font-size:14px;">From your question bank</strong> <span style="font-size:12px;color:var(--faint);">(questions from your own tests)</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;">
+              <% ownChapters.forEach(function (c) { %>
+                <label class="pp-ch"><input type="checkbox" name="mine_chapters" value="<%= c.chapter %>"> <span><%= c.chapter %></span> <em><%= c.mcq %> MCQ · <%= c.short %> short · <%= c.long %> long</em></label>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <p style="font-size:13px;color:var(--faint);margin:0;">Your question bank is empty — questions from tests you create show up here. For now, let the AI write the paper below.</p>
+          <% } %>
+          <% if (bankIndex) { %>
+            <div style="margin-top:6px;"><strong style="font-size:14px;">From the NEET bank</strong> <span style="font-size:12px;color:var(--faint);">(MCQs only)</span></div>
+            <% Object.keys(bankIndex).forEach(function (sub) { %>
+              <details><summary style="font-size:14px;cursor:pointer;"><%= sub %> (<%= bankIndex[sub].length %> chapters)</summary>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin-top:8px;">
+                  <% bankIndex[sub].forEach(function (c) { %><label class="pp-ch"><input type="checkbox" name="bank_chapters" value="<%= c.chapter %>"> <span><%= c.chapter %></span> <em><%= c.n %> Qs</em></label><% }) %>
+                </div>
+              </details>
+            <% }) %>
+          <% } %>
+          <label style="display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600;margin-top:8px;"><input type="checkbox" name="use_ai" value="1" checked> Let AI write the missing questions</label>
+          <div class="field"><label>Chapters / topics for AI (if not ticked above)</label><input name="topics" maxlength="1000" placeholder="e.g. Light — reflection and refraction; Electricity"></div>
+          <details><summary style="font-size:13px;cursor:pointer;color:var(--accent);">Paste syllabus or notes for the AI (optional)</summary>
+            <textarea name="source_text" rows="6" style="width:100%;margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:6px;" placeholder="Paste the chapter text so questions stick to what you taught."></textarea></details>
+        </div>
+        <div><button type="submit" class="btn btn-primary" id="pp-go">Build question paper</button></div>
+      </form>
+
+      <% if (papers.length) { %>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <h2 style="font-size:20px;">Your papers</h2>
+        <div class="card" style="overflow-x:auto;">
+          <table class="plain">
+            <thead><tr><th>Paper</th><th>Sets</th><th>Created</th></tr></thead>
+            <tbody><% papers.forEach(function (p) { %><tr><td><a href="/papers/<%= p.id %>" style="font-weight:600;"><%= p.title %></a><div style="font-size:12px;color:var(--faint);"><%= p.header.school %></div></td><td><%= p.sets %></td><td style="font-size:13px;"><%= String(p.created_at).slice(0, 10) %></td></tr><% }) %></tbody>
+          </table>
+        </div>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<style>
+  .pp-ch{display:flex;gap:8px;align-items:baseline;font-size:13.5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+  .pp-ch em{margin-left:auto;font-style:normal;font-size:11px;color:var(--faint);white-space:nowrap}
+</style>
+<script>
+(function(){
+  function total(){var n=document.querySelectorAll('.pp-n'),m=document.querySelectorAll('.pp-m'),q=0,t=0;
+    for(var i=0;i<n.length;i++){var c=parseInt(n[i].value,10)||0,k=parseInt(m[i].value,10)||0;q+=c;t+=c*k;}
+    document.getElementById('pp-total').textContent=q+' questions · '+t+' marks';}
+  document.querySelectorAll('.pp-n,.pp-m').forEach(function(el){el.addEventListener('input',total);});total();
+  document.querySelector('form[action="/papers"]').addEventListener('submit',function(){var b=document.getElementById('pp-go');b.disabled=true;b.textContent='Building… (AI can take up to a minute)';});
+})();
+</script>
+</body>
+</html>

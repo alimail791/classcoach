@@ -51,7 +51,7 @@
         <div class="card stat-card"><span class="label">This month</span><span class="value"><%= inr(revenue.thisMonth) %></span><span class="sub"><%= month %></span></div>
         <div class="card stat-card"><span class="label">Last 30 days</span><span class="value"><%= inr(revenue.last30) %></span><span class="sub"><%= revenue.abandoned %> unfinished checkouts in 30 days</span></div>
         <div class="card stat-card"><span class="label">All time</span><span class="value"><%= inr(revenue.total) %></span><span class="sub"><%= revenue.count %> payments · <%= inr(revenue.viaWhatsApp) %> via WhatsApp</span></div>
-        <div class="card stat-card"><span class="label">By plan type (all time)</span><span class="sub" style="font-size: 13px; line-height: 1.7;">School &amp; general: <strong><%= inr(byPlanTrack.general) %></strong><br>NEET/JEE: <strong><%= inr(byPlanTrack.neet_jee) %></strong><br>Institutes: <strong><%= inr(byPlanTrack.institute) %></strong></span></div>
+        <div class="card stat-card"><span class="label">By plan type (all time)</span><span class="sub" style="font-size: 13px; line-height: 1.7;">School &amp; general: <strong><%= inr(byPlanTrack.general) %></strong><br>NEET/JEE: <strong><%= inr(byPlanTrack.neet_jee) %></strong><br>Institutes: <strong><%= inr(byPlanTrack.institute) %></strong><br>Career test: <strong><%= inr(byPlanTrack.career) %></strong></span></div>
       </div>
       <div class="card" style="overflow-x: auto;">
         <div style="padding: 14px 20px; border-bottom: 1px solid #EFE6D8; font-size: 14px; font-weight: 700;">Recent payments (last 25)</div>
@@ -118,6 +118,31 @@
         <% } %>
       </div>
       <p style="font-size: 12px; color: var(--faint); margin: 0;">An institute's plan applies to every teacher in it. Teacher seats don't count the institute admin.</p>
+
+      <h2 id="career" style="font-size: 20px;">Career test seats</h2>
+      <% if (careerSaved) { %><div class="flash flash-ok"><%= careerSaved %></div><% } %>
+      <% if (careerError) { %><div class="flash flash-error"><%= careerError %></div><% } %>
+      <div class="grid-4">
+        <div class="card stat-card"><span class="label">Seats sold / granted</span><span class="value"><%= career.seatsSold %></span><span class="sub"><%= career.seatsLeft %> unused</span></div>
+        <div class="card stat-card"><span class="label">Tests completed</span><span class="value"><%= career.tests %></span><span class="sub"><%= career.locked %> waiting for seats</span></div>
+      </div>
+      <div class="card" style="padding: 18px;">
+        <form method="POST" action="/admin/career-seats" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+          <div class="field"><label>Teacher / institute admin email</label><input name="email" type="email" required style="min-width: 240px;"></div>
+          <div class="field"><label>Tier</label><select name="tier"><% career.tiers.forEach(function (t) { %><option value="<%= t.key %>" <%= t.key === 'standard' ? 'selected' : '' %>><%= t.name %> (<%= inr(t.price) %>)</option><% }) %></select></div>
+          <div class="field"><label>Seats</label><input name="qty" type="number" min="1" max="5000" value="100" style="width: 100px;"></div>
+          <div class="field"><label>Note</label><input name="note" placeholder="e.g. ABC School, bank transfer"></div>
+          <button type="submit" class="btn btn-primary">Add seats</button>
+        </form>
+        <p style="font-size: 12px; color: var(--faint); margin: 10px 0 0;">For schools that paid offline. Seats go to the institute if the teacher belongs to one.</p>
+      </div>
+      <% if (career.grants.length) { %>
+      <div class="card" style="overflow-x: auto;">
+        <table class="plain"><thead><tr><th>Date</th><th>Owner</th><th>Tier</th><th>Seats</th><th>Left</th><th>Source</th></tr></thead><tbody>
+          <% career.grants.forEach(function (g) { %><tr><td><%= shortDate(g.created_at) %></td><td><%= g.owner_name || '—' %></td><td><%= g.tier %></td><td><%= g.qty %></td><td><%= g.remaining %></td><td style="font-size: 12px;"><%= g.payment_id ? 'Razorpay' : g.note %></td></tr><% }) %>
+        </tbody></table>
+      </div>
+      <% } %>
 
       <h2 style="font-size: 20px;">Feature usage</h2>
       <div class="grid-4">

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: batch.title + ' — Class Career Summary' }) %>
+<style>
+  body { background: #fff; }
+  .cs { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; display: flex; flex-direction: column; gap: 22px; }
+  .cs h2 { font-size: 20px; }
+  .cs .bar { height: 9px; background: #EFE6D8; border-radius: 5px; }
+  .cs .bar div { height: 9px; background: var(--accent); border-radius: 5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .cs .row { display: flex; justify-content: space-between; font-size: 14px; }
+  .cs table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .cs th, .cs td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .cs th { font-size: 11.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .4px; }
+  @media print { .no-print { display: none !important; } .cs section { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="cs">
+  <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start;">
+    <div>
+      <div style="font-size: 12px; color: var(--faint); text-transform: uppercase; letter-spacing: 1px;">Career Aptitude Test — Class Summary</div>
+      <h1 style="font-size: 30px; margin-top: 4px;"><%= batch.title %></h1>
+      <div style="font-size: 13px; color: var(--muted); margin-top: 4px;"><%= batch.school || conductor %> · <%= batch.level === '10' ? 'After Class 10 (stream choice)' : 'After Class 12 (course & career)' %> · <%= summary.total %> students · <%= new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+    </div>
+    <button class="btn btn-ghost no-print" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <% if (!rows.length) { %>
+    <p>No completed tests yet.</p>
+  <% } else { %>
+  <section class="grid-3">
+    <div class="card stat-card"><span class="label">Students assessed</span><span class="value"><%= summary.total %></span></div>
+    <div class="card stat-card"><span class="label">Most common match</span><span class="value" style="font-size: 20px;"><%= summary.split[0].name %></span><span class="sub"><%= summary.split[0].pct %>% of the class</span></div>
+    <div class="card stat-card"><span class="label">Need counselling</span><span class="value"><%= summary.counselling %></span><span class="sub"><%= Math.round((summary.counselling / summary.total) * 100) %>% of the class</span></div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 10px;">
+    <h2><%= batch.level === '10' ? 'Recommended stream split' : 'Top career field split' %></h2>
+    <% summary.split.forEach(function (s) { %>
+      <div><div class="row"><span><%= s.name %></span><span><%= s.n %> students (<%= s.pct %>%)</span></div><div class="bar"><div style="width: <%= s.pct %>%;"></div></div></div>
+    <% }) %>
+  </section>
+
+  <section class="grid-2" style="gap: 28px;">
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <h2>Class aptitude (average)</h2>
+      <% aptitudeAvg.forEach(function (a) { %><div><div class="row"><span><%= a.label %></span><span><%= a.pct %>%</span></div><div class="bar"><div style="width: <%= a.pct %>%;"></div></div></div><% }) %>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <h2>Class interests (average)</h2>
+      <% interestAvg.forEach(function (a) { %><div><div class="row"><span><%= a.label %></span><span><%= a.pct %></span></div><div class="bar"><div style="width: <%= a.pct %>%; background: var(--good);"></div></div></div><% }) %>
+    </div>
+  </section>
+
+  <% var flagged = rows.filter(function (r) { return r.needs_counselling; }); %>
+  <% if (flagged.length) { %>
+  <section style="display: flex; flex-direction: column; gap: 8px;">
+    <h2>Students to follow up with a counsellor</h2>
+    <table><thead><tr><th>Student</th><th>Section / Roll</th><th>Own goal</th><th>Top match</th><th>Why</th></tr></thead><tbody>
+      <% flagged.forEach(function (r) { %><tr><td><strong><%= r.student_name %></strong></td><td><%= [r.section, r.roll_no].filter(Boolean).join(' / ') %></td><td><%= r.aspiration || '—' %></td><td><%= r.result.top[0] ? r.result.top[0].name : '' %></td><td><%= r.result.counselReasons.join('; ') %></td></tr><% }) %>
+    </tbody></table>
+  </section>
+  <% } %>
+
+  <section style="display: flex; flex-direction: column; gap: 8px;">
+    <h2>All students</h2>
+    <table><thead><tr><th>Student</th><th>Section / Roll</th><th>1st match</th><th>2nd</th><th>3rd</th><th>Interest code</th></tr></thead><tbody>
+      <% rows.forEach(function (r) { var t = r.result.top; %><tr><td><strong><%= r.student_name %></strong></td><td><%= [r.section, r.roll_no].filter(Boolean).join(' / ') %></td><td><%= t[0] ? t[0].name + ' (' + t[0].fit + ')' : '' %></td><td><%= t[1] ? t[1].name : '' %></td><td><%= t[2] ? t[2].name : '' %></td><td><%= r.result.interestCode %></td></tr><% }) %>
+    </tbody></table>
+  </section>
+  <% } %>
+  <p style="font-size: 12px; color: var(--faint);">Generated by ClassCoach. Results are guidance from one assessment and should be discussed with students and parents.</p>
+</div>
+</body>
+</html>

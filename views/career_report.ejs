@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: attempt.student_name + ' — Career Report' }) %>
+<% var aiPending = tier.ai && attempt.status === 'done' && (attempt.ai_status === 'pending' || attempt.ai_status === 'none'); %>
+<% if (aiPending) { %><meta http-equiv="refresh" content="15"><% } %>
+<style>
+  .cr { max-width: 820px; margin: 0 auto; padding: 24px 18px 60px; display: flex; flex-direction: column; gap: 18px; }
+  .cr h2 { font-size: 21px; }
+  .cr .sec { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .cr .bar { height: 9px; background: #EFE6D8; border-radius: 5px; }
+  .cr .bar div { height: 9px; background: var(--accent); border-radius: 5px; }
+  .cr .row { display: flex; justify-content: space-between; font-size: 14px; }
+  .cr .rec { border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .cr .rec.first { border-color: var(--accent); background: #FFFBF5; }
+  .cr ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.5; }
+  .cr p { margin: 0; font-size: 14.5px; line-height: 1.6; }
+  .cr .muted { color: var(--faint); font-size: 12.5px; }
+  .cr .chips span { display: inline-block; font-size: 12px; background: #EFE6D8; border-radius: 100px; padding: 3px 10px; margin: 2px 4px 2px 0; }
+  .cr-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  @media print {
+    body { background: #fff; }
+    .cr-actions, .no-print { display: none !important; }
+    .cr .sec { break-inside: avoid; border-color: #ddd; }
+    .cr .rec { break-inside: avoid; }
+    .cr .bar div { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="cr">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 10px;"><%- include('partials/logo', { size: 30 }) %><span style="font-family: 'Newsreader', serif; font-size: 19px;">ClassCoach Career Report</span></div>
+    <div class="cr-actions">
+      <button class="btn btn-ghost" onclick="window.print()" style="padding: 8px 14px;">Print / Save as PDF</button>
+      <a class="btn btn-ghost" style="padding: 8px 14px;" target="_blank" href="https://wa.me/?text=<%= encodeURIComponent(attempt.student_name + "'s career report: " + reportUrl) %>">Share on WhatsApp</a>
+    </div>
+  </div>
+
+  <div>
+    <h1 style="font-size: 32px;"><%= attempt.student_name %></h1>
+    <div class="muted" style="margin-top: 4px;">
+      <%= result ? result.levelLabel : '' %><% if (result && result.currentStreamLabel) { %> · Currently in <%= result.currentStreamLabel %><% } %>
+      <% if (attempt.section || attempt.roll_no) { %> · <%= [attempt.section, attempt.roll_no && ('Roll ' + attempt.roll_no)].filter(Boolean).join(' · ') %><% } %>
+      <br><%= batch.school || conductor %> · <%= new Date((attempt.submitted_at || attempt.started_at).replace(' ', 'T') + 'Z').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) %> · <%= tier.name %> report
+    </div>
+  </div>
+
+  <% if (attempt.status === 'locked') { %>
+    <div class="sec"><h2>Your test is submitted ✓</h2><p>Your report will appear on this page as soon as your school or teacher activates it. Save this link or ask your teacher for it later.</p></div>
+  <% } else if (result) { %>
+
+    <% if (aiPending) { %><div class="flash flash-ok no-print">Your detailed report is being written. This page refreshes on its own in a few seconds.</div><% } %>
+
+    <div class="sec">
+      <h2>Summary</h2>
+      <% if (ai && ai.summary) { %>
+        <p><%= ai.summary %></p>
+      <% } else { %>
+        <p>Your strongest match is <strong><%= result.top[0].name %></strong> (<%= result.top[0].band.toLowerCase() %>, <%= result.top[0].fit %>/100)<% if (result.top[1]) { %>, followed by <strong><%= result.top[1].name %></strong><% } %><% if (result.top[2]) { %> and <strong><%= result.top[2].name %></strong><% } %>. Your interest code is <strong><%= result.interestCode %></strong> — <%= result.interests.slice(0, 2).map(function (i) { return i.label.toLowerCase(); }).join(' and ') %> activities appeal to you most.</p>
+      <% } %>
+      <% if (ai && ai.strengths.length) { %>
+        <div class="grid-2" style="gap: 16px;">
+          <div><strong style="font-size: 14px;">Strengths</strong><ul style="margin-top: 6px;"><% ai.strengths.forEach(function (s) { %><li><%= s %></li><% }) %></ul></div>
+          <div><strong style="font-size: 14px;">To build</strong><ul style="margin-top: 6px;"><% ai.toDevelop.forEach(function (s) { %><li><%= s %></li><% }) %></ul></div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="sec">
+      <h2>Recommended <%= result.level === '10' ? 'streams' : 'fields' %></h2>
+      <% result.top.forEach(function (t, i) { var r = ai && ai.recommendations[i]; %>
+        <div class="rec <%= i === 0 ? 'first' : '' %>">
+          <div class="row" style="align-items: baseline;"><strong style="font-size: 16px;"><%= i + 1 %>. <%= t.name %></strong><span class="muted"><%= t.band %> · <%= t.fit %>/100</span></div>
+          <div class="bar"><div style="width: <%= t.fit %>%;"></div></div>
+          <% if (r && r.why) { %><p><%= r.why %></p><% } %>
+          <% if (result.level === '10') { %><p class="muted" style="font-size: 13px;"><strong>Leads to:</strong> <%= t.leadsTo %></p>
+          <% } else { %><p class="muted" style="font-size: 13px;"><strong>Courses:</strong> <%= t.degrees %></p><% } %>
+          <div class="chips"><span style="background: var(--accent-tint);">Exams</span><% t.exams.forEach(function (e) { %><span><%= e %></span><% }) %></div>
+          <% if (r && r.nextSteps.length) { %><div><strong style="font-size: 13px;">Next steps</strong><ul style="margin-top: 4px;"><% r.nextSteps.forEach(function (s) { %><li><%= s %></li><% }) %></ul></div><% } %>
+        </div>
+      <% }) %>
+      <% if (result.blocked.length) { %>
+        <div class="rec" style="background: #FAF7F1;">
+          <strong style="font-size: 14px;">Also a strong match, but needs different Class 12 subjects</strong>
+          <% result.blocked.forEach(function (b) { %><p style="font-size: 13.5px;"><strong><%= b.name %></strong> (<%= b.fit %>/100) — needs <%= b.needs %>. Talk to a counsellor about bridge options.</p><% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <% if (result.aspiration) { %>
+      <div class="sec">
+        <h2>About your goal: “<%= result.aspiration %>”</h2>
+        <% if (ai && ai.aboutGoal) { %><p><%= ai.aboutGoal %></p>
+        <% } else if (result.aspirationMatch === true) { %><p>Good news — your goal matches what the test found. Keep going and start preparing for the exams listed above.</p>
+        <% } else if (result.aspirationMatch === false) { %><p>The test points to other areas too. Your goal still matters: talk it through with a counsellor to understand what it would take and what fits you best.</p>
+        <% } else { %><p>Discuss your goal with a counsellor to see how it connects with the fields above.</p><% } %>
+      </div>
+    <% } %>
+
+    <div class="sec">
+      <h2>Your scores</h2>
+      <div class="grid-2" style="gap: 22px;">
+        <div style="display: flex; flex-direction: column; gap: 9px;">
+          <strong style="font-size: 14px;">Aptitude</strong>
+          <% result.aptitude.forEach(function (a) { %>
+            <div><div class="row"><span><%= a.label %></span><span><%= a.correct %>/<%= a.total %></span></div><div class="bar"><div style="width: <%= a.pct %>%;"></div></div></div>
+          <% }) %>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 9px;">
+          <strong style="font-size: 14px;">Interests · code <%= result.interestCode %></strong>
+          <% result.interests.forEach(function (a) { %>
+            <div><div class="row"><span><%= a.label %></span><span><%= a.pct %></span></div><div class="bar"><div style="width: <%= a.pct %>%; background: var(--good);"></div></div></div>
+          <% }) %>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+        <strong style="font-size: 14px;">Work style</strong>
+        <div class="grid-2" style="gap: 9px 22px;">
+          <% result.traits.forEach(function (a) { %>
+            <div><div class="row"><span><%= a.label %></span><span><%= a.pct %></span></div><div class="bar"><div style="width: <%= a.pct %>%; background: var(--warn);"></div></div></div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+
+    <% if (ai && (ai.parentNote || ai.studyTips.length)) { %>
+      <div class="sec">
+        <% if (ai.parentNote) { %><h2>For parents</h2><p><%= ai.parentNote %></p><% } %>
+        <% if (ai.studyTips.length) { %><strong style="font-size: 14px;">Study tips that suit you</strong><ul><% ai.studyTips.forEach(function (s) { %><li><%= s %></li><% }) %></ul><% } %>
+      </div>
+    <% } %>
+
+    <% if (counselLink) { %>
+      <div class="sec no-print" style="background: var(--accent-tint); border-color: #E8C9A8;">
+        <% if (tier.counselling) { %>
+          <h2>Your 1:1 counselling session is included</h2>
+          <p>Book your session with <%= counselPartner %> to discuss this report and plan your next steps.</p>
+        <% } else { %>
+          <h2>Want to talk it through?</h2>
+          <p>Book a 1:1 career counselling session with <%= counselPartner %> to discuss this report with you and your parents.</p>
+        <% } %>
+        <div><a class="btn btn-primary" target="_blank" href="<%= counselLink %>">Book on WhatsApp</a></div>
+      </div>
+    <% } %>
+
+    <p class="muted">This report is guidance based on one test, not a final verdict. Interests and abilities grow with time — use it to start a conversation with your parents, teachers and a counsellor.</p>
+  <% } %>
+</div>
+</body>
+</html>

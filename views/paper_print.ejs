@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title><%= paper.title %><%= showSet ? ' — Set ' + view.letter : '' %><%= answerKey ? ' — Answer key' : '' %></title>
+<style>
+  @page { size: A4; margin: 14mm 14mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Times New Roman', 'Noto Serif', 'DejaVu Serif', serif; color: #000; margin: 0; background: #f2f2f2; font-size: 12pt; line-height: 1.4; }
+  .page { max-width: 210mm; margin: 16px auto; background: #fff; padding: 14mm; box-shadow: 0 1px 6px rgba(0,0,0,.12); }
+  .bar { max-width: 210mm; margin: 12px auto 0; display: flex; gap: 8px; justify-content: flex-end; font-family: system-ui, sans-serif; }
+  .bar button { padding: 8px 14px; border: 1px solid #ccc; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .hd { text-align: center; border-bottom: 2px solid #000; padding-bottom: 6px; }
+  .hd .school { font-size: 17pt; font-weight: bold; text-transform: uppercase; }
+  .hd .exam { font-size: 13pt; font-weight: bold; margin-top: 2px; }
+  .meta { display: flex; justify-content: space-between; font-weight: bold; padding: 6px 0; border-bottom: 1px solid #000; }
+  .set { display: inline-block; border: 2px solid #000; padding: 1px 10px; font-weight: bold; }
+  .cand { display: flex; gap: 24px; padding: 8px 0; font-size: 11pt; }
+  .cand span { flex: 1; border-bottom: 1px dotted #000; }
+  .ins { font-size: 10.5pt; margin: 6px 0 4px; }
+  .ins ol { margin: 2px 0 0; padding-left: 20px; }
+  .sec { margin-top: 12px; }
+  .sec h3 { font-size: 12pt; text-align: center; margin: 0 0 6px; text-transform: uppercase; }
+  .sec h3 small { font-weight: normal; text-transform: none; }
+  .q { display: flex; gap: 6px; margin: 7px 0; break-inside: avoid; }
+  .q .n { min-width: 26px; font-weight: bold; }
+  .q .body { flex: 1; }
+  .q .mk { min-width: 34px; text-align: right; font-size: 10.5pt; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 18px; margin-top: 2px; }
+  .ans { color: #1d5f1d; font-weight: bold; }
+  .kp { font-size: 10.5pt; color: #333; margin-top: 2px; }
+  .keygrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px 10px; font-size: 11pt; }
+  .end { text-align: center; margin-top: 16px; font-weight: bold; }
+  @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; padding: 0; max-width: none; } .bar { display: none; } }
+</style>
+</head>
+<body>
+<div class="bar"><button onclick="window.print()">Print / Save as PDF</button></div>
+<div class="page">
+  <div class="hd">
+    <% if (header.school) { %><div class="school"><%= header.school %></div><% } %>
+    <div class="exam"><%= header.exam %><%= answerKey ? ' — ANSWER KEY & MARKING SCHEME' : '' %></div>
+    <div><%= [header.className && ('Class ' + header.className), header.subject].filter(Boolean).join(' — ') %></div>
+  </div>
+  <div class="meta"><span>Time: <%= header.duration >= 60 && header.duration % 30 === 0 ? (header.duration / 60) + ' hour' + (header.duration === 60 ? '' : 's') : header.duration + ' minutes' %></span><% if (showSet) { %><span class="set">SET <%= view.letter %></span><% } %><span>Max. marks: <%= view.totalMarks %></span></div>
+
+  <% if (!answerKey) { %>
+    <div class="cand"><span>Name:</span><span style="flex:.5;">Roll no:</span><span style="flex:.5;">Section:</span></div>
+    <% var ins = String(header.instructions || '').split('\n').map(function (s) { return s.trim(); }).filter(Boolean); %>
+    <% if (ins.length) { %><div class="ins"><strong>General instructions:</strong><ol><% ins.forEach(function (l) { %><li><%= l %></li><% }) %></ol></div><% } %>
+  <% } else { %>
+    <% var mcqKey = view.key; %>
+    <% if (mcqKey.length) { %>
+      <div class="sec"><h3>MCQ answer key<%= showSet ? ' — Set ' + view.letter : '' %></h3>
+        <div class="keygrid"><% mcqKey.forEach(function (k) { %><span><strong><%= k.n %>.</strong> (<%= String.fromCharCode(97 + k.correct) %>)</span><% }) %></div>
+      </div>
+    <% } %>
+  <% } %>
+
+  <% view.sections.forEach(function (sec) { %>
+    <% if (answerKey && sec.type === 'mcq') return; %>
+    <div class="sec">
+      <h3>Section <%= sec.key %> — <%= sec.title %> <small>(<%= sec.questions.length %> × <%= sec.marks %> = <%= sec.questions.length * sec.marks %> marks)</small></h3>
+      <% sec.questions.forEach(function (q) { %>
+        <div class="q">
+          <span class="n"><%= q.n %>.</span>
+          <div class="body">
+            <%= q.text %>
+            <% if (sec.type === 'mcq') { %>
+              <div class="opts"><% q.options.forEach(function (o, oi) { %><span class="<%= answerKey && oi === q.correct ? 'ans' : '' %>">(<%= String.fromCharCode(97 + oi) %>) <%= o %></span><% }) %></div>
+            <% } else if (answerKey) { %>
+              <div class="kp"><strong>Marking points:</strong> <%= q.answer || 'Teacher to add.' %></div>
+            <% } %>
+          </div>
+          <span class="mk">[<%= sec.marks %>]</span>
+        </div>
+      <% }) %>
+    </div>
+  <% }) %>
+  <div class="end">— End of <%= answerKey ? 'answer key' : 'question paper' %> —</div>
+</div>
+</body>
+</html>
