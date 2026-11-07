@@ -16,6 +16,12 @@
 </head>
 <body>
 <div class="cs">
+  <% if (typeof sample !== 'undefined' && sample) { %>
+    <div class="no-print" style="background: #211C15; color: #FBF6EE; border-radius: 10px; padding: 14px 18px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; font-size: 14px; font-family: system-ui, sans-serif;">
+      <span><strong>Sample class summary</strong> with made-up students. <a href="/sample-career-report" style="color: #F5C9A0;">See a sample student report →</a></span>
+      <a href="/aptitude-test-for-class-10-and-12" class="btn btn-primary" style="padding: 8px 14px;">Get 10 free reports</a>
+    </div>
+  <% } %>
   <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start;">
     <div>
       <div style="font-size: 12px; color: var(--faint); text-transform: uppercase; letter-spacing: 1px;">Career Aptitude Test — Class Summary</div>

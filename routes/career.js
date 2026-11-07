@@ -17,8 +17,9 @@ const razorpay = require('../lib/razorpay');
 const { publicSections } = require('../lib/career/items');
 const { buildResult } = require('../lib/career/scoring');
 const { CLASS12_STREAMS, STREAMS, CLUSTERS } = require('../lib/career/catalog');
-const { TIERS, MAX_QTY, getTier, seatBalance, useSeat } = require('../lib/career/seats');
+const { TIERS, MAX_QTY, PILOT_SEATS, getTier, seatBalance, useSeat, addSeats } = require('../lib/career/seats');
 const { LANGUAGES, generateAiReport } = require('../lib/career/report');
+const { sampleStudent, sampleClass } = require('../lib/career/sample');
 
 const router = express.Router();
 
@@ -66,6 +67,16 @@ function optionName(level, key) {
 
 router.get('/career', requireTeacher, (req, res) => {
   const t = req.teacher;
+  // Free pilot seats, once per individual teacher or institute admin
+  // (institute teachers share their admin's seats).
+  let pilot = false;
+  if (!t.career_pilot_given && !(t.institute_id && t.institute_role !== 'owner')) {
+    const given = db.prepare('UPDATE teachers SET career_pilot_given = 1 WHERE id = ? AND career_pilot_given = 0').run(t.id).changes;
+    if (given) {
+      addSeats({ teacher: t, tier: PILOT_SEATS.tier, qty: PILOT_SEATS.qty, note: 'Free pilot' });
+      pilot = true;
+    }
+  }
   const where = t.institute_id && t.institute_role === 'owner'
     ? 'teacher_id IN (SELECT id FROM teachers WHERE institute_id = ?)'
     : 'teacher_id = ?';
@@ -88,6 +99,7 @@ router.get('/career', requireTeacher, (req, res) => {
     canBuy: !(t.institute_id && t.institute_role !== 'owner'),
     razorpayConfigured: razorpay.isConfigured(),
     bought: req.query.bought || null,
+    pilot,
     error: req.query.error || null
   });
 });
@@ -175,26 +187,53 @@ router.post('/career/attempts/:id/retry-ai', requireTeacher, (req, res) => {
   res.redirect(`/career/batches/${batch.id}`);
 });
 
-router.get('/career/batches/:id/summary', requireTeacher, (req, res) => {
-  const batch = getBatchFor(req.teacher, req.params.id);
-  if (!batch) return res.status(404).send('Not found');
-  const attempts = db.prepare("SELECT * FROM career_attempts WHERE batch_id = ? AND status = 'done' ORDER BY section, roll_no, student_name").all(batch.id);
-  const rows = attempts.map((a) => ({ ...a, result: JSON.parse(a.result_json) }));
-  // Class-wide average of each aptitude area and interest type.
+// Everything the principal summary page needs, from rows that carry a parsed `result`.
+function summaryView(batch, rows) {
   const avg = (pick) => {
     if (!rows.length) return [];
     const first = pick(rows[0].result);
     return first.map((x, i) => ({ label: x.label, pct: Math.round(rows.reduce((s, r) => s + pick(r.result)[i].pct, 0) / rows.length) }));
   };
-  res.render('career_summary', {
+  return {
     batch,
-    conductor: conductorName(batch),
     rows,
-    summary: batchSummary(batch, attempts),
+    summary: batchSummary(batch, rows),
     aptitudeAvg: avg((r) => r.aptitude),
     interestAvg: avg((r) => r.interests.slice().sort((a, b) => a.key.localeCompare(b.key))),
     optionName: (k) => optionName(batch.level, k)
+  };
+}
+
+router.get('/career/batches/:id/summary', requireTeacher, (req, res) => {
+  const batch = getBatchFor(req.teacher, req.params.id);
+  if (!batch) return res.status(404).send('Not found');
+  const attempts = db.prepare("SELECT * FROM career_attempts WHERE batch_id = ? AND status = 'done' ORDER BY section, roll_no, student_name").all(batch.id);
+  const rows = attempts.map((a) => ({ ...a, result: JSON.parse(a.result_json) }));
+  res.render('career_summary', { ...summaryView(batch, rows), conductor: conductorName(batch) });
+});
+
+// ---------------------------------------------------------------- public samples
+// Demo pages for principals and parents (no login, nothing stored).
+const SAMPLE_BATCH = { id: 0, title: 'Class 10 A — Sample', school: 'Sample Public School', level: '10', tier: 'standard', code: 'SAMPLE' };
+
+router.get('/sample-career-report', (req, res) => {
+  const s = sampleStudent();
+  res.render('career_report', {
+    attempt: s.attempt,
+    batch: SAMPLE_BATCH,
+    tier: TIERS.standard,
+    conductor: SAMPLE_BATCH.school,
+    result: s.result,
+    ai: s.ai,
+    counselLink: counselLink('my child'),
+    counselPartner: counselPartner(),
+    reportUrl: `${SITE_ORIGIN}/sample-career-report`,
+    sample: true
   });
+});
+
+router.get('/sample-class-summary', (req, res) => {
+  res.render('career_summary', { ...summaryView(SAMPLE_BATCH, sampleClass()), conductor: SAMPLE_BATCH.school, sample: true });
 });
 
 router.get('/career/batches/:id/export.csv', requireTeacher, (req, res) => {

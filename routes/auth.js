@@ -20,7 +20,11 @@ function generateOtp() {
   return String(crypto.randomInt(0, 1000000)).padStart(6, '0');
 }
 
+// Pages a landing page may send a new teacher to after signup (?next=/career).
+const AFTER_SIGNUP = ['/career', '/papers'];
+
 router.get('/signup', (req, res) => {
+  if (AFTER_SIGNUP.includes(req.query.next)) req.session.afterSignup = req.query.next;
   res.render('signup', {
     error: null,
     refCode: req.query.ref || '',
@@ -162,7 +166,9 @@ router.post('/verify-otp', (req, res) => {
 
   db.prepare('UPDATE teachers SET signup_verified = 1, email_verified = 1, email_otp = NULL, email_otp_expires = NULL, email_otp_attempts = 0 WHERE id = ?').run(teacher.id);
   if (!teacher.signup_verified) notifyAdminOfSignup(teacher);
-  res.redirect('/dashboard');
+  const next = AFTER_SIGNUP.includes(req.session.afterSignup) ? req.session.afterSignup : '/dashboard';
+  req.session.afterSignup = null;
+  res.redirect(next);
 });
 
 router.post('/verify-otp/resend', (req, res) => {

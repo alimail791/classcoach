@@ -23,8 +23,10 @@
     <h1 style="font-size: 40px; line-height: 1.15; color: var(--ink);"><%= page.h1 %></h1>
     <p style="font-size: 17px; line-height: 1.65; color: var(--muted); margin: 0;"><%= page.intro %></p>
     <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-      <a href="<%= page.signup %>" class="btn btn-primary">Start your free 1-month trial</a>
-      <a href="/#demo" style="font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px;">Watch the 90-second demo →</a>
+      <a href="<%= page.signup %>" class="btn btn-primary"><%= page.primary || 'Start your free 1-month trial' %></a>
+      <% if (page.demo && demoLink) { %><a href="<%= demoLink %>" target="_blank" rel="noopener" class="btn btn-ghost">Book a free demo on WhatsApp</a><% } %>
+      <% if (page.sample) { %><a href="<%= page.sample.href %>" target="_blank" style="font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px;"><%= page.sample.label %> →</a>
+      <% } else if (!page.demo) { %><a href="/#demo" style="font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px;">Watch the 90-second demo →</a><% } %>
     </div>
     <p style="font-size: 13px; color: var(--faint); margin: 0;">No credit card needed.</p>
   </div>
@@ -72,7 +74,7 @@
     <div style="max-width: 780px; margin: 0 auto; padding: 64px 32px; display: flex; flex-direction: column; gap: 36px;">
       <div class="card" style="padding: 24px; border-color: var(--accent);">
         <h2 style="font-size: 20px; color: var(--ink); margin-bottom: 8px;">Pricing</h2>
-        <p style="font-size: 15px; color: var(--muted); line-height: 1.6; margin: 0;"><%= page.pricingNote %> <a href="/#pricing" style="color: var(--accent-deep); font-weight: 600;">See all plans</a></p>
+        <p style="font-size: 15px; color: var(--muted); line-height: 1.6; margin: 0;"><%= page.pricingNote %> <a href="<%= page.pricingHref || '/#pricing' %>" style="color: var(--accent-deep); font-weight: 600;"><%= page.pricingHref ? 'Get started' : 'See all plans' %></a></p>
       </div>
       <div>
         <h2 style="font-size: 24px; color: var(--ink); margin-bottom: 24px;">Common questions</h2>
@@ -91,9 +93,12 @@
   <!-- CTA -->
   <div style="background: var(--ink); color: #FBF6EE;">
     <div style="max-width: 720px; margin: 0 auto; padding: 64px 32px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;">
-      <h2 style="font-size: 26px; color: #FBF6EE;">Start free. See it save you time.</h2>
-      <p style="font-size: 15px; color: #C9BEA9; margin: 0;">Set up your first class and test in a few minutes — no card required.</p>
-      <a href="<%= page.signup %>" class="btn btn-primary" style="margin-top: 8px;">Start your free 1-month trial</a>
+      <h2 style="font-size: 26px; color: #FBF6EE;"><%= page.ctaH2 || 'Start free. See it save you time.' %></h2>
+      <p style="font-size: 15px; color: #C9BEA9; margin: 0;"><%= page.ctaP || 'Set up your first class and test in a few minutes — no card required.' %></p>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px;">
+        <a href="<%= page.signup %>" class="btn btn-primary"><%= page.primary || 'Start your free 1-month trial' %></a>
+        <% if (page.demo && demoLink) { %><a href="<%= demoLink %>" target="_blank" rel="noopener" class="btn btn-ghost">Book a free demo on WhatsApp</a><% } %>
+      </div>
     </div>
   </div>
 

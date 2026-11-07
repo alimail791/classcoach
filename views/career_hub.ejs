@@ -11,6 +11,7 @@
         A 40-minute aptitude, interest and work-style test for students after Class 10 (which stream to take) and after Class 12 (which course or career).
         Each student gets a personal report to share with parents, and you get a class summary for the principal. One seat is used when a student finishes the test.
       </p>
+      <% if (pilot) { %><div class="flash flash-ok">🎁 You have <strong>10 free Standard reports</strong> to pilot the test with one section. Create an assessment below and share the link.</div><% } %>
       <% if (bought) { %><div class="flash flash-ok">Payment received. Your seats have been added.</div><% } %>
       <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
 
