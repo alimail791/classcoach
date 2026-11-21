@@ -42,39 +42,93 @@
   </div>
 
   <!-- HERO -->
-  <div style="max-width: 1180px; margin: 0 auto; padding: 80px 32px 72px; display: flex; align-items: center; gap: 56px; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 300px; max-width: 560px; display: flex; flex-direction: column; gap: 24px;">
-      <div style="display: inline-flex; align-self: flex-start; padding: 6px 14px; border: 1px solid #D8A87C; border-radius: 100px; font-size: 13px; color: var(--accent-deep); background: var(--accent-tint);">For teachers, tutors &amp; coaching institutes</div>
-      <h1 style="font-size: 44px; line-height: 1.1; color: var(--ink);">Grade less.<br>Teach more.</h1>
-      <p style="font-size: 17px; line-height: 1.6; color: var(--muted); margin: 0;">ClassCoach is your AI teaching assistant. It makes tests from your chapter in about a minute, marks them the moment students submit, shows the exact chapter each student is weak in, and sends parents the result on WhatsApp. You get hours back every week to actually teach.</p>
-      <ul class="hero-benefits" style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px 18px; font-size: 15px; color: var(--ink);">
-        <li>⚡ <strong>Test in 1 minute</strong> from text, PDF or a textbook photo</li>
-        <li>✅ <strong>Auto-graded</strong>: no more correcting papers</li>
-        <li>🎯 <strong>Weak chapters</strong> for every student</li>
-        <li>📲 <strong>Parent reports</strong> on WhatsApp in 1 tap</li>
-        <li>📚 <strong>3,600+ NEET/JEE</strong> questions ready</li>
-        <li>🎮 <strong>Live Quiz</strong> games for up to 300</li>
-      </ul>
-      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-        <a href="/signup" class="btn btn-primary">Start your free 1-month trial</a>
-        <a href="/signup?type=institute" style="font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px;">Run an institute? Try free for 14 days →</a>
-      </div>
-      <p style="font-size: 13px; color: var(--faint); margin: 0;">No credit card needed · No app to install · Works on any phone · <a href="/pricing" style="color: inherit;">Plans from ₹250/month</a></p>
-      <p style="font-size: 14px; color: var(--muted); margin: 0;">Not ready yet? Make a question paper now with our <a href="/free-question-paper-generator" style="font-weight: 700; color: var(--accent);">free AI question paper generator</a>, no login.</p>
-    </div>
-    <div style="flex: 1; min-width: 280px; display: flex; justify-content: center;">
-      <div class="card" style="width: 100%; max-width: 380px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <span style="font-size: 12px; color: var(--faint); font-weight: 600;">Chapter-wise weakness</span>
-          <span style="font-size: 11px; color: var(--accent); font-weight: 600;">Physics · Class 11</span>
+  <style>
+    .hero{position:relative;overflow:hidden}
+    .hero::before{content:"";position:absolute;width:620px;height:620px;right:-160px;top:-180px;background:radial-gradient(circle,rgba(242,193,78,.28),rgba(242,193,78,0) 65%);pointer-events:none}
+    .hero::after{content:"";position:absolute;width:520px;height:520px;left:-220px;bottom:-260px;background:radial-gradient(circle,rgba(180,80,28,.12),rgba(180,80,28,0) 65%);pointer-events:none}
+    .hero-in{position:relative;max-width:1180px;margin:0 auto;padding:72px 32px 80px;display:flex;align-items:center;gap:56px;flex-wrap:wrap}
+    .hero-copy{flex:1.1;min-width:300px;max-width:600px;display:flex;flex-direction:column;gap:22px}
+    .hero-pill{display:inline-flex;align-self:flex-start;align-items:center;gap:8px;padding:7px 14px 7px 8px;border-radius:100px;font-size:13px;font-weight:600;color:var(--accent-deep);background:#fff;border:1px solid #E9CFB4;box-shadow:0 2px 8px rgba(140,60,19,.08)}
+    .hero-pill b{background:var(--accent);color:#FBF6EE;border-radius:100px;padding:2px 8px;font-size:11px;letter-spacing:.3px}
+    .hero h1{font-size:64px;line-height:1.02;letter-spacing:-1px;color:var(--ink)}
+    .hero h1 .hl{color:var(--accent);position:relative;white-space:nowrap}
+    .hero h1 .hl svg{position:absolute;left:0;bottom:-10px;width:100%;height:14px}
+    .hero-sub{font-size:19px;line-height:1.55;color:var(--muted);margin:0;max-width:540px}
+    .hero-sub strong{color:var(--ink)}
+    .hero-feats{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .hero-feats li{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;color:var(--ink);line-height:1.3}
+    .hero-feats .ic{flex:none;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px}
+    .hero-cta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px}
+    .hero-cta .btn-primary{padding:15px 26px;font-size:16px;border-radius:10px;box-shadow:0 8px 20px rgba(180,80,28,.28)}
+    .hero-cta .btn-ghost{padding:14px 20px;font-size:15px;border-radius:10px}
+    .hero-trust{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--faint);margin:0;padding:0;list-style:none}
+    .hero-trust li::before{content:"✓ ";color:#15803D;font-weight:800}
+    .hero-alt{font-size:14px;color:var(--muted);margin:0}
+    .hero-alt a{font-weight:700}
+    .hero-art{flex:.9;min-width:290px;display:flex;justify-content:center}
+    .stack{position:relative;width:100%;max-width:400px;padding:26px 0 78px}
+    .stack .card{border-radius:16px;box-shadow:0 18px 40px rgba(33,28,21,.10)}
+    .s-test{padding:16px 18px;display:flex;align-items:center;gap:12px;margin:0 28px -14px 0;position:relative;z-index:1;transform:rotate(-2deg)}
+    .s-test .doc{width:40px;height:40px;border-radius:10px;background:var(--accent-tint);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+    .s-main{padding:22px;display:flex;flex-direction:column;gap:13px;position:relative;z-index:2}
+    .float{position:absolute;z-index:3;border-radius:14px;font-size:13px;box-shadow:0 12px 28px rgba(33,28,21,.16);animation:bob 5s ease-in-out infinite}
+    .f-graded{top:6px;right:-14px;background:#15803D;color:#fff;font-weight:700;padding:9px 14px}
+    .f-wa{bottom:0;left:-22px;background:#DCF8C6;color:#1F2D1A;padding:10px 14px;max-width:230px;line-height:1.4;animation-delay:1.2s}
+    .f-wa small{display:block;color:#5B7052;font-size:11px;margin-bottom:2px;font-weight:700}
+    @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    .s-main .bar-fill{animation:grow 1.4s ease-out both}
+    @keyframes grow{from{width:0}}
+    @media (prefers-reduced-motion:reduce){.float,.s-main .bar-fill{animation:none}}
+    @media (max-width:640px){
+      .hero-in{padding:44px 20px 56px;gap:40px}
+      .hero h1{font-size:46px}
+      .hero-sub{font-size:17px}
+      .hero-feats{grid-template-columns:1fr 1fr;gap:8px}
+      .hero-feats li{font-size:13px;padding:8px 10px;gap:8px}
+      .hero-feats .ic{width:28px;height:28px;font-size:15px}
+      .hero-cta .btn{flex:1 1 100%}
+      .f-graded{right:-4px}.f-wa{left:-4px}
+    }
+  </style>
+  <div class="hero">
+    <div class="hero-in">
+      <div class="hero-copy">
+        <span class="hero-pill"><b>NEW</b> AI teaching assistant for Indian teachers &amp; coaching centres</span>
+        <h1>Grade less.<br><span class="hl">Teach more.<svg viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path d="M3 10 C 60 2, 120 2, 160 7 S 260 13, 297 4" fill="none" stroke="#F2C14E" stroke-width="5" stroke-linecap="round"/></svg></span></h1>
+        <p class="hero-sub">Make a test from any chapter in <strong>1 minute</strong>. It&rsquo;s <strong>marked the moment students submit</strong>, you see who is weak in which chapter, and parents get the result on <strong>WhatsApp</strong>. Your evenings are yours again.</p>
+        <ul class="hero-feats">
+          <li><span class="ic" style="background:#FDF0E3">⚡</span><span><strong>1-minute tests</strong> from PDF or a textbook photo</span></li>
+          <li><span class="ic" style="background:#E8F4EA">✅</span><span><strong>Auto-graded</strong>, zero correction</span></li>
+          <li><span class="ic" style="background:#FDEDEA">🎯</span><span><strong>Weak chapters</strong> for every student</span></li>
+          <li><span class="ic" style="background:#E6F6E9">📲</span><span><strong>WhatsApp reports</strong> for parents</span></li>
+          <li><span class="ic" style="background:#EEF0FB">📚</span><span><strong>3,600+ NEET/JEE</strong> questions ready</span></li>
+          <li><span class="ic" style="background:#FFF6D9">🎮</span><span><strong>Live Quiz</strong> games for 300 students</span></li>
+        </ul>
+        <div class="hero-cta">
+          <a href="/signup" class="btn btn-primary">Start free for 1 month →</a>
+          <a href="#demo" class="btn btn-ghost">▶ Watch 90-sec demo</a>
         </div>
-        <div class="bar-row"><span class="name">Kinematics</span><div class="bar-track"><div class="bar-fill" style="width: 84%; background: #6B8F71;"></div></div><span class="pct">84%</span></div>
-        <div class="bar-row"><span class="name">Newton's Laws</span><div class="bar-track"><div class="bar-fill" style="width: 61%; background: #D8A24A;"></div></div><span class="pct">61%</span></div>
-        <div class="bar-row"><span class="name">Gravitation</span><div class="bar-track"><div class="bar-fill" style="width: 38%; background: #B4501C;"></div></div><span class="pct">38%</span></div>
-        <div style="border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--muted);">
-          <span>✅ Unit test graded automatically: 26 of 26</span>
-          <span>📲 Report sent to Ananya's parent on WhatsApp</span>
-          <span>🎯 Class weak chapter: Gravitation, plan a revision</span>
+        <ul class="hero-trust"><li>No card needed</li><li>No app to install</li><li>Works on any phone</li><li><a href="/pricing" style="color: inherit;">From ₹250/month</a></li></ul>
+        <p class="hero-alt">Run an institute? <a href="/signup?type=institute">Try free for 14 days</a> · Just need a paper? <a href="/free-question-paper-generator">Free question paper generator</a></p>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="stack">
+          <div class="float f-graded">✓ 26 of 26 graded</div>
+          <div class="card s-test">
+            <span class="doc">📄</span>
+            <span style="display:flex;flex-direction:column;gap:2px;"><strong style="font-size:14px;">Unit test · Class 11 Physics</strong><span style="font-size:12px;color:var(--faint);">20 MCQs made from a textbook photo · 52 sec</span></span>
+          </div>
+          <div class="card s-main">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:12px;color:var(--faint);font-weight:700;letter-spacing:.3px;">CHAPTER-WISE WEAKNESS</span>
+              <span style="font-size:11px;color:var(--accent);font-weight:700;">Class average</span>
+            </div>
+            <div class="bar-row"><span class="name">Kinematics</span><div class="bar-track"><div class="bar-fill" style="width: 84%; background: #6B8F71;"></div></div><span class="pct">84%</span></div>
+            <div class="bar-row"><span class="name">Newton's Laws</span><div class="bar-track"><div class="bar-fill" style="width: 61%; background: #D8A24A;"></div></div><span class="pct">61%</span></div>
+            <div class="bar-row"><span class="name">Gravitation</span><div class="bar-track"><div class="bar-fill" style="width: 38%; background: #B4501C;"></div></div><span class="pct">38%</span></div>
+            <div style="background:var(--accent-tint);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--accent-deep);">🎯 Plan a revision class on <strong>Gravitation</strong></div>
+          </div>
+          <div class="float f-wa"><small>WhatsApp · to Ananya's parent</small>Ananya scored 18/20 in today's test 🎉 Needs practice: Gravitation</div>
         </div>
       </div>
     </div>

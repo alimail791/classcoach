@@ -3,35 +3,95 @@
   const LANDING_PAGES = typeof landingPages !== 'undefined' ? landingPages : {};
   const currentSlug = typeof current !== 'undefined' ? current : '';
 %>
-<div style="border-top: 1px solid var(--line);">
-  <div style="max-width: 1180px; margin: 0 auto; padding: 28px 32px; display: flex; flex-direction: column; gap: 18px;">
-    <nav aria-label="ClassCoach features" style="display: flex; gap: 18px; flex-wrap: wrap;">
-      <% Object.keys(LANDING_PAGES).forEach(function (s) { if (s === currentSlug) return; %>
-      <a href="/<%= s %>" style="font-size: 13px; color: var(--muted);"><%= LANDING_PAGES[s].nav %></a>
-      <% }) %>
-      <a href="/free-question-paper-generator" style="font-size: 13px; color: var(--muted);">Free question paper generator</a>
-      <a href="/free-omr-sheet-generator" style="font-size: 13px; color: var(--muted);">Free OMR sheet generator</a>
-      <a href="/question-paper-generator" style="font-size: 13px; color: var(--muted);">Question papers by class</a>
-      <a href="/pricing" style="font-size: 13px; color: var(--muted);">Pricing</a>
-      <% if (currentSlug !== 'blog') { %><a href="/blog" style="font-size: 13px; color: var(--muted);">Blog</a><% } %>
-    </nav>
-    <nav aria-label="More from the ClassCoach team" style="display: flex; gap: 8px 18px; flex-wrap: wrap; align-items: center;">
-      <span style="font-size: 13px; color: var(--faint);">More from our team:</span>
-      <a href="https://testmandi.in/?utm_source=classcoach&amp;utm_medium=footer" target="_blank" rel="noopener" style="font-size: 13px; color: var(--muted);">TestMandi — buy &amp; sell MCQ tests</a>
-      <a href="https://yneet.in/?utm_source=classcoach&amp;utm_medium=footer" target="_blank" rel="noopener" style="font-size: 13px; color: var(--muted);">YNeet — NEET preparation</a>
-      <a href="https://vasulbook.com/?utm_source=classcoach&amp;utm_medium=footer" target="_blank" rel="noopener" style="font-size: 13px; color: var(--muted);">VasulBook — collect fee dues</a>
-    </nav>
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-      <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink);">
-        <%- include('logo', { size: 22 }) %>
-        <span style="font-family: 'Newsreader', serif; font-size: 16px;">ClassCoach</span>
-      </a>
-      <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
-        <a href="mailto:info@classcoach.in" style="font-size: 13px; color: var(--faint);">info@classcoach.in</a>
-        <a href="https://wa.me/919443424064?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20ClassCoach" style="font-size: 13px; color: var(--faint);" target="_blank" rel="noopener">WhatsApp us</a>
-        <a href="/institute/login" style="font-size: 13px; color: var(--faint);">Institute login</a>
-        <a href="/student/login" style="font-size: 13px; color: var(--faint);">Student login →</a>
+<style>
+  .ftr{background:#FFFFFF;border-top:1px solid var(--line)}
+  .ftr-in{max-width:1180px;margin:0 auto;padding:56px 32px 28px}
+  .ftr-grid{display:grid;grid-template-columns:1.5fr repeat(4,1fr);gap:32px 28px}
+  .ftr h4{font-family:'Karla',system-ui,sans-serif;font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--ink);margin:0 0 14px}
+  .ftr ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  .ftr ul a{font-size:14px;color:var(--muted)}
+  .ftr ul a:hover{color:var(--accent)}
+  .ftr-brand p{font-size:14px;line-height:1.6;color:var(--muted);margin:12px 0 16px;max-width:300px}
+  .ftr-contact{display:flex;flex-direction:column;gap:8px}
+  .ftr-wa{display:inline-flex;align-self:flex-start;align-items:center;gap:8px;background:#25D366;color:#fff;font-size:14px;font-weight:700;padding:9px 14px;border-radius:8px}
+  .ftr-more{margin-top:40px;padding-top:22px;border-top:1px solid var(--line);display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;font-size:13px}
+  .ftr-more span{color:var(--faint)}
+  .ftr-more a{color:var(--muted)}
+  .ftr-bottom{margin-top:18px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--faint)}
+  .ftr-bottom a{color:var(--faint)}
+  @media (max-width:900px){.ftr-grid{grid-template-columns:1fr 1fr}.ftr-brand{grid-column:1 / -1}}
+  @media (max-width:420px){.ftr-in{padding:44px 20px 24px}}
+</style>
+<footer class="ftr">
+  <div class="ftr-in">
+    <div class="ftr-grid">
+      <div class="ftr-brand">
+        <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink);">
+          <%- include('logo', { size: 30 }) %>
+          <span style="font-family: 'Newsreader', serif; font-size: 20px;">ClassCoach</span>
+        </a>
+        <p>Grade less. Teach more. AI tests, instant grading and WhatsApp parent reports for Indian teachers, tutors and coaching centres.</p>
+        <div class="ftr-contact">
+          <a class="ftr-wa" href="https://wa.me/919443424064?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20ClassCoach" target="_blank" rel="noopener">💬 WhatsApp us</a>
+          <a href="mailto:info@classcoach.in" style="font-size: 14px; color: var(--muted);">info@classcoach.in</a>
+        </div>
+      </div>
+
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/#features">Features</a></li>
+          <li><a href="/#live-quiz">Live Quiz</a></li>
+          <li><a href="/#demo">90-second demo</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/pricing#institutes">For institutes</a></li>
+          <li><a href="/signup">Start free trial</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Free tools</h4>
+        <ul>
+          <li><a href="/free-question-paper-generator">Question paper generator</a></li>
+          <li><a href="/free-omr-sheet-generator">OMR sheet generator</a></li>
+          <li><a href="/question-paper-generator">Papers by class</a></li>
+          <li><a href="/question-paper-generator/tamil">Tamil medium papers</a></li>
+          <li><a href="/question-paper-generator/hindi">Hindi medium papers</a></li>
+          <li><a href="/free-tools">All free tools</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Solutions</h4>
+        <ul>
+          <% Object.keys(LANDING_PAGES).forEach(function (s) { if (s === currentSlug) return; %>
+          <li><a href="/<%= s %>"><%= LANDING_PAGES[s].nav %></a></li>
+          <% }) %>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Log in</h4>
+        <ul>
+          <li><a href="/login">Teacher login</a></li>
+          <li><a href="/institute/login">Institute login</a></li>
+          <li><a href="/student/login">Student login</a></li>
+          <li><a href="/parent/login">Parent login</a></li>
+          <li><a href="/play">Join a live quiz</a></li>
+          <% if (currentSlug !== 'blog') { %><li><a href="/blog">Blog</a></li><% } %>
+        </ul>
       </div>
     </div>
+
+    <div class="ftr-more">
+      <span>More from our team:</span>
+      <a href="https://testmandi.in/?utm_source=classcoach&amp;utm_medium=footer" target="_blank" rel="noopener">TestMandi: buy &amp; sell MCQ tests</a>
+      <a href="https://yneet.in/?utm_source=classcoach&amp;utm_medium=footer" target="_blank" rel="noopener">YNeet: NEET preparation</a>
+      <a href="https://vasulbook.com/?utm_source=classcoach&amp;utm_medium=footer" target="_blank" rel="noopener">VasulBook: collect fee dues</a>
+    </div>
+    <div class="ftr-bottom">
+      <span>© <%= new Date().getFullYear() %> ClassCoach · A Raise Academy product · Made in India</span>
+      <span><a href="/sitemap.xml">Sitemap</a></span>
+    </div>
   </div>
-</div>
+</footer>
