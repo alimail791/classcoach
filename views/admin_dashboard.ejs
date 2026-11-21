@@ -9,6 +9,7 @@
     </div>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
       <a href="#traffic" class="btn btn-ghost">📈 Traffic &amp; signups</a>
+      <a href="#drip" class="btn btn-ghost">✉ Email follow-ups</a>
       <a href="#revenue" class="btn btn-ghost">₹ Revenue</a>
       <a href="#institutes" class="btn btn-ghost">🏢 Institutes</a>
       <a href="#teachers" class="btn btn-ghost">👥 Teachers</a>
@@ -180,6 +181,47 @@
         <% } %>
       </div>
       <p style="font-size: 12px; color: var(--faint); margin: 0;">An institute's plan applies to every teacher in it. Teacher seats don't count the institute admin.</p>
+
+      <!-- EMAIL FOLLOW-UPS (lib/emailDrip.js) -->
+      <div id="drip" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+        <h2 style="font-size: 20px;">Email follow-ups to tutor leads</h2>
+        <form method="POST" action="/admin/drip/toggle"><input type="hidden" name="on" value="<%= drip.enabled ? '0' : '1' %>"><button type="submit" class="btn <%= drip.enabled ? 'btn-ghost' : 'btn-primary' %>"><%= drip.enabled ? '⏸ Pause sending' : '▶ Start sending' %></button></form>
+      </div>
+      <% if (dripMsg) { %><div class="flash flash-ok"><%= dripMsg %></div><% } %>
+      <% if (!drip.configured) { %><div class="flash flash-error">RESEND_API_KEY is not set, so nothing can be sent.</div><% } %>
+      <div class="grid-4">
+        <div class="card stat-card"><span class="label">Status</span><span class="value" style="font-size: 22px;"><%= drip.enabled ? 'Sending' : 'Paused' %></span><span class="sub">9am–7pm IST · up to <%= drip.dailyCap %>/day</span></div>
+        <div class="card stat-card"><span class="label">Tutor leads</span><span class="value"><%= drip.leads.total || 0 %></span><span class="sub"><%= drip.leads.eligible || 0 %> can be emailed · <%= drip.leads.unsubscribed || 0 %> unsubscribed</span></div>
+        <div class="card stat-card"><span class="label">Already signed up</span><span class="value"><%= drip.leads.signedUp || 0 %></span><span class="sub">skipped automatically</span></div>
+        <div class="card stat-card"><span class="label">Sent today</span><span class="value"><%= drip.sentToday %></span><span class="sub">of <%= drip.dailyCap %></span></div>
+      </div>
+      <div class="card" style="overflow-x: auto;">
+        <table class="plain">
+          <thead><tr><th>Email</th><th>When</th><th>Subject</th><th>Sent</th><th>Due now</th><th>Failed</th></tr></thead>
+          <tbody><% drip.steps.forEach(function (st, i) { %>
+            <tr>
+              <td><%= i + 1 %></td>
+              <td style="font-size: 13px;"><%= i === 0 ? 'First' : st.gapDays + ' days after email ' + i %></td>
+              <td><details><summary style="cursor: pointer; font-weight: 600;"><%= st.subject %></summary><pre style="white-space: pre-wrap; font-family: inherit; font-size: 13px; background: #FBF6EE; padding: 12px; border-radius: 8px; margin-top: 8px;"><%= st.preview %></pre></details></td>
+              <td><%= st.sent %></td><td><%= st.dueNow %></td><td><%= st.failed %></td>
+            </tr>
+          <% }) %></tbody>
+        </table>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+        <form method="POST" action="/admin/drip/test" class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+          <strong>1. Send yourself a test</strong>
+          <div class="field"><label>Send all 3 emails to</label><input name="to" type="email" value="alimail791@gmail.com" required></div>
+          <button type="submit" class="btn btn-ghost" style="align-self: flex-start;">Send test emails</button>
+        </form>
+        <form method="POST" action="/admin/drip/import" class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+          <strong>Add more leads</strong>
+          <input type="file" accept=".csv,.txt" onchange="var f=this.files[0],t=this.form.csv;if(f){var r=new FileReader();r.onload=function(){t.value=r.result;};r.readAsText(f);}">
+          <textarea name="csv" rows="3" placeholder="Choose a CSV with an email column (and name), or paste: name,email one per line" style="padding: 10px; border: 1px solid var(--line); border-radius: 6px;"></textarea>
+          <button type="submit" class="btn btn-ghost" style="align-self: flex-start;">Import leads</button>
+        </form>
+      </div>
+      <p style="font-size: 12px; color: var(--faint); margin: 0;">Each email has an unsubscribe link. People who unsubscribe, sign up, or whose email bounced are skipped. Links are tagged utm_source=email, so signups from these emails show as "email" in Traffic &amp; signups.</p>
 
       <h2 style="font-size: 20px;">Free tools</h2>
       <div class="grid-4">

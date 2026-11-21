@@ -228,6 +228,7 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 startInactivityScheduler();
 require('./lib/incompleteSignups').startIncompleteSignupAlerts();
+require('./lib/emailDrip').startDrip();
 
 try { require('./lib/creditsMigration').migrateToCredits(); } catch (e) { console.error('Credits migration failed:', e.message); }
 

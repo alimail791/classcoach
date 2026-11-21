@@ -239,6 +239,8 @@ router.get('/admin', requireAdminSession, (req, res) => {
     careerSaved: req.query.careerSaved || null,
     testimonials: all('SELECT * FROM testimonials ORDER BY id DESC'),
     freeToolStats: require('../lib/freeTools').stats(),
+    drip: require('../lib/emailDrip').stats(),
+    dripMsg: req.query.dripMsg || null,
     traffic: require('../lib/tracking').report([7, 30, 90].includes(parseInt(req.query.days, 10)) ? parseInt(req.query.days, 10) : 30),
     testimonialSaved: req.query.testimonialSaved || null,
     careerError: req.query.careerError || null,
@@ -313,6 +315,28 @@ router.post('/admin/testimonials/:id/delete', requireAdminSession, (req, res) =>
   db.prepare('DELETE FROM testimonials WHERE id = ?').run(req.params.id);
   clearSocialProofCache();
   res.redirect('/admin#testimonials');
+});
+
+// Email follow-up sequence (lib/emailDrip.js).
+router.post('/admin/drip/toggle', requireAdminSession, (req, res) => {
+  const drip = require('../lib/emailDrip');
+  drip.setEnabled(req.body.on === '1');
+  res.redirect('/admin?dripMsg=' + encodeURIComponent(req.body.on === '1' ? 'Email follow-ups started. Sending 9am–7pm IST, in small batches.' : 'Email follow-ups paused.') + '#drip');
+});
+
+router.post('/admin/drip/test', requireAdminSession, async (req, res) => {
+  const to = String(req.body.to || process.env.ADMIN_NOTIFY_EMAIL || 'alimail791@gmail.com').trim();
+  try {
+    await require('../lib/emailDrip').sendTest(to);
+    res.redirect('/admin?dripMsg=' + encodeURIComponent(`Sent all 3 test emails to ${to}. Check inbox and spam.`) + '#drip');
+  } catch (err) {
+    res.redirect('/admin?dripMsg=' + encodeURIComponent(`Test failed: ${err.message}`) + '#drip');
+  }
+});
+
+router.post('/admin/drip/import', requireAdminSession, (req, res) => {
+  const r = require('../lib/emailDrip').importCsv(req.body.csv);
+  res.redirect('/admin?dripMsg=' + encodeURIComponent(`Imported ${r.added} new lead(s); ${r.skipped} skipped (duplicates or not an email).`) + '#drip');
 });
 
 router.post('/admin/teachers/:id/toggle-active', requireAdminSession, (req, res) => {
