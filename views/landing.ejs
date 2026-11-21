@@ -102,6 +102,17 @@
     </div>
   </div>
 
+  <% if (typeof seoPages !== 'undefined' && seoPages) { var cls = []; seoPages.forEach(function (p) { if (p.kind === 'class' && cls.indexOf(p.cls) < 0) cls.push(p.cls); }); %>
+  <div id="by-class" style="max-width: 880px; margin: 0 auto; padding: 8px 32px 56px; display: flex; flex-direction: column; gap: 18px;">
+    <h2 style="font-size: 26px; color: var(--ink);">Free question paper generators by class and language</h2>
+    <p style="font-size: 15px; color: var(--muted); margin: 0;">No login needed. Pick a class and subject to make a paper with an answer key in about a minute.</p>
+    <% cls.forEach(function (c) { %>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;"><strong style="min-width: 80px; font-size: 14px;">Class <%= c %></strong><% seoPages.filter(function (p) { return p.cls === c; }).forEach(function (p) { %><a href="/question-paper-generator/<%= p.slug %>" style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 100px; color: var(--ink); background: #fff;"><%= p.subject %></a><% }) %></div>
+    <% }) %>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;"><strong style="min-width: 80px; font-size: 14px;">Language</strong><% seoPages.filter(function (p) { return p.kind === 'language'; }).forEach(function (p) { %><a href="/question-paper-generator/<%= p.slug %>" style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 100px; color: var(--ink); background: #fff;"><%= p.language %> medium</a><% }) %></div>
+  </div>
+  <% } %>
+
   <!-- FOOTER -->
   <%- include('partials/public_footer', { current: slug }) %>
 

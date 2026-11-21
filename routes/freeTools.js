@@ -140,30 +140,21 @@ router.get('/free-question-paper-generator/p/:token', (req, res) => {
 
 // ---- SEO pages: /question-paper-generator and /question-paper-generator/:slug
 
-router.get('/question-paper-generator', (req, res) => {
-  const pages = Object.values(SEO.PAGES);
-  const classes = [...new Set(pages.filter((p) => p.kind === 'class').map((p) => p.cls))].map((cls) => ({ cls, pages: pages.filter((p) => p.cls === cls) }));
-  res.render('seo_hub', {
-    classes,
-    languages: pages.filter((p) => p.kind === 'language'),
-    indexable: true,
-    canonicalUrl: `${SITE_ORIGIN}/question-paper-generator`,
-    title: 'Question Paper Generator for Class 6 to 12 — Free, All Subjects | ClassCoach',
-    description: 'Free AI question paper generator for Class 6 to 12: Maths, Science, Social Science, English, Physics, Chemistry and Biology, with answer keys, in English and 8 Indian languages.'
-  });
-});
-
 router.get('/question-paper-generator/:slug', (req, res, next) => {
   const page = SEO.PAGES[req.params.slug];
   if (!page) return next();
   const who = page.kind === 'class' ? `Class ${page.cls} ${page.subject}` : `${page.language} medium`;
   const faqs = [
     { q: `Is this ${who} question paper generator free?`, a: `Yes. No login and no card. You can make ${F.PER_VISITOR_PER_DAY} papers a day with up to ${F.LIMITS.mcq} MCQs, ${F.LIMITS.short} short and ${F.LIMITS.long} long answer questions each.` },
-    { q: 'Does it give an answer key?', a: 'Yes. Every paper has a separate answer key with the correct MCQ options and the key points a full-marks written answer should contain.' },
+    page.kind === 'class'
+      ? { q: `Does the Class ${page.cls} ${page.subject} paper come with an answer key?`, a: `Yes. Next to the ${page.subject} paper you get a separate answer key: the correct option for every MCQ and, for the short and long answers, the points a full-marks Class ${page.cls} answer should contain.` }
+      : { q: `Does the ${page.language} paper come with an answer key?`, a: `Yes. The answer key is written in ${page.language} too: the correct option for every MCQ and the key points for each written answer.` },
     page.kind === 'class'
       ? { q: `Which syllabus does it follow for Class ${page.cls} ${page.subject}?`, a: `You type the chapters, so it works for CBSE (NCERT), ICSE and state board syllabi alike. The questions are written in the style of board exam papers for Class ${page.cls}.` }
       : { q: `Will the questions really be in ${page.language}?`, a: `Yes. Choose ${page.language} and every question, option and answer is written in ${page.language} script. Formulas, numbers and standard terms are kept the way ${page.language}-medium textbooks write them.` },
-    { q: 'Should I check the questions before using them?', a: 'Yes. AI-written questions are a strong first draft, but always read the paper and the answer key before giving it to students.' }
+    page.kind === 'class'
+      ? { q: `Can my Class ${page.cls} students take the ${page.subject} test online?`, a: `Yes, in ClassCoach. Students open the test on any phone, MCQs are marked the moment they submit, and you see which ${page.subject} chapters each student is weak in. It is free for 1 month.` }
+      : { q: `Can students take the ${page.language} test online?`, a: `Yes, in ClassCoach. Students open the test on any phone without an app, answers are marked instantly, and parents can get the result on WhatsApp.` }
   ];
   res.render('seo_paper', {
     page,
