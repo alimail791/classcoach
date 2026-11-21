@@ -35,7 +35,7 @@ function loadMaterialOr404(req, res) {
 router.get('/batches/:batchId/materials/new', requireTeacher, (req, res) => {
   const batch = db.prepare('SELECT * FROM batches WHERE id = ? AND teacher_id = ?').get(req.params.batchId, req.teacher.id);
   if (!batch) return res.status(404).send('Batch not found');
-  res.render('material_new', { teacher: req.teacher, batch, error: null });
+  res.render('material_new', { teacher: req.teacher, batch, error: null, preset: req.query.type === 'lesson' ? 'lesson' : '' });
 });
 
 router.post('/batches/:batchId/materials', requireTeacher, (req, res, next) => {
@@ -50,8 +50,8 @@ router.post('/batches/:batchId/materials', requireTeacher, (req, res, next) => {
   const batch = db.prepare('SELECT * FROM batches WHERE id = ? AND teacher_id = ?').get(req.params.batchId, req.teacher.id);
   if (!batch) return res.status(404).send('Batch not found');
 
-  const { title, chapter, type, source_text, mode } = req.body;
-  const materialType = type === 'notes' ? 'notes' : 'slides';
+  const { title, chapter, type, source_text, mode, grade, subject, minutes } = req.body;
+  const materialType = type === 'notes' || type === 'lesson' ? type : 'slides';
 
   const renderError = (msg) => res.render('material_new', { teacher: req.teacher, batch, error: msg });
 
@@ -64,7 +64,7 @@ router.post('/batches/:batchId/materials', requireTeacher, (req, res, next) => {
     return res.redirect(`/materials/${info.lastInsertRowid}/edit`);
   }
 
-  const materialFeature = materialType === 'notes' ? 'notes' : 'slides';
+  const materialFeature = materialType;
   const materialCredits = creditsFor(materialFeature);
   const limitCheck = checkAiLimit(req.teacher, materialCredits);
   if (!limitCheck.allowed) {
@@ -93,11 +93,14 @@ router.post('/batches/:batchId/materials', requireTeacher, (req, res, next) => {
       return renderError(`Could not read that image: ${err.message}`);
     }
   }
-  if (!topicText) return renderError('Paste some source text, upload a PDF or photo, or choose "Start blank".');
+  // A lesson plan can be written from the topic alone; notes and slides need source material.
+  if (!topicText && !(materialType === 'lesson' && (chapter || '').trim())) {
+    return renderError(materialType === 'lesson' ? 'Enter the topic (or paste the chapter text) for the lesson plan.' : 'Paste some source text, upload a PDF or photo, or choose "Start blank".');
+  }
 
   try {
     const meter = {};
-    const content = await generateMaterial({ type: materialType, topicText, chapterLabel: (chapter || '').trim(), meter });
+    const content = await generateMaterial({ type: materialType, topicText, chapterLabel: (chapter || '').trim(), meter, lesson: { grade: (grade || '').trim().slice(0, 40), subject: (subject || '').trim().slice(0, 60), minutes } });
     if (!content.length) return renderError('The AI response could not be parsed. Try again or shorten the text.');
     const info = db
       .prepare('INSERT INTO materials (teacher_id, batch_id, type, title, chapter, content_json) VALUES (?, ?, ?, ?, ?, ?)')
@@ -152,6 +155,7 @@ router.get('/materials/:id/edit', requireTeacher, (req, res) => {
 router.post('/materials/:id/share', requireTeacher, (req, res) => {
   const material = loadMaterialOr404(req, res);
   if (!material) return;
+  if (material.type === 'lesson') return res.redirect(`/materials/${material.id}/edit`); // lesson plans are for the teacher only
   db.prepare('UPDATE materials SET shared = 1 WHERE id = ?').run(material.id);
   res.redirect(`/materials/${material.id}/edit`);
 });

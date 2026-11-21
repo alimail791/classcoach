@@ -31,6 +31,33 @@
     <p style="font-size: 13px; color: var(--faint); margin: 0;">No credit card needed.</p>
   </div>
 
+  <% if (page.answer) { %>
+  <!-- DIRECT ANSWER (what someone asking an AI assistant or Google wants first) -->
+  <div style="max-width: 880px; margin: 0 auto; padding: 0 32px 48px;">
+    <div class="card" style="padding: 24px; border-color: var(--accent); background: var(--accent-tint);">
+      <h2 style="font-size: 20px; color: var(--ink); margin-bottom: 10px;"><%= page.answer.q %></h2>
+      <p style="font-size: 15px; color: var(--ink); line-height: 1.7; margin: 0;"><%= page.answer.a %></p>
+      <% if (page.answer.points) { %><ul style="margin: 12px 0 0; padding-left: 20px; font-size: 15px; color: var(--muted); line-height: 1.7;"><% page.answer.points.forEach(function (pt) { %><li><%= pt %></li><% }) %></ul><% } %>
+    </div>
+  </div>
+  <% } %>
+
+  <% if (page.shots && page.shots.length) { %>
+  <!-- REAL SCREENS FROM THE APP -->
+  <div style="max-width: 1180px; margin: 0 auto; padding: 0 32px 64px;">
+    <h2 style="font-size: 26px; color: var(--ink); margin-bottom: 8px;"><%= page.shotsH2 || 'See it in ClassCoach' %></h2>
+    <p style="font-size: 14px; color: var(--muted); margin: 0 0 24px;">Real screens from the app, with a demo teacher and demo students.</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+      <% page.shots.forEach(function (sh) { %>
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 10px;">
+        <img src="/screens/<%= sh.src %>.webp" alt="<%= sh.alt %>" loading="lazy" width="1280" height="<%= sh.h || 820 %>" style="width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px rgba(33,28,21,0.08);">
+        <figcaption style="font-size: 14px; color: var(--muted); line-height: 1.5;"><strong style="color: var(--ink);"><%= sh.title %></strong> — <%= sh.caption %></figcaption>
+      </figure>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
   <!-- STATS -->
   <div style="max-width: 1180px; margin: 0 auto; padding: 0 32px 56px;">
     <div class="grid-3">
@@ -90,6 +117,15 @@
     </div>
   </div>
 
+  <% if (page.related && page.related.length) { %>
+  <div style="max-width: 880px; margin: 0 auto; padding: 48px 32px 8px;">
+    <h2 style="font-size: 22px; color: var(--ink); margin-bottom: 14px;">Related</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+      <% page.related.forEach(function (r) { %><a href="<%= r.href %>" style="font-size: 14px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 100px; color: var(--ink); background: #fff;"><%= r.label %></a><% }) %>
+    </div>
+  </div>
+  <% } %>
+
   <!-- CTA -->
   <div style="background: var(--ink); color: #FBF6EE;">
     <div style="max-width: 720px; margin: 0 auto; padding: 64px 32px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;">
@@ -133,6 +169,10 @@
         { '@type': 'ListItem', position: 1, name: 'ClassCoach', item: canonicalUrl.replace(/\/[^/]*$/, '/') },
         { '@type': 'ListItem', position: 2, name: page.nav, item: canonicalUrl }
       ]
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: page.faqs.map(function (f) { return { '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }; })
     }
   ]
 }).replace(/</g, '\\u003c') %>

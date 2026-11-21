@@ -16,7 +16,7 @@
       <div style="display: flex; gap: 10px;">
         <a href="/batches/<%= batch.id %>/attendance" class="btn btn-ghost">📋 Attendance</a>
         <a href="/batches/<%= batch.id %>/homework" class="btn btn-ghost">✏️ Homework</a>
-        <a href="/batches/<%= batch.id %>/materials/new" class="btn btn-ghost">+ Slides &amp; notes</a>
+        <a href="/batches/<%= batch.id %>/materials/new" class="btn btn-ghost">+ Slides, notes &amp; lesson plans</a>
         <a href="#videos" class="btn btn-ghost">▶ YouTube lesson</a>
         <a href="/batches/<%= batch.id %>/tests/new" class="btn btn-primary">+ Create test</a>
       </div>
@@ -142,7 +142,7 @@
       </div>
 
       <div>
-        <h2 style="font-size: 15px; color: var(--muted); margin-bottom: 14px; font-family: 'Karla', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">Slides &amp; notes</h2>
+        <h2 style="font-size: 15px; color: var(--muted); margin-bottom: 14px; font-family: 'Karla', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">Slides, notes &amp; lesson plans</h2>
         <% if (materials.length === 0) { %>
           <div class="card" style="padding: 24px; text-align: center; color: var(--muted); font-size: 14px;">Nothing created yet for this class.</div>
         <% } else { %>
@@ -153,7 +153,7 @@
                 <% materials.forEach(function(m) { %>
                   <tr>
                     <td><%= m.title %></td>
-                    <td><%= m.type === 'slides' ? '🖥️ Slides' : '📝 Notes' %></td>
+                    <td><%= m.type === 'slides' ? '🖥️ Slides' : m.type === 'lesson' ? '📋 Lesson plan' : '📝 Notes' %></td>
                     <td><% if (m.shared) { %><span class="badge badge-good">Shared</span><% } else { %><span class="badge badge-neutral">Draft</span><% } %></td>
                     <td><a href="/materials/<%= m.id %>/edit" style="font-size: 13px; font-weight: 600;">Open →</a></td>
                   </tr>

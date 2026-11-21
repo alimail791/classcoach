@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><%- include('partials/head', { title: 'New slides/notes — ClassCoach' }) %></head>
+<head><%- include('partials/head', { title: 'New slides, notes or lesson plan — ClassCoach' }) %></head>
 <body>
 <div class="layout">
   <%- include('partials/sidebar', { active: 'dashboard' }) %>
@@ -9,7 +9,7 @@
       <div class="crumbs">
         <a href="/batches/<%= batch.id %>" style="font-size: 14px; color: var(--faint);">← <%= batch.name %></a>
         <div class="divider-v"></div>
-        <h1 style="font-size: 17px;">Create slides &amp; notes</h1>
+        <h1 style="font-size: 17px;">Create slides, notes or a lesson plan</h1>
       </div>
     </div>
     <div class="content" style="align-items: center;">
@@ -24,10 +24,19 @@
             <label style="padding: 9px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
               <input type="radio" name="type" value="notes" style="margin-right: 6px;">📝 Notes
             </label>
+            <label style="padding: 9px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
+              <input type="radio" name="type" value="lesson" style="margin-right: 6px;" <%= typeof preset !== 'undefined' && preset === 'lesson' ? 'checked' : '' %>>📋 Lesson plan
+            </label>
           </div>
 
           <div class="field"><label>Title</label><input name="title" placeholder="Gravitation — Chapter 8" required></div>
           <div class="field"><label>Chapter / topic</label><input name="chapter" placeholder="Gravitation"></div>
+          <div id="lesson-fields" style="display: none; gap: 12px; flex-wrap: wrap;">
+            <div class="field" style="flex: 1; min-width: 120px;"><label>Class</label><input name="grade" placeholder="Class 9"></div>
+            <div class="field" style="flex: 1; min-width: 120px;"><label>Subject</label><input name="subject" placeholder="Physics"></div>
+            <div class="field" style="flex: 1; min-width: 120px;"><label>Period (minutes)</label><input name="minutes" type="number" min="20" max="180" value="40"></div>
+            <p style="font-size: 12px; color: var(--faint); margin: 0; width: 100%;">For a lesson plan the topic is enough — source text is optional. You get objectives, a timed lesson flow, board work, questions, an exit check and homework. Only you see it.</p>
+          </div>
 
           <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--bg); border-radius: 8px;">
             <label style="font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
@@ -44,6 +53,14 @@
 
           <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Continue →</button>
         </form>
+        <script>
+          (function () {
+            var box = document.getElementById('lesson-fields');
+            function sync() { var t = document.querySelector('input[name="type"]:checked'); box.style.display = t && t.value === 'lesson' ? 'flex' : 'none'; }
+            document.querySelectorAll('input[name="type"]').forEach(function (r) { r.addEventListener('change', sync); });
+            sync();
+          })();
+        </script>
       </div>
     </div>
   </div>
