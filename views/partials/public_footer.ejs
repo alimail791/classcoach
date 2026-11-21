@@ -9,6 +9,8 @@
       <% Object.keys(LANDING_PAGES).forEach(function (s) { if (s === currentSlug) return; %>
       <a href="/<%= s %>" style="font-size: 13px; color: var(--muted);"><%= LANDING_PAGES[s].nav %></a>
       <% }) %>
+      <a href="/free-question-paper-generator" style="font-size: 13px; color: var(--muted);">Free question paper generator</a>
+      <a href="/free-omr-sheet-generator" style="font-size: 13px; color: var(--muted);">Free OMR sheet generator</a>
       <% if (currentSlug !== 'blog') { %><a href="/blog" style="font-size: 13px; color: var(--muted);">Blog</a><% } %>
     </nav>
     <nav aria-label="More from the ClassCoach team" style="display: flex; gap: 8px 18px; flex-wrap: wrap; align-items: center;">

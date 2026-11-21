@@ -97,6 +97,15 @@ router.post('/signup', (req, res) => {
       examTrack
     );
   if (accountType === 'institute') createInstitute(Number(info.lastInsertRowid), instituteName);
+  try {
+    const ck = (n) => decodeURIComponent((new RegExp(`(?:^|;\\s*)${n}=([^;]*)`).exec(req.headers.cookie || '') || [])[1] || '');
+    const first = ck('cc_src');
+    const last = ck('cc_last');
+    const source = [first, last && !first.startsWith(last + ':') ? `last: ${last}` : ''].filter(Boolean).join(' · ').slice(0, 160);
+    if (source) db.prepare('UPDATE teachers SET signup_source = ? WHERE id = ?').run(source, Number(info.lastInsertRowid));
+  } catch (err) {
+    console.error('Could not save signup source:', err.message);
+  }
   const signupToken = require('crypto').randomBytes(16).toString('hex');
   db.prepare('UPDATE teachers SET session_token = ? WHERE id = ?').run(signupToken, info.lastInsertRowid);
   req.session.sessionToken = signupToken;

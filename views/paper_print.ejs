@@ -37,7 +37,19 @@
 </style>
 </head>
 <body>
+<% var freeP = typeof free !== 'undefined' && free; %>
+<% if (freeP) { %>
+<div class="bar" style="flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; background: #FFF4E8; border: 1px solid #D8A87C; border-radius: 10px; padding: 12px 14px;">
+  <span style="font-size: 14px;"><strong>Your free paper is ready.</strong> <a href="/signup?src=free-paper-result" style="font-weight: 700; color: #B4501C;">Sign up free</a> to edit it, print 4 shuffled sets and grade by OMR.</span>
+  <span style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <a href="/free-question-paper-generator/p/<%= free.token %><%= free.answerKey ? '' : '?key=1' %>"><button type="button"><%= free.answerKey ? 'Show question paper' : 'Show answer key' %></button></a>
+    <a href="/free-question-paper-generator"><button type="button">Make another</button></a>
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </span>
+</div>
+<% } else { %>
 <div class="bar"><button onclick="window.print()">Print / Save as PDF</button></div>
+<% } %>
 <div class="page">
   <div class="hd">
     <% if (header.school) { %><div class="school"><%= header.school %></div><% } %>
@@ -80,6 +92,7 @@
     </div>
   <% }) %>
   <div class="end">— End of <%= answerKey ? 'answer key' : 'question paper' %> —</div>
+  <% if (freeP) { %><div style="text-align: center; margin-top: 10px; font-size: 9pt; color: #666; font-family: system-ui, sans-serif;">Made free with ClassCoach · classcoach.in</div><% } %>
 </div>
 </body>
 </html>

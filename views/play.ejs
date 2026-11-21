@@ -184,7 +184,8 @@
         stats + '<p class="small">' + t('lookScreen') + '</p></div>';
     } else if (v.phase === 'final') {
       h = '<div class="mid"><p class="small">' + t('final') + '</p><div class="big">#' + v.rank + ' ' + t('of') + ' ' + v.of + '</div>' +
-        '<p style="font-size:18px">' + v.correct + '/' + (v.qi + 1) + ' ' + t('gotRight') + ' · ' + v.score + ' ' + t('pts') + '</p></div>';
+        '<p style="font-size:18px">' + v.correct + '/' + (v.qi + 1) + ' ' + t('gotRight') + ' · ' + v.score + ' ' + t('pts') + '</p>' +
+        '<p class="small" style="margin-top:28px">Live Quiz by <a href="/?utm_source=live_quiz" style="color:inherit;font-weight:700">ClassCoach</a> · Teachers, try it free</p></div>';
       store(KEY, null);
     }
     screen.innerHTML = h;

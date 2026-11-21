@@ -84,6 +84,31 @@ app.use((req, res, next) => {
   next();
 });
 
+// Remember where a visitor first came from (utm_source, ?src=, or the
+// referring site) in a first-party cookie, so signups can be traced to a
+// channel (saved as teachers.signup_source; shown in Admin). A later ?src=
+// (e.g. a free-tool button) is kept as the "last touch".
+const BOT_UA = /bot|crawl|spider|slurp|preview|headless|monitor/i;
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || BOT_UA.test(req.get('user-agent') || '') || /\.[a-z0-9]{2,5}$/i.test(req.path)) return next();
+  const cookies = String(req.headers.cookie || '');
+  const tag = (req.query.utm_source || req.query.src || '').toString().replace(/[^\w.\-]/g, '').slice(0, 40);
+  const opts = { maxAge: 60 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'lax', secure: req.secure };
+  if (!/(?:^|;\s*)cc_src=/.test(cookies)) {
+    let ref = '';
+    try {
+      const host = new URL(req.get('referer') || '').hostname.replace(/^www\./, '');
+      if (host && !/classcoach\.in$/.test(host)) ref = host;
+    } catch (e) {
+      ref = '';
+    }
+    const first = (tag || ref || 'direct') + ':' + req.path.slice(0, 60);
+    res.cookie('cc_src', first, opts);
+  }
+  if (tag) res.cookie('cc_last', tag, opts);
+  next();
+});
+
 app.get('/', (req, res) => {
   if (req.session.teacherId) return res.redirect('/dashboard');
   if (req.session.studentId) return res.redirect('/student/dashboard');
@@ -161,6 +186,9 @@ app.get('/sitemap.xml', (req, res) => {
       Object.keys(LANDING_PAGES)
         .map((slug) => `  <url>\n    <loc>${base}/${slug}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`)
         .join('') +
+      ['free-tools', 'free-question-paper-generator', 'free-omr-sheet-generator']
+        .map((slug) => `  <url>\n    <loc>${base}/${slug}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`)
+        .join('') +
       `  <url>\n    <loc>${base}/blog</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n` +
       blogRoutes
         .publishedPosts()
@@ -205,6 +233,7 @@ app.use('/', blogRoutes);
 app.use('/', careerRoutes);
 app.use('/', paperRoutes);
 app.use('/', omrRoutes);
+app.use('/', require('./routes/freeTools'));
 
 app.use((req, res) => {
   res.status(404).send('Page not found. <a href="/">Go home</a>');

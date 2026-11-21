@@ -119,6 +119,11 @@
       </div>
       <p style="font-size: 12px; color: var(--faint); margin: 0;">An institute's plan applies to every teacher in it. Teacher seats don't count the institute admin.</p>
 
+      <h2 style="font-size: 20px;">Free tools</h2>
+      <div class="grid-4">
+        <div class="card stat-card"><span class="label">Free papers today</span><span class="value"><%= freeToolStats.today %></span><span class="sub"><%= freeToolStats.week %> in the last 7 days</span></div>
+      </div>
+
       <h2 id="testimonials" style="font-size: 20px;">Homepage reviews</h2>
       <% if (testimonialSaved) { %><div class="flash flash-ok"><%= testimonialSaved %></div><% } %>
       <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px;">
@@ -203,6 +208,7 @@
                   <% if (!t.institute_id) { %><span class="badge badge-neutral" style="margin-left: 4px;"><%= t.exam_track === 'neet_jee' ? 'NEET/JEE' : 'School & general' %></span><% } %>
                   <div style="font-size: 11px; color: var(--faint); margin-top: 4px;">Joined <%= shortDate(t.created_at) %> · Last active <%= t.last_active_at ? shortDate(t.last_active_at) : 'never' %><%= t.referred ? ' · Referred ' + t.referred + ' (' + t.referredBought + ' bought)' : '' %></div>
                   <div style="font-size: 11px; color: var(--faint);"><%= t.batchCount %> classes · <%= t.testCount %> tests</div>
+                  <% if (t.signup_source) { %><div style="font-size: 11px; color: var(--accent-deep);">Came from: <%= t.signup_source %></div><% } %>
                 </td>
                 <td>
                   <% if (t.institute_id) { %>
