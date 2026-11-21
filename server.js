@@ -47,6 +47,10 @@ app.locals.genTiers = genTiers();
 app.locals.topupPacks = Object.values(require('./lib/credits').TOPUPS);
 app.locals.featureCredits = require('./lib/credits').FEATURE_CREDITS;
 app.locals.instTiers = instTiers();
+// Product facts for search engines and AI assistants (lib/seoData.js).
+const seoData = require('./lib/seoData');
+app.locals.productJsonLd = JSON.stringify(seoData.productJsonLd()).replace(/</g, '\\u003c');
+app.get('/llms.txt', (req, res) => res.type('text/plain; charset=utf-8').send(seoData.llmsTxt()));
 // Public landing pages (see lib/landing_pages.js) — exposed to views so the
 // shared public footer can link them all.
 const { LANDING_PAGES } = require('./lib/landing_pages');
@@ -97,7 +101,7 @@ app.get('/', (req, res) => {
     indexable: true,
     canonicalUrl,
     description:
-      'ClassCoach helps individual teachers and small coaching classes create AI-generated tests, run live quiz games in class, auto-grade objective answers, track chapter-wise weaknesses, and share results with parents.'
+      'Make tests and question papers from any chapter in 1 minute, auto-grade answers, see each student\'s weak chapters and send parents results on WhatsApp. Free for 1 month.'
   });
 });
 
@@ -120,6 +124,7 @@ Object.keys(LANDING_PAGES).forEach((slug) => {
     res.render('landing', {
       page,
       slug,
+      seoPages: slug === 'question-paper-generator' ? Object.values(require('./lib/seo_pages').PAGES) : null,
       demoLink,
       indexable: true,
       canonicalUrl: `${SITE_ORIGIN}/${slug}`,
@@ -165,24 +170,36 @@ app.get('/robots.txt', (req, res) => {
   );
 });
 
-app.get('/sitemap.xml', (req, res) => {
+// Every public, indexable URL (sitemap.xml and IndexNow read the same list).
+function publicUrls() {
   const base = SITE_ORIGIN;
+  const pages = [
+    { loc: `${base}/`, freq: 'weekly', pri: '1.0' },
+    ...Object.keys(LANDING_PAGES).map((slug) => ({ loc: `${base}/${slug}`, freq: 'monthly', pri: '0.8' })),
+    ...['pricing', 'free-tools', 'free-question-paper-generator', 'free-omr-sheet-generator', ...require('./routes/freeTools').seoSlugs()].map((slug) => ({
+      loc: `${base}/${slug}`,
+      freq: 'monthly',
+      pri: '0.9'
+    })),
+    { loc: `${base}/blog`, freq: 'weekly', pri: '0.7' },
+    ...blogRoutes.publishedPosts().map((p) => ({ loc: `${base}/blog/${p.slug}`, lastmod: String(p.updated_at || p.published_at).slice(0, 10), pri: '0.7' }))
+  ];
+  return pages;
+}
+
+app.get('/sitemap.xml', (req, res) => {
   res.type('application/xml').send(
-    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${base}/</loc>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n` +
-      Object.keys(LANDING_PAGES)
-        .map((slug) => `  <url>\n    <loc>${base}/${slug}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`)
-        .join('') +
-      ['pricing', 'free-tools', 'free-question-paper-generator', 'free-omr-sheet-generator', 'question-paper-generator', ...require('./routes/freeTools').seoSlugs()]
-        .map((slug) => `  <url>\n    <loc>${base}/${slug}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`)
-        .join('') +
-      `  <url>\n    <loc>${base}/blog</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n` +
-      blogRoutes
-        .publishedPosts()
-        .map((p) => `  <url>\n    <loc>${base}/blog/${p.slug}</loc>\n    <lastmod>${String(p.updated_at || p.published_at).slice(0, 10)}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`)
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+      publicUrls()
+        .map((u) => `  <url>\n    <loc>${u.loc}</loc>\n` + (u.lastmod ? `    <lastmod>${u.lastmod}</lastmod>\n` : '') + (u.freq ? `    <changefreq>${u.freq}</changefreq>\n` : '') + `    <priority>${u.pri}</priority>\n  </url>\n`)
         .join('') +
       `</urlset>`
   );
 });
+
+const indexNow = require('./lib/indexNow');
+app.get(`/${indexNow.KEY}.txt`, (req, res) => res.type('text/plain').send(indexNow.KEY));
+setTimeout(() => indexNow.ping(publicUrls().map((u) => u.loc), SITE_ORIGIN), 30 * 1000).unref();
 
 app.get('/unsubscribe', (req, res) => {
   const email = (req.query.email || '').toLowerCase().trim();
