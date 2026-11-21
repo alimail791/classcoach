@@ -231,6 +231,7 @@ app.use('/', reportPublicRoutes);
 app.use('/', reportsHubRoutes);
 app.use('/', neetBankRoutes);
 app.use('/', internalRoutes);
+app.use('/', require('./routes/instagramReels')); // daily promo Reels (shorts-bot/)
 app.use('/', liveRoutes);
 app.use('/', blogRoutes);
 app.use('/', careerRoutes);
@@ -246,6 +247,7 @@ const PORT = process.env.PORT || 3000;
 startInactivityScheduler();
 require('./lib/incompleteSignups').startIncompleteSignupAlerts();
 require('./lib/emailDrip').startDrip();
+require('./lib/instagramReels').startInstagramReelsJob(); // posts the daily promo Reel (needs IG_ACCESS_TOKEN)
 
 try { require('./lib/creditsMigration').migrateToCredits(); } catch (e) { console.error('Credits migration failed:', e.message); }
 
