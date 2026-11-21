@@ -8,6 +8,7 @@ const { getInstitute, setInstitutePlan, teacherSeatsUsed } = require('../lib/ins
 const mailer = require('../lib/mailer');
 
 const careerSeats = require('../lib/career/seats');
+const { clearSocialProofCache } = require('../lib/socialProof');
 
 const router = express.Router();
 
@@ -236,6 +237,10 @@ router.get('/admin', requireAdminSession, (req, res) => {
       tiers: Object.values(careerSeats.TIERS)
     },
     careerSaved: req.query.careerSaved || null,
+    testimonials: all('SELECT * FROM testimonials ORDER BY id DESC'),
+    freeToolStats: require('../lib/freeTools').stats(),
+    traffic: require('../lib/tracking').report([7, 30, 90].includes(parseInt(req.query.days, 10)) ? parseInt(req.query.days, 10) : 30),
+    testimonialSaved: req.query.testimonialSaved || null,
     careerError: req.query.careerError || null,
     payments,
     institutes,
@@ -285,6 +290,29 @@ router.post('/admin/career-seats', requireAdminSession, (req, res) => {
   if (!tier || !(qty >= 1 && qty <= 5000)) return res.redirect('/admin?careerError=' + encodeURIComponent('Pick a tier and a quantity between 1 and 5000') + '#career');
   careerSeats.addSeats({ teacher, tier, qty, note: String(req.body.note || 'Offline payment').slice(0, 200) });
   res.redirect('/admin?careerSaved=' + encodeURIComponent(`${qty} ${careerSeats.TIERS[tier].name} seats added for ${teacher.name}`) + '#career');
+});
+
+// Homepage testimonials. Only add real quotes from teachers who agreed to it.
+router.post('/admin/testimonials', requireAdminSession, (req, res) => {
+  const name = String(req.body.name || '').trim().slice(0, 80);
+  const role = String(req.body.role || '').trim().slice(0, 120);
+  const quote = String(req.body.quote || '').trim().slice(0, 400);
+  if (!name || !quote) return res.redirect('/admin?testimonialSaved=' + encodeURIComponent('Name and quote are both needed') + '#testimonials');
+  db.prepare('INSERT INTO testimonials (name, role, quote) VALUES (?, ?, ?)').run(name, role, quote);
+  clearSocialProofCache();
+  res.redirect('/admin?testimonialSaved=' + encodeURIComponent(`Added ${name}'s review to the homepage`) + '#testimonials');
+});
+
+router.post('/admin/testimonials/:id/toggle', requireAdminSession, (req, res) => {
+  db.prepare('UPDATE testimonials SET visible = 1 - visible WHERE id = ?').run(req.params.id);
+  clearSocialProofCache();
+  res.redirect('/admin#testimonials');
+});
+
+router.post('/admin/testimonials/:id/delete', requireAdminSession, (req, res) => {
+  db.prepare('DELETE FROM testimonials WHERE id = ?').run(req.params.id);
+  clearSocialProofCache();
+  res.redirect('/admin#testimonials');
 });
 
 router.post('/admin/teachers/:id/toggle-active', requireAdminSession, (req, res) => {

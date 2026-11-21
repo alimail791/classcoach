@@ -68,7 +68,7 @@
             <% }) %>
           <% } %>
           <label style="display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600;margin-top:8px;"><input type="checkbox" name="use_ai" value="1" checked> Let AI write the missing questions</label>
-          <div class="field"><label>Chapters / topics for AI (if not ticked above)</label><input name="topics" maxlength="1000" placeholder="e.g. Light — reflection and refraction; Electricity"></div>
+          <div class="field"><label>Chapters / topics for AI (if not ticked above)</label><input name="topics" id="pp-topics" maxlength="1000" placeholder="e.g. Light — reflection and refraction; Electricity" value="<%= typeof topicsValue !== 'undefined' ? topicsValue : '' %>"><div id="pp-topics-msg" style="display:none;font-size:13px;color:#b42318;margin-top:4px;">Type a chapter or topic here (or fill Subject above) so the AI knows what to write.</div></div>
           <details><summary style="font-size:13px;cursor:pointer;color:var(--accent);">Paste syllabus or notes for the AI (optional)</summary>
             <textarea name="source_text" rows="6" style="width:100%;margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:6px;" placeholder="Paste the chapter text so questions stick to what you taught."></textarea></details>
         </div>
@@ -99,7 +99,12 @@
     for(var i=0;i<n.length;i++){var c=parseInt(n[i].value,10)||0,k=parseInt(m[i].value,10)||0;q+=c;t+=c*k;}
     document.getElementById('pp-total').textContent=q+' questions · '+t+' marks';}
   document.querySelectorAll('.pp-n,.pp-m').forEach(function(el){el.addEventListener('input',total);});total();
-  document.querySelector('form[action="/papers"]').addEventListener('submit',function(){var b=document.getElementById('pp-go');b.disabled=true;b.textContent='Building… (AI can take up to a minute)';});
+  document.querySelector('form[action="/papers"]').addEventListener('submit',function(e){
+    var f=e.target,ai=f.querySelector('[name=use_ai]'),tp=document.getElementById('pp-topics');
+    var ticked=f.querySelectorAll('[name=mine_chapters]:checked,[name=bank_chapters]:checked').length;
+    var subj=(f.querySelector('[name=subject]').value||'').trim();
+    if(ai&&ai.checked&&!ticked&&!tp.value.trim()&&!subj){e.preventDefault();document.getElementById('pp-topics-msg').style.display='block';tp.focus();return;}
+    var b=document.getElementById('pp-go');b.disabled=true;b.textContent='Building… (AI can take up to a minute)';});
 })();
 </script>
 </body>

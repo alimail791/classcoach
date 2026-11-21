@@ -2,6 +2,14 @@
 <html lang="en">
 <head><%- include('partials/head', { title: 'ClassCoach — AI tests, auto-grading & parent reports for teachers and institutes' }) %></head>
 <body>
+<style>
+  .nav-login{position:relative}
+  .nav-login summary::-webkit-details-marker{display:none}
+  .nav-login-menu{position:absolute;right:0;top:28px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:6px;display:flex;flex-direction:column;min-width:170px;z-index:30}
+  .nav-login-menu a{padding:8px 12px;border-radius:6px;font-size:14px;color:var(--ink)}
+  .nav-login-menu a:hover{background:var(--accent-tint)}
+  @media (max-width:640px){.nav-wide{display:none}.nav-login-menu{left:0;right:auto}}
+</style>
 
   <!-- NAV -->
   <div style="position: sticky; top: 0; z-index: 20; background: rgba(251,246,238,0.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line);">
@@ -11,17 +19,23 @@
         <span style="font-family: 'Newsreader', serif; font-size: 20px; color: var(--ink);">ClassCoach</span>
       </div>
       <div style="display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap;">
-        <a href="/student/login" style="font-size: 14px; color: var(--muted);">Student login</a>
-        <a href="/parent/login" style="font-size: 14px; color: var(--muted);">Parent login</a>
-        <a href="/join" style="font-size: 14px; color: var(--muted);">Join a class</a>
-        <a href="/play" style="font-size: 14px; color: var(--muted);">Join a live quiz</a>
-        <a href="#live-quiz" style="font-size: 14px; color: var(--muted);">Live Quiz</a>
-        <a href="#compare" style="font-size: 14px; color: var(--muted);">Compare</a>
-        <a href="#institutes" style="font-size: 14px; color: var(--muted);">For institutes</a>
-        <a href="#demo" style="font-size: 14px; color: var(--muted);">Demo</a>
-        <a href="/admin/login" style="font-size: 13px; color: var(--faint);">Admin</a>
-        <a href="/institute/login" style="font-size: 14px; color: var(--muted);">Institute login</a>
-        <a href="/login" style="font-size: 14px; font-weight: 600; color: var(--muted);">Log in</a>
+        <a href="#features" class="nav-wide" style="font-size: 14px; color: var(--muted);">Features</a>
+        <a href="#live-quiz" class="nav-wide" style="font-size: 14px; color: var(--muted);">Live Quiz</a>
+        <a href="/pricing" class="nav-wide" style="font-size: 14px; color: var(--muted);">Pricing</a>
+        <a href="/free-tools" class="nav-wide" style="font-size: 14px; color: var(--muted);">Free tools</a>
+        <a href="/blog" class="nav-wide" style="font-size: 14px; color: var(--muted);">Blog</a>
+        <details class="nav-login">
+          <summary style="font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; list-style: none;">Log in ▾</summary>
+          <div class="nav-login-menu">
+            <a href="/login">Teacher</a>
+            <a href="/student/login">Student</a>
+            <a href="/parent/login">Parent</a>
+            <a href="/institute/login">Institute</a>
+            <a href="/play">Join a live quiz</a>
+            <a href="/join">Join a class</a>
+            <a href="/admin/login" style="color: var(--faint);">Admin</a>
+          </div>
+        </details>
         <a href="/signup" class="btn btn-dark">Start free trial</a>
       </div>
     </div>
@@ -45,7 +59,8 @@
         <a href="/signup" class="btn btn-primary">Start your free 1-month trial</a>
         <a href="/signup?type=institute" style="font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px;">Run an institute? Try free for 14 days →</a>
       </div>
-      <p style="font-size: 13px; color: var(--faint); margin: 0;">No credit card needed · No app to install · Works on any phone · Plans from ₹499</p>
+      <p style="font-size: 13px; color: var(--faint); margin: 0;">No credit card needed · No app to install · Works on any phone · <a href="/pricing" style="color: inherit;">Plans from ₹250/month</a></p>
+      <p style="font-size: 14px; color: var(--muted); margin: 0;">Not ready yet? Make a question paper now with our <a href="/free-question-paper-generator" style="font-weight: 700; color: var(--accent);">free AI question paper generator</a>, no login.</p>
     </div>
     <div style="flex: 1; min-width: 280px; display: flex; justify-content: center;">
       <div class="card" style="width: 100%; max-width: 380px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
@@ -60,6 +75,123 @@
           <span>✅ Unit test graded automatically: 26 of 26</span>
           <span>📲 Report sent to Ananya's parent on WhatsApp</span>
           <span>🎯 Class weak chapter: Gravitation, plan a revision</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOCIAL PROOF: real usage numbers (shown only once they're meaningful) and admin-added reviews -->
+  <% if ((proof && proof.stats.length) || (proof && proof.reviews.length)) { %>
+  <div style="border-top: 1px solid var(--line); background: #FFFFFF;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 40px 32px; display: flex; flex-direction: column; gap: 28px;">
+      <% if (proof.stats.length) { %>
+      <div style="display: flex; justify-content: center; gap: 24px 56px; flex-wrap: wrap; text-align: center;">
+        <% proof.stats.forEach(function (st) { %>
+          <div><div style="font-family: 'Newsreader', serif; font-size: 32px; color: var(--ink);"><%= st.value %></div><div style="font-size: 13px; color: var(--muted);"><%= st.label %></div></div>
+        <% }) %>
+      </div>
+      <% } %>
+      <% if (proof.reviews.length) { %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+        <% proof.reviews.forEach(function (r) { %>
+          <figure class="card" style="margin: 0; padding: 22px; display: flex; flex-direction: column; gap: 12px;">
+            <blockquote style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink);">“<%= r.quote %>”</blockquote>
+            <figcaption style="font-size: 13px; color: var(--muted);"><strong style="color: var(--ink);"><%= r.name %></strong><% if (r.role) { %> · <%= r.role %><% } %></figcaption>
+          </figure>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- WHO IT'S FOR -->
+  <div style="max-width: 1180px; margin: 0 auto; padding: 64px 32px 24px;">
+    <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 10px;">Made for how India teaches</h2>
+    <p style="font-size: 15px; color: var(--muted); margin: 0 0 28px; max-width: 720px; line-height: 1.6;">Whether you take tuition at home or run a coaching centre, ClassCoach takes the testing and correcting off your plate.</p>
+    <div class="grid-4">
+      <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 8px;"><span style="font-size: 22px;">🏠</span><h3 style="font-size: 16px;">Home tuition teachers</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0;">Weekly tests for 10–50 students without carrying home a pile of papers to correct.</p></div>
+      <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 8px;"><span style="font-size: 22px;">🏫</span><h3 style="font-size: 16px;">Coaching centres</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0;">One dashboard for every teacher and batch, and results parents can see the same day.</p></div>
+      <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 8px;"><span style="font-size: 22px;">🩺</span><h3 style="font-size: 16px;">NEET &amp; JEE coaches</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0;">Chapter tests from a ready bank of 3,600+ questions, including previous-year questions.</p></div>
+      <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 8px;"><span style="font-size: 22px;">📚</span><h3 style="font-size: 16px;">School teachers</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0;">Printable question papers in up to 4 sets, OMR sheets you can grade with a phone photo.</p></div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div>
+    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
+      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 40px;">Three steps, start to finish</h2>
+      <div class="grid-3">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'Newsreader', serif; font-size: 34px; color: #D8A87C;">01</span>
+          <h3 style="font-size: 17px;">Upload your syllabus</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Paste a chapter outline or upload a PDF — ClassCoach drafts questions by chapter.</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'Newsreader', serif; font-size: 34px; color: #D8A87C;">02</span>
+          <h3 style="font-size: 17px;">Review and publish</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Edit anything that needs a fix, then publish the test for your class to take on their own phone.</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'Newsreader', serif; font-size: 34px; color: #D8A87C;">03</span>
+          <h3 style="font-size: 17px;">Get results and reports</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Objective answers grade instantly. You see the weak chapters, and parents get their update.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMO VIDEO -->
+  <div id="demo" style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+    <div style="max-width: 900px; margin: 0 auto; padding: 64px 32px; text-align: center;">
+      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 12px;">See it in action</h2>
+      <p style="font-size: 15px; color: var(--muted); margin: 0 0 32px;">A 90-second walkthrough — from syllabus to graded results.</p>
+      <video
+        controls
+        preload="none"
+        poster="/demo-poster.jpg"
+        style="width: 100%; max-width: 800px; border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,0.08);"
+      >
+        <source src="/demo.mp4" type="video/mp4">
+        Your browser doesn't support embedded video — <a href="/demo.mp4">download the demo</a> instead.
+      </video>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div id="features" style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
+      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 40px;">Everything you need, nothing you don't</h2>
+      <div class="grid-2">
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 20px;">📄</span>
+          <h3 style="font-size: 17px;">AI question generation</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Paste a syllabus or upload a PDF — get chapter-tagged questions in minutes, ready to review.</p>
+        </div>
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 20px;">✓</span>
+          <h3 style="font-size: 17px;">Automatic evaluation</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Objective answers are graded the moment a student submits — no marking pile.</p>
+        </div>
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 20px;">📊</span>
+          <h3 style="font-size: 17px;">Chapter-wise tracking</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Every result rolls up into a per-student, per-chapter picture — not just a score.</p>
+        </div>
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 20px;">💬</span>
+          <h3 style="font-size: 17px;">Parent reports</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Share a result the moment it's graded — a link, an email, or their own parent login.</p>
+        </div>
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 20px;">🖥️</span>
+          <h3 style="font-size: 17px;">Slides &amp; notes</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Generate a slide deck or class notes from the same source material, and share them with your class.</p>
+        </div>
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 20px;">🖨️</span>
+          <h3 style="font-size: 17px;">Printable question papers</h3>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Download any test as a PDF question paper for offline use, plus a separate answer key for yourself.</p>
         </div>
       </div>
     </div>
@@ -102,82 +234,14 @@
     </div>
   </div>
 
-  <!-- DEMO VIDEO -->
-  <div id="demo" style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
-    <div style="max-width: 900px; margin: 0 auto; padding: 64px 32px; text-align: center;">
-      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 12px;">See it in action</h2>
-      <p style="font-size: 15px; color: var(--muted); margin: 0 0 32px;">A 90-second walkthrough — from syllabus to graded results.</p>
-      <video
-        controls
-        preload="none"
-        poster="/demo-poster.jpg"
-        style="width: 100%; max-width: 800px; border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,0.08);"
-      >
-        <source src="/demo.mp4" type="video/mp4">
-        Your browser doesn't support embedded video — <a href="/demo.mp4">download the demo</a> instead.
-      </video>
-    </div>
-  </div>
-
-  <!-- FEATURES -->
-  <div style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
-    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
-      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 40px;">Everything you need, nothing you don't</h2>
-      <div class="grid-2">
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 20px;">📄</span>
-          <h3 style="font-size: 17px;">AI question generation</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Paste a syllabus or upload a PDF — get chapter-tagged questions in minutes, ready to review.</p>
-        </div>
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 20px;">✓</span>
-          <h3 style="font-size: 17px;">Automatic evaluation</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Objective answers are graded the moment a student submits — no marking pile.</p>
-        </div>
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 20px;">📊</span>
-          <h3 style="font-size: 17px;">Chapter-wise tracking</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Every result rolls up into a per-student, per-chapter picture — not just a score.</p>
-        </div>
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 20px;">💬</span>
-          <h3 style="font-size: 17px;">Parent reports</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Share a result the moment it's graded — a link, an email, or their own parent login.</p>
-        </div>
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 20px;">🖥️</span>
-          <h3 style="font-size: 17px;">Slides &amp; notes</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Generate a slide deck or class notes from the same source material, and share them with your class.</p>
-        </div>
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 20px;">🖨️</span>
-          <h3 style="font-size: 17px;">Printable question papers</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Download any test as a PDF question paper for offline use, plus a separate answer key for yourself.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- HOW IT WORKS -->
+  <!-- FREE TOOLS -->
   <div>
-    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
-      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 40px;">Three steps, start to finish</h2>
-      <div class="grid-3">
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <span style="font-family: 'Newsreader', serif; font-size: 34px; color: #D8A87C;">01</span>
-          <h3 style="font-size: 17px;">Upload your syllabus</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Paste a chapter outline or upload a PDF — ClassCoach drafts questions by chapter.</p>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <span style="font-family: 'Newsreader', serif; font-size: 34px; color: #D8A87C;">02</span>
-          <h3 style="font-size: 17px;">Review and publish</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Edit anything that needs a fix, then publish the test for your class to take on their own phone.</p>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <span style="font-family: 'Newsreader', serif; font-size: 34px; color: #D8A87C;">03</span>
-          <h3 style="font-size: 17px;">Get results and reports</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Objective answers grade instantly. You see the weak chapters, and parents get their update.</p>
-        </div>
+    <div style="max-width: 1180px; margin: 0 auto; padding: 64px 32px;">
+      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 10px;">Try it first, free and without login</h2>
+      <p style="font-size: 15px; color: var(--muted); margin: 0 0 28px;">Free tools any teacher can use today.</p>
+      <div class="grid-2">
+        <a href="/free-question-paper-generator" class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink);"><span style="font-size: 24px;">📝</span><h3 style="font-size: 17px;">Free AI question paper generator</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0;">Class, subject and chapters in; a printable paper with answer key out. 9 Indian languages.</p><span style="font-size: 14px; font-weight: 700; color: var(--accent);">Make a paper →</span></a>
+        <a href="/free-omr-sheet-generator" class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink);"><span style="font-size: 24px;">🔘</span><h3 style="font-size: 17px;">Free OMR sheet generator</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0;">A4 OMR answer sheets with your institute name and 10 to 125 questions, ready to print.</p><span style="font-size: 14px; font-weight: 700; color: var(--accent);">Make an OMR sheet →</span></a>
       </div>
     </div>
   </div>
@@ -197,81 +261,22 @@
       <p style="font-size: 12px; color: var(--faint); margin: 12px 0 0;">✓ yes &nbsp; ~ partly / depends on plan &nbsp; ✗ no. Based on publicly available information, October 2026; other products' features and prices may change. Product names belong to their owners. On phones, swipe the table sideways.</p>
       <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 24px;">
         <a href="/signup" class="btn btn-primary">Try ClassCoach free</a>
-        <a href="#pricing" style="font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px;">See pricing →</a>
+        <a href="/pricing" style="font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px;">See pricing →</a>
       </div>
     </div>
   </div>
 
-  <!-- PRICING -->
-  <div id="pricing" style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
-    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
-      <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 12px;">Simple pricing, per teacher</h2>
-      <p style="font-size: 15px; color: var(--muted); margin: 0 0 40px;">Start free. No card needed. Pay every 2 months, or save with a yearly plan.</p>
-      <% if (neetJeeEnabled) { %>
-      <div class="pt-tabs" style="display:inline-flex;background:#EFE6D8;border-radius:100px;padding:4px;gap:2px;margin-bottom:32px;">
-        <button type="button" data-pt="gen" aria-pressed="true" style="border:none;padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;">School &amp; general</button>
-        <button type="button" data-pt="nj" aria-pressed="false" style="border:none;padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;">NEET &amp; JEE coaches</button>
+  <!-- PRICING TEASER (full pricing lives on /pricing) -->
+  <div id="pricing" style="background: var(--accent-tint); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 56px 32px; display: flex; gap: 28px; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+      <div style="max-width: 640px; display: flex; flex-direction: column; gap: 10px;">
+        <h2 style="font-size: 28px; color: var(--ink); margin: 0;">Free for 1 month. Then less than a cup of tea a day.</h2>
+        <p style="font-size: 15px; color: var(--muted); margin: 0; line-height: 1.6;">Plans for individual teachers start at ₹250 a month for up to 20 students. Coaching centres get one plan for all their teachers. No card needed to start.</p>
       </div>
-      <style>.pt-tabs button{background:transparent;color:var(--muted)}.pt-tabs button[aria-pressed="true"]{background:var(--ink);color:#FBF6EE}</style>
-      <div id="pt-gen">
-      <% } %>
-      <div class="grid-4">
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 15px; font-weight: 700;">Free Trial</span>
-          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹0</span><span style="font-size: 13px; color: var(--faint);"> / 1 month</span></div>
-          <span style="font-size: 13px; color: var(--muted);">Up to 10 students</span>
-          <span style="font-size: 13px; color: var(--muted);">50 AI credits</span>
-        </div>
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px; border-color: var(--accent);">
-          <span style="font-size: 15px; font-weight: 700; color: var(--accent-deep);">Starter</span>
-          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹499</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
-          <div style="font-size: 13px; color: var(--ink);">or <strong>₹2,499 / year</strong> <span class="badge badge-good">Save ₹495</span></div>
-          <span style="font-size: 13px; color: var(--muted);">Up to 20 students</span>
-          <span style="font-size: 13px; color: var(--muted);"><%= genTiers[0].ai %> AI credits / month (<%= genTiers[0].aiYearly %> on yearly)</span>
-        </div>
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 15px; font-weight: 700;">Growth</span>
-          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹999</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
-          <div style="font-size: 13px; color: var(--ink);">or <strong>₹4,999 / year</strong> <span class="badge badge-good">Save ₹995</span></div>
-          <span style="font-size: 13px; color: var(--muted);">Up to 50 students</span>
-          <span style="font-size: 13px; color: var(--muted);"><%= genTiers[1].ai %> AI credits / month (<%= genTiers[1].aiYearly %> on yearly)</span>
-        </div>
-        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 15px; font-weight: 700;">Pro</span>
-          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹1,999</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
-          <div style="font-size: 13px; color: var(--ink);">or <strong>₹9,999 / year</strong> <span class="badge badge-good">Save ₹1,995</span></div>
-          <span style="font-size: 13px; color: var(--muted);">Up to 100 students</span>
-          <span style="font-size: 13px; color: var(--muted);"><%= genTiers[2].ai %> AI credits / month (<%= genTiers[2].aiYearly %> on yearly)</span>
-        </div>
+      <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+        <a href="/signup" class="btn btn-primary">Start free trial</a>
+        <a href="/pricing" style="font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px;">See all plans →</a>
       </div>
-      <% if (neetJeeEnabled) { %>
-      </div>
-      <div id="pt-nj" style="display:none;"><%- include('partials/nj_pricing', { tiers: njTiers, mode: 'public' }) %></div>
-      <script>
-      document.querySelectorAll('.pt-tabs button').forEach(function(b){b.addEventListener('click',function(){
-        var nj=b.getAttribute('data-pt')==='nj';
-        document.getElementById('pt-gen').style.display=nj?'none':'';
-        document.getElementById('pt-nj').style.display=nj?'':'none';
-        document.querySelectorAll('.pt-tabs button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
-      });});
-      </script>
-      <% } %>
-      <div style="margin-top: 28px; padding: 18px 22px; border-radius: 12px; background: var(--accent-tint); display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
-        <span style="font-size: 22px;">🎁</span>
-        <p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;"><strong>Refer &amp; earn:</strong> teachers get 2 months free when two teachers they refer buy any plan. Institutes get 40% off their next plan for every referral who buys. Find your referral link in your dashboard.</p>
-      </div>
-      <div style="margin-top: 16px; padding: 18px 22px; border-radius: 12px; border: 1px solid var(--line); display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
-        <span style="font-size: 22px;">⚡</span>
-        <p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;"><strong>How AI credits work:</strong> an MCQ set of up to 10 questions uses <%= featureCredits.mcq %> credits, notes or slides <%= featureCredits.notes %>, a student practice set <%= featureCredits.practice %>, an AI grading suggestion <%= featureCredits.grade %>, AI-written questions in a printed question paper <%= featureCredits.paper %> (+1 per 10), and OMR scanning <%= featureCredits.omr %> per 10 sheets. Tests, question papers built from your bank, auto-grading, Live Quiz, reports and the question bank don't use credits. Need more? Top-ups start at 100 credits for ₹99.</p>
-      </div>
-      <p style="font-size: 12px; color: var(--faint); margin-top: 20px;">Start with the free trial, then upgrade anytime from your dashboard — pay by UPI, card or netbanking.</p>
-    </div>
-  </div>
-
-  <!-- INSTITUTES -->
-  <div id="institutes">
-    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
-      <%- include('partials/inst_pricing', { tiers: instTiers, mode: 'public' }) %>
     </div>
   </div>
 
@@ -302,13 +307,22 @@
         </div>
         <div>
           <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">Where does my data live?</h3>
-          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">In your own database on your own server — it's not sent anywhere else. You can download a full backup of everything at any time.</p>
+          <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">On ClassCoach's own secure servers. It is used only to run ClassCoach for you, and you can download a full backup of everything at any time.</p>
         </div>
         <div>
           <h3 style="font-size: 16px; color: var(--ink); margin-bottom: 8px;">Can I add my whole class at once?</h3>
           <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">Yes — import a class list from a .csv or .xlsx spreadsheet, or add students one at a time. Each student and each parent gets their own separate login.</p>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div style="background: var(--ink); color: #FBF6EE;">
+    <div style="max-width: 720px; margin: 0 auto; padding: 72px 32px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px;">
+      <h2 style="font-size: 28px; color: #FBF6EE;">Start free. See it save you time.</h2>
+      <p style="font-size: 15px; color: #C9BEA9; margin: 0;">Set up your first class and test in a few minutes — no card required.</p>
+      <a href="/signup" class="btn btn-primary" style="margin-top: 8px;">Start your free 1-month trial</a>
     </div>
   </div>
 
@@ -337,15 +351,6 @@
           <span style="font-size: 14px; font-weight: 700; color: var(--accent-deep); margin-top: auto;">Visit vasulbook.com →</span>
         </a>
       </div>
-    </div>
-  </div>
-
-  <!-- CTA -->
-  <div style="background: var(--ink); color: #FBF6EE;">
-    <div style="max-width: 720px; margin: 0 auto; padding: 72px 32px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px;">
-      <h2 style="font-size: 28px; color: #FBF6EE;">Start free. See it save you time.</h2>
-      <p style="font-size: 15px; color: #C9BEA9; margin: 0;">Set up your first class and test in a few minutes — no card required.</p>
-      <a href="/signup" class="btn btn-primary" style="margin-top: 8px;">Start your free 1-month trial</a>
     </div>
   </div>
 
@@ -419,7 +424,7 @@
     {
       "@type": "Question",
       "name": "Where does my data live?",
-      "acceptedAnswer": { "@type": "Answer", "text": "In your own database on your own server — it's not sent anywhere else. You can download a full backup of everything at any time." }
+      "acceptedAnswer": { "@type": "Answer", "text": "On ClassCoach's own secure servers. It is used only to run ClassCoach for you, and you can download a full backup of everything at any time." }
     },
     {
       "@type": "Question",

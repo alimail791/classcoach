@@ -84,16 +84,28 @@ app.use((req, res, next) => {
   next();
 });
 
+// First-party visitor tracking for Admin → Traffic & signups (lib/tracking.js).
+app.use(require('./lib/tracking').middleware);
+
 app.get('/', (req, res) => {
   if (req.session.teacherId) return res.redirect('/dashboard');
   if (req.session.studentId) return res.redirect('/student/dashboard');
   if (req.session.parentStudentId) return res.redirect('/parent/dashboard');
   const canonicalUrl = `${SITE_ORIGIN}/`;
   res.render('home', {
+    proof: require('./lib/socialProof').getSocialProof(),
     indexable: true,
     canonicalUrl,
     description:
       'ClassCoach helps individual teachers and small coaching classes create AI-generated tests, run live quiz games in class, auto-grade objective answers, track chapter-wise weaknesses, and share results with parents.'
+  });
+});
+
+app.get('/pricing', (req, res) => {
+  res.render('pricing', {
+    indexable: true,
+    canonicalUrl: `${SITE_ORIGIN}/pricing`,
+    description: 'ClassCoach pricing: free for 1 month, then from ₹499 for 2 months (about ₹250 a month) for individual teachers, yearly plans, NEET & JEE plans and coaching institute packs. Pay by UPI, card or netbanking.'
   });
 });
 
@@ -160,6 +172,9 @@ app.get('/sitemap.xml', (req, res) => {
       Object.keys(LANDING_PAGES)
         .map((slug) => `  <url>\n    <loc>${base}/${slug}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`)
         .join('') +
+      ['pricing', 'free-tools', 'free-question-paper-generator', 'free-omr-sheet-generator', 'question-paper-generator', ...require('./routes/freeTools').seoSlugs()]
+        .map((slug) => `  <url>\n    <loc>${base}/${slug}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`)
+        .join('') +
       `  <url>\n    <loc>${base}/blog</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n` +
       blogRoutes
         .publishedPosts()
@@ -204,6 +219,7 @@ app.use('/', blogRoutes);
 app.use('/', careerRoutes);
 app.use('/', paperRoutes);
 app.use('/', omrRoutes);
+app.use('/', require('./routes/freeTools'));
 
 app.use((req, res) => {
   res.status(404).send('Page not found. <a href="/">Go home</a>');
@@ -211,6 +227,7 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 startInactivityScheduler();
+require('./lib/incompleteSignups').startIncompleteSignupAlerts();
 
 try { require('./lib/creditsMigration').migrateToCredits(); } catch (e) { console.error('Credits migration failed:', e.message); }
 

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: title }) %></head>
+<body>
+  <%- include('partials/public_nav') %>
+  <div style="max-width: 860px; margin: 0 auto; padding: 56px 24px 40px; display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: inline-flex; align-self: flex-start; padding: 6px 14px; border: 1px solid #D8A87C; border-radius: 100px; font-size: 13px; color: var(--accent-deep); background: var(--accent-tint);">Free · No login · 9 languages</div>
+      <h1 style="font-size: 36px; line-height: 1.15; color: var(--ink);">Free AI question paper generator</h1>
+      <p style="font-size: 16px; line-height: 1.6; color: var(--muted); margin: 0;">Type the class, subject and chapters. In about a minute you get a printable question paper with MCQs, short and long answer questions, plus an answer key and marking scheme.</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="flash flash-error"><%= error %><% if (/account/.test(error)) { %> <a href="/signup?src=free-paper-limit" style="font-weight: 700;">Create a free account →</a><% } %></div>
+    <% } %>
+
+    <%- include('partials/free_paper_form') %>
+
+    <div class="card" style="padding: 22px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 240px; font-size: 14px; line-height: 1.6; color: var(--muted);">
+        <strong style="color: var(--ink);">Need more?</strong> With a free ClassCoach account you can make papers of up to 150 questions, print 4 shuffled sets (A–D), reuse your own question bank, and grade MCQs by photographing OMR sheets.
+      </div>
+      <a href="/signup?src=free-paper" class="btn btn-dark">Try ClassCoach free</a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 12px;">
+      <h2 style="font-size: 24px; color: var(--ink);">How it works</h2>
+      <ol style="margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.7; color: var(--muted);">
+        <li>Enter the class, subject and the chapters you have taught.</li>
+        <li>Choose how many MCQs, short and long answer questions you want, and the language.</li>
+        <li>Press the button. The AI writes questions in the style of CBSE and state board papers.</li>
+        <li>Print the paper, or save it as PDF. Open the answer key and marking scheme on the next tab.</li>
+      </ol>
+      <p style="font-size: 14px; color: var(--muted); margin: 0;">Looking for a specific class? See <a href="/question-paper-generator" style="font-weight: 700; color: var(--accent);">question paper generators for Class 6 to 12 and by language</a>.</p>
+      <h2 style="font-size: 24px; color: var(--ink);">Questions teachers ask</h2>
+      <details><summary style="font-weight: 700; cursor: pointer;">Is it really free?</summary><p style="color: var(--muted); line-height: 1.6;">Yes. No login and no card. You can make <%= perDay %> papers a day. For bigger papers and saved question banks, ClassCoach has a free 1-month trial.</p></details>
+      <details><summary style="font-weight: 700; cursor: pointer;">Which languages are supported?</summary><p style="color: var(--muted); line-height: 1.6;"><%= languages.join(', ') %>.</p></details>
+      <details><summary style="font-weight: 700; cursor: pointer;">Should I check the questions?</summary><p style="color: var(--muted); line-height: 1.6;">Yes. AI-written questions are a strong first draft, but always read the paper and the answer key before giving it to students.</p></details>
+      <details><summary style="font-weight: 700; cursor: pointer;">Can students take it online?</summary><p style="color: var(--muted); line-height: 1.6;">In ClassCoach, yes: students take the test on their phones, it is graded instantly, and parents can get the result on WhatsApp.</p></details>
+    </div>
+  </div>
+  <%- include('partials/public_footer') %>
+  <script>
+    document.getElementById('fp-form').addEventListener('submit', function () {
+      var b = document.getElementById('fp-go'); b.disabled = true; b.textContent = 'Writing your paper… (about a minute)';
+    });
+  </script>
+</body>
+</html>

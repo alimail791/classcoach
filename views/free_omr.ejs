@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: title }) %></head>
+<body>
+  <%- include('partials/public_nav') %>
+  <div style="max-width: 860px; margin: 0 auto; padding: 56px 24px 40px; display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: inline-flex; align-self: flex-start; padding: 6px 14px; border: 1px solid #D8A87C; border-radius: 100px; font-size: 13px; color: var(--accent-deep); background: var(--accent-tint);">Free · No login · A4 printable</div>
+      <h1 style="font-size: 36px; line-height: 1.15; color: var(--ink);">Free OMR sheet generator</h1>
+      <p style="font-size: 16px; line-height: 1.6; color: var(--muted); margin: 0;">Make a printable OMR answer sheet with your institute name, exam name, a 6-digit roll number grid and 10 to <%= max %> questions (options A–D). Print it or save as PDF, then photocopy for your class.</p>
+    </div>
+
+    <form method="GET" action="/free-omr-sheet-generator/sheet" target="_blank" class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+        <div class="field"><label>School / institute name</label><input name="school" maxlength="60" placeholder="e.g. Bright Future Academy"></div>
+        <div class="field"><label>Exam name</label><input name="exam" maxlength="60" placeholder="e.g. Weekly test 3"></div>
+        <div class="field"><label>Class (optional)</label><input name="className" maxlength="20" placeholder="e.g. 12"></div>
+        <div class="field"><label>Subject (optional)</label><input name="subject" maxlength="40" placeholder="e.g. Physics"></div>
+        <div class="field"><label>Number of questions</label><input name="count" type="number" min="10" max="<%= max %>" value="50"></div>
+      </div>
+      <div><button type="submit" class="btn btn-primary">Make my OMR sheet</button></div>
+    </form>
+
+    <div class="card" style="padding: 22px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; background: var(--accent-tint); border-color: #D8A87C;">
+      <div style="flex: 1; min-width: 240px; font-size: 14px; line-height: 1.6; color: var(--ink);">
+        <strong>Grade OMR sheets with your phone camera.</strong> In ClassCoach, make the question paper, print its OMR sheets, then photograph each filled sheet: marks, ranks and a results sheet are ready in seconds.
+      </div>
+      <a href="/signup?src=free-omr" class="btn btn-primary">Try it free for 1 month</a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 12px;">
+      <h2 style="font-size: 24px; color: var(--ink);">Printing tips</h2>
+      <ul style="margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.7; color: var(--muted);">
+        <li>Print on A4 at 100% scale ("Actual size"), not "Fit to page".</li>
+        <li>Photocopies work fine. One sheet per student.</li>
+        <li>Ask students to use a black or blue ball-point pen and fill the circle fully.</li>
+      </ul>
+      <p style="font-size: 14px; color: var(--muted); margin: 0;">Also try the <a href="/free-question-paper-generator" style="font-weight: 700;">free AI question paper generator</a>.</p>
+    </div>
+  </div>
+  <%- include('partials/public_footer') %>
+</body>
+</html>

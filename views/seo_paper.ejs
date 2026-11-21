@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: page.title }) %></head>
+<body>
+  <%- include('partials/public_nav') %>
+  <div style="max-width: 860px; margin: 0 auto; padding: 48px 24px 40px; display: flex; flex-direction: column; gap: 24px;">
+    <nav style="font-size: 13px; color: var(--faint);"><a href="/free-tools" style="color: var(--muted);">Free tools</a> › <a href="/question-paper-generator" style="color: var(--muted);">Question paper generator</a> › <%= page.label %></nav>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: inline-flex; align-self: flex-start; padding: 6px 14px; border: 1px solid #D8A87C; border-radius: 100px; font-size: 13px; color: var(--accent-deep); background: var(--accent-tint);">Free · No login · Answer key included</div>
+      <h1 style="font-size: 34px; line-height: 1.15; color: var(--ink);"><%= page.h1 %></h1>
+      <p style="font-size: 16px; line-height: 1.65; color: var(--muted); margin: 0;"><%= page.intro %></p>
+    </div>
+
+    <%- include('partials/free_paper_form') %>
+
+    <% if (page.sample) { %>
+    <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+      <h2 style="font-size: 18px; color: var(--ink);">A sample <%= page.label %> MCQ</h2>
+      <p style="font-size: 15px; margin: 0; color: var(--ink);"><%= page.sample.q %></p>
+      <ol type="a" style="margin: 0; padding-left: 22px; font-size: 15px; color: var(--ink); line-height: 1.7;"><% page.sample.options.forEach(function (o, i) { %><li<%- i === page.sample.correct ? ' style="font-weight:700;color:#15803D"' : '' %>><%= o %></li><% }) %></ol>
+      <p style="font-size: 13px; color: var(--faint); margin: 0;">Answer: (<%= 'abcd'[page.sample.correct] %>) <%= page.sample.options[page.sample.correct] %>. Your paper gets questions like this for the chapters you enter, plus short and long answer questions with marking points.</p>
+    </div>
+    <% } %>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <h2 style="font-size: 22px; color: var(--ink);">What you get</h2>
+      <ul style="margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.75; color: var(--muted);">
+        <li>A printable A4 paper with your school name, exam name, time and total marks</li>
+        <li>MCQs (1 mark), short answer (2 marks) and long answer (5 marks) sections</li>
+        <li>A separate answer key with the correct options and marking points for written answers</li>
+        <li>Questions in English, Hindi, Tamil, Telugu, Kannada, Malayalam, Marathi, Bengali or Gujarati</li>
+      </ul>
+      <h2 style="font-size: 22px; color: var(--ink);">Questions teachers ask</h2>
+      <% faqs.forEach(function (f) { %>
+        <details><summary style="font-weight: 700; cursor: pointer;"><%= f.q %></summary><p style="color: var(--muted); line-height: 1.6;"><%= f.a %></p></details>
+      <% }) %>
+    </div>
+
+    <div class="card" style="padding: 22px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; background: var(--accent-tint); border-color: #D8A87C;">
+      <div style="flex: 1; min-width: 240px; font-size: 14px; line-height: 1.6; color: var(--ink);"><strong>Run the test online instead?</strong> In ClassCoach, students take it on their phones, it is graded instantly, and you see each student's weak chapters.</div>
+      <a href="/signup?src=seo-<%= page.slug %>" class="btn btn-primary">Try ClassCoach free</a>
+    </div>
+
+    <% if (related.length) { %>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <h2 style="font-size: 18px; color: var(--ink);">More question paper generators</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;"><% related.forEach(function (r) { %><a href="/question-paper-generator/<%= r.slug %>" style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 100px; color: var(--ink); background: #fff;"><%= r.label %></a><% }) %></div>
+    </div>
+    <% } %>
+  </div>
+  <script type="application/ld+json"><%- JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map(function (f) { return { '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }; }) }).replace(/</g, '\\u003c') %></script>
+  <%- include('partials/public_footer') %>
+  <script>
+    document.getElementById('fp-form').addEventListener('submit', function () {
+      var b = document.getElementById('fp-go'); b.disabled = true; b.textContent = 'Writing your paper… (about a minute)';
+    });
+  </script>
+</body>
+</html>

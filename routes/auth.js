@@ -7,6 +7,7 @@ const { PLANS, trialExpiryFromNow, trackEnabled } = require('../lib/plans');
 const mailer = require('../lib/mailer');
 const { createInstitute } = require('../lib/institutes');
 const signupGuard = require('../lib/signupGuard');
+const tracking = require('../lib/tracking');
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ function generateOtp() {
 const AFTER_SIGNUP = ['/career', '/papers'];
 
 router.get('/signup', (req, res) => {
+  tracking.event(req, 'signup_view');
   if (AFTER_SIGNUP.includes(req.query.next)) req.session.afterSignup = req.query.next;
   res.render('signup', {
     error: null,
@@ -39,19 +41,29 @@ router.post('/signup', (req, res) => {
   const accountType = req.body.account_type === 'institute' ? 'institute' : 'teacher';
   const instituteName = String(req.body.institute_name || '').trim().slice(0, 120);
   const examTrack = accountType === 'institute' || (trackEnabled() && req.body.exam_track === 'neet_jee') ? 'neet_jee' : 'general';
-  const again = (error) => res.render('signup', { error, refCode: ref || '', track: examTrack, accountType, instituteName });
+  const again = (error, { record = true } = {}) => {
+    // Keep real people who hit an error (not bots) so they can be followed up.
+    if (record && (email || phone)) tracking.recordAttempt(req, { name, email, phone, accountType, status: 'failed', error });
+    return res.render('signup', { error, refCode: ref || '', track: examTrack, accountType, instituteName });
+  };
   signupGuard.cleanupUnverified();
   const blocked = signupGuard.checkSignup(req);
   if (blocked) {
     console.log(`[Signup blocked] ${blocked} ip=${req.ip} email=${String(email || '').slice(0, 80)}`);
     return again(blocked === 'ip-limit'
       ? 'Too many signups from this network. Please try again in an hour, or WhatsApp us on +91 94434 24064.'
-      : 'Please check your details and try again. Use your real name.');
+      : 'Please check your details and try again. Use your real name.', { record: blocked === 'ip-limit' });
   }
   if (!name || !email || !phone || !password) return again('All fields are required, including phone number.');
   if (accountType === 'institute' && !instituteName) return again('Enter your institute or coaching centre name.');
-  const existing = db.prepare('SELECT id FROM teachers WHERE email = ?').get(email.toLowerCase().trim());
-  if (existing) return again('An account with that email already exists.');
+  const existing = db.prepare('SELECT id, signup_verified, has_purchased FROM teachers WHERE email = ?').get(email.toLowerCase().trim());
+  if (existing && !existing.signup_verified && !existing.has_purchased) {
+    // They signed up earlier but never entered the OTP. Let them start again
+    // instead of being stuck behind "account already exists".
+    signupGuard.removeUnverified(existing.id);
+  } else if (existing) {
+    return again('An account with that email already exists. Please log in, or use "Forgot password".');
+  }
   const hash = bcrypt.hashSync(password, 10);
   const trial = PLANS.trial;
   const otp = generateOtp();
@@ -97,6 +109,9 @@ router.post('/signup', (req, res) => {
       examTrack
     );
   if (accountType === 'institute') createInstitute(Number(info.lastInsertRowid), instituteName);
+  const source = tracking.sourceLabel(req);
+  db.prepare('UPDATE teachers SET signup_source = ? WHERE id = ?').run(source, Number(info.lastInsertRowid));
+  tracking.recordAttempt(req, { teacherId: Number(info.lastInsertRowid), name, email, phone, accountType, status: 'started' });
   const signupToken = require('crypto').randomBytes(16).toString('hex');
   db.prepare('UPDATE teachers SET session_token = ? WHERE id = ?').run(signupToken, info.lastInsertRowid);
   req.session.sessionToken = signupToken;
@@ -124,6 +139,7 @@ function notifyAdminOfSignup(teacher) {
     `Name: ${teacher.name}`,
     `Email: ${teacher.email}`,
     `Phone: ${teacher.phone}`,
+    `Came from: ${teacher.signup_source || 'unknown'}`,
     inst ? `Institute: ${inst.name} (Institute Free Trial, 14 days)` : `Plan: ${PLANS.trial.name} (free trial)`,
     `Signed up: ${new Date(teacher.created_at.replace(' ', 'T') + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
   ].join('\n');
@@ -166,6 +182,7 @@ router.post('/verify-otp', (req, res) => {
 
   db.prepare('UPDATE teachers SET signup_verified = 1, email_verified = 1, email_otp = NULL, email_otp_expires = NULL, email_otp_attempts = 0 WHERE id = ?').run(teacher.id);
   if (!teacher.signup_verified) notifyAdminOfSignup(teacher);
+  tracking.markVerified(teacher.id, teacher.email);
   const next = AFTER_SIGNUP.includes(req.session.afterSignup) ? req.session.afterSignup : '/dashboard';
   req.session.afterSignup = null;
   res.redirect(next);

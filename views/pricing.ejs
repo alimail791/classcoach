@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Pricing — ClassCoach plans for teachers, tutors and coaching institutes' }) %></head>
+<body>
+  <%- include('partials/public_nav') %>
+  <!-- PRICING -->
+  <div id="pricing" style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
+      <h1 style="font-size: 36px; color: var(--ink); margin-bottom: 12px;">ClassCoach pricing</h1>
+      <h2 style="font-size: 22px; color: var(--ink); margin-bottom: 8px;">For individual teachers and tutors</h2>
+      <p style="font-size: 17px; color: var(--ink); margin: 0 0 6px;"><strong>Free for 1 month.</strong> After that, from <strong>₹250 a month</strong> for up to 20 students.</p>
+      <p style="font-size: 14px; color: var(--muted); margin: 0 0 40px;">No card needed to start. Pay every 2 months, or save with a yearly plan.</p>
+      <% if (neetJeeEnabled) { %>
+      <div class="pt-tabs" style="display:inline-flex;background:#EFE6D8;border-radius:100px;padding:4px;gap:2px;margin-bottom:32px;">
+        <button type="button" data-pt="gen" aria-pressed="true" style="border:none;padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;">School &amp; general</button>
+        <button type="button" data-pt="nj" aria-pressed="false" style="border:none;padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;">NEET &amp; JEE coaches</button>
+      </div>
+      <style>.pt-tabs button{background:transparent;color:var(--muted)}.pt-tabs button[aria-pressed="true"]{background:var(--ink);color:#FBF6EE}</style>
+      <div id="pt-gen">
+      <% } %>
+      <div class="grid-4">
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 15px; font-weight: 700;">Free Trial</span>
+          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹0</span><span style="font-size: 13px; color: var(--faint);"> / 1 month</span></div>
+          <span style="font-size: 13px; color: var(--muted);">Up to 10 students</span>
+          <span style="font-size: 13px; color: var(--muted);">50 AI credits</span>
+        </div>
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px; border-color: var(--accent);">
+          <span style="font-size: 15px; font-weight: 700; color: var(--accent-deep);">Starter</span>
+          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹499</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
+          <div style="font-size: 13px; color: var(--ink);">or <strong>₹2,499 / year</strong> <span class="badge badge-good">Save ₹495</span></div>
+          <span style="font-size: 13px; color: var(--muted);">Up to 20 students</span>
+          <span style="font-size: 13px; color: var(--muted);"><%= genTiers[0].ai %> AI credits / month (<%= genTiers[0].aiYearly %> on yearly)</span>
+        </div>
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 15px; font-weight: 700;">Growth</span>
+          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹999</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
+          <div style="font-size: 13px; color: var(--ink);">or <strong>₹4,999 / year</strong> <span class="badge badge-good">Save ₹995</span></div>
+          <span style="font-size: 13px; color: var(--muted);">Up to 50 students</span>
+          <span style="font-size: 13px; color: var(--muted);"><%= genTiers[1].ai %> AI credits / month (<%= genTiers[1].aiYearly %> on yearly)</span>
+        </div>
+        <div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 15px; font-weight: 700;">Pro</span>
+          <div><span style="font-family: 'Newsreader', serif; font-size: 30px;">₹1,999</span><span style="font-size: 13px; color: var(--faint);"> / 2 months</span></div>
+          <div style="font-size: 13px; color: var(--ink);">or <strong>₹9,999 / year</strong> <span class="badge badge-good">Save ₹1,995</span></div>
+          <span style="font-size: 13px; color: var(--muted);">Up to 100 students</span>
+          <span style="font-size: 13px; color: var(--muted);"><%= genTiers[2].ai %> AI credits / month (<%= genTiers[2].aiYearly %> on yearly)</span>
+        </div>
+      </div>
+      <% if (neetJeeEnabled) { %>
+      </div>
+      <div id="pt-nj" style="display:none;"><%- include('partials/nj_pricing', { tiers: njTiers, mode: 'public' }) %></div>
+      <script>
+      document.querySelectorAll('.pt-tabs button').forEach(function(b){b.addEventListener('click',function(){
+        var nj=b.getAttribute('data-pt')==='nj';
+        document.getElementById('pt-gen').style.display=nj?'none':'';
+        document.getElementById('pt-nj').style.display=nj?'':'none';
+        document.querySelectorAll('.pt-tabs button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+      });});
+      </script>
+      <% } %>
+      <div style="margin-top: 28px; padding: 18px 22px; border-radius: 12px; background: var(--accent-tint); display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+        <span style="font-size: 22px;">🎁</span>
+        <p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;"><strong>Refer &amp; earn:</strong> teachers get 2 months free when two teachers they refer buy any plan. Institutes get 40% off their next plan for every referral who buys. Find your referral link in your dashboard.</p>
+      </div>
+      <details style="margin-top: 16px; padding: 14px 22px; border-radius: 12px; border: 1px solid var(--line);">
+        <summary style="font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer;">⚡ What are AI credits? (only AI features use them)</summary>
+        <div style="margin-top: 10px;"><p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;">an MCQ set of up to 10 questions uses <%= featureCredits.mcq %> credits, notes or slides <%= featureCredits.notes %>, a student practice set <%= featureCredits.practice %>, an AI grading suggestion <%= featureCredits.grade %>, AI-written questions in a printed question paper <%= featureCredits.paper %> (+1 per 10), and OMR scanning <%= featureCredits.omr %> per 10 sheets. Tests, question papers built from your bank, auto-grading, Live Quiz, reports and the question bank don't use credits. Need more? Top-ups start at 100 credits for ₹99.</p></div>
+      </details>
+      <p style="font-size: 12px; color: var(--faint); margin-top: 20px;">Start with the free trial, then upgrade anytime from your dashboard — pay by UPI, card or netbanking.</p>
+    </div>
+  </div>
+
+  <!-- INSTITUTES -->
+  <div id="institutes">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
+      <%- include('partials/inst_pricing', { tiers: instTiers, mode: 'public' }) %>
+    </div>
+  </div>
+
+
+  <!-- PRICING FAQ -->
+  <div style="background: #FFFFFF; border-top: 1px solid var(--line);">
+    <div style="max-width: 780px; margin: 0 auto; padding: 56px 32px; display: flex; flex-direction: column; gap: 22px;">
+      <h2 style="font-size: 24px; color: var(--ink);">Pricing questions</h2>
+      <div><h3 style="font-size: 16px; margin-bottom: 6px;">Do I need a card for the free trial?</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">No. Teachers get 1 month free and institutes 14 days, without any card. Upgrade from your dashboard when you're ready.</p></div>
+      <div><h3 style="font-size: 16px; margin-bottom: 6px;">How do I pay?</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">By UPI, debit or credit card, or netbanking through Razorpay.</p></div>
+      <div><h3 style="font-size: 16px; margin-bottom: 6px;">What happens if I renew early?</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;">The days left on your current plan carry over, so you never lose time you've paid for.</p></div>
+      <div><h3 style="font-size: 16px; margin-bottom: 6px;">Can I talk to someone first?</h3><p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;"><a href="https://wa.me/919443424064?text=Hi%2C%20I%20have%20a%20question%20about%20ClassCoach%20pricing" target="_blank" rel="noopener" style="font-weight: 700; color: var(--accent);">Message us on WhatsApp</a> and we'll help you pick a plan.</p></div>
+      <div><a href="/signup" class="btn btn-primary">Start your free trial</a></div>
+    </div>
+  </div>
+  <%- include('partials/public_footer') %>
+</body>
+</html>

@@ -39,7 +39,8 @@ function formData(req, extra) {
       header: defaultHeader(req.teacher),
       paperCredits: creditsFor('paper', { count: 10 }),
       error: null,
-      notice: null
+      notice: null,
+      topicsValue: ''
     },
     extra || {}
   );
@@ -59,7 +60,8 @@ router.post('/papers', requireTeacher, async (req, res) => {
     duration: int(b.duration, 5, 600, 60),
     instructions: String(b.instructions || '').trim().slice(0, 1500)
   };
-  const fail = (error) => res.status(400).render('papers', formData(req, { error, header }));
+  // Keep what the teacher typed so a validation error doesn't wipe the form.
+  const fail = (error) => res.status(400).render('papers', formData(req, { error, header, topicsValue: String(b.topics || '').slice(0, 1000) }));
   if (!header.exam) return fail('Give the paper a name, e.g. "Half-yearly exam".');
 
   const want = {
@@ -79,7 +81,10 @@ router.post('/papers', requireTeacher, async (req, res) => {
   const mine = list(b.mine_chapters);
   const bank = bankAllowed(req.teacher) ? list(b.bank_chapters) : [];
   const useAi = b.use_ai === '1';
-  const topics = String(b.topics || '').trim().slice(0, 1000) || [...bank, ...mine].join(', ');
+  // Fall back to the header's class + subject so a brand-new teacher (empty
+  // question bank) who only filled the header still gets a paper.
+  const headerTopic = [header.className && `Class ${header.className}`, header.subject].filter(Boolean).join(' ');
+  const topics = String(b.topics || '').trim().slice(0, 1000) || [...bank, ...mine].join(', ') || (header.subject ? headerTopic : '');
   const sourceText = String(b.source_text || '').trim();
   const sets = int(b.sets, 1, 4, 1);
 
@@ -99,7 +104,7 @@ router.post('/papers', requireTeacher, async (req, res) => {
     if (!useAi) {
       notice = `Your chosen chapters had ${needTotal} question${needTotal === 1 ? '' : 's'} fewer than asked, so the paper is shorter. Tick "Let AI write the missing questions" to fill the gap.`;
     } else if (!topics) {
-      return fail('Tick some chapters or type the chapters/topics so the AI knows what to write about.');
+      return fail('Type the chapters/topics (or the Subject) so the AI knows what to write about.');
     } else if (needTotal > P.MAX_AI_QUESTIONS) {
       return fail(`AI can write up to ${P.MAX_AI_QUESTIONS} questions per paper (${needTotal} needed). Pick more chapters from your bank or reduce the counts.`);
     } else {
