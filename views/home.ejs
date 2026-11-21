@@ -2,6 +2,14 @@
 <html lang="en">
 <head><%- include('partials/head', { title: 'ClassCoach — AI tests, auto-grading & parent reports for teachers and institutes' }) %></head>
 <body>
+<style>
+  .nav-login{position:relative}
+  .nav-login summary::-webkit-details-marker{display:none}
+  .nav-login-menu{position:absolute;right:0;top:28px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:6px;display:flex;flex-direction:column;min-width:170px;z-index:30}
+  .nav-login-menu a{padding:8px 12px;border-radius:6px;font-size:14px;color:var(--ink)}
+  .nav-login-menu a:hover{background:var(--accent-tint)}
+  @media (max-width:640px){.nav-wide{display:none}.nav-login-menu{left:0;right:auto}}
+</style>
 
   <!-- NAV -->
   <div style="position: sticky; top: 0; z-index: 20; background: rgba(251,246,238,0.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line);">
@@ -11,17 +19,21 @@
         <span style="font-family: 'Newsreader', serif; font-size: 20px; color: var(--ink);">ClassCoach</span>
       </div>
       <div style="display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap;">
-        <a href="/student/login" style="font-size: 14px; color: var(--muted);">Student login</a>
-        <a href="/parent/login" style="font-size: 14px; color: var(--muted);">Parent login</a>
-        <a href="/join" style="font-size: 14px; color: var(--muted);">Join a class</a>
-        <a href="/play" style="font-size: 14px; color: var(--muted);">Join a live quiz</a>
-        <a href="#live-quiz" style="font-size: 14px; color: var(--muted);">Live Quiz</a>
-        <a href="#compare" style="font-size: 14px; color: var(--muted);">Compare</a>
-        <a href="#institutes" style="font-size: 14px; color: var(--muted);">For institutes</a>
-        <a href="#demo" style="font-size: 14px; color: var(--muted);">Demo</a>
-        <a href="/admin/login" style="font-size: 13px; color: var(--faint);">Admin</a>
-        <a href="/institute/login" style="font-size: 14px; color: var(--muted);">Institute login</a>
-        <a href="/login" style="font-size: 14px; font-weight: 600; color: var(--muted);">Log in</a>
+        <a href="#live-quiz" class="nav-wide" style="font-size: 14px; color: var(--muted);">Live Quiz</a>
+        <a href="#pricing" class="nav-wide" style="font-size: 14px; color: var(--muted);">Pricing</a>
+        <a href="#demo" class="nav-wide" style="font-size: 14px; color: var(--muted);">Demo</a>
+        <details class="nav-login">
+          <summary style="font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; list-style: none;">Log in ▾</summary>
+          <div class="nav-login-menu">
+            <a href="/login">Teacher</a>
+            <a href="/student/login">Student</a>
+            <a href="/parent/login">Parent</a>
+            <a href="/institute/login">Institute</a>
+            <a href="/play">Join a live quiz</a>
+            <a href="/join">Join a class</a>
+            <a href="/admin/login" style="color: var(--faint);">Admin</a>
+          </div>
+        </details>
         <a href="/signup" class="btn btn-dark">Start free trial</a>
       </div>
     </div>
@@ -64,6 +76,31 @@
       </div>
     </div>
   </div>
+
+  <!-- SOCIAL PROOF: real usage numbers (shown only once they're meaningful) and admin-added reviews -->
+  <% if ((proof && proof.stats.length) || (proof && proof.reviews.length)) { %>
+  <div style="border-top: 1px solid var(--line); background: #FFFFFF;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 40px 32px; display: flex; flex-direction: column; gap: 28px;">
+      <% if (proof.stats.length) { %>
+      <div style="display: flex; justify-content: center; gap: 24px 56px; flex-wrap: wrap; text-align: center;">
+        <% proof.stats.forEach(function (st) { %>
+          <div><div style="font-family: 'Newsreader', serif; font-size: 32px; color: var(--ink);"><%= st.value %></div><div style="font-size: 13px; color: var(--muted);"><%= st.label %></div></div>
+        <% }) %>
+      </div>
+      <% } %>
+      <% if (proof.reviews.length) { %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+        <% proof.reviews.forEach(function (r) { %>
+          <figure class="card" style="margin: 0; padding: 22px; display: flex; flex-direction: column; gap: 12px;">
+            <blockquote style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink);">“<%= r.quote %>”</blockquote>
+            <figcaption style="font-size: 13px; color: var(--muted);"><strong style="color: var(--ink);"><%= r.name %></strong><% if (r.role) { %> · <%= r.role %><% } %></figcaption>
+          </figure>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+  <% } %>
 
   <!-- LIVE QUIZ -->
   <div id="live-quiz" style="background: var(--ink); color: #FBF6EE;">
@@ -206,7 +243,8 @@
   <div id="pricing" style="background: #FFFFFF; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
     <div style="max-width: 1180px; margin: 0 auto; padding: 72px 32px;">
       <h2 style="font-size: 28px; color: var(--ink); margin-bottom: 12px;">Simple pricing, per teacher</h2>
-      <p style="font-size: 15px; color: var(--muted); margin: 0 0 40px;">Start free. No card needed. Pay every 2 months, or save with a yearly plan.</p>
+      <p style="font-size: 17px; color: var(--ink); margin: 0 0 6px;"><strong>Free for 1 month.</strong> After that, from <strong>₹250 a month</strong> for up to 20 students.</p>
+      <p style="font-size: 14px; color: var(--muted); margin: 0 0 40px;">No card needed to start. Pay every 2 months, or save with a yearly plan.</p>
       <% if (neetJeeEnabled) { %>
       <div class="pt-tabs" style="display:inline-flex;background:#EFE6D8;border-radius:100px;padding:4px;gap:2px;margin-bottom:32px;">
         <button type="button" data-pt="gen" aria-pressed="true" style="border:none;padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;">School &amp; general</button>
@@ -260,10 +298,10 @@
         <span style="font-size: 22px;">🎁</span>
         <p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;"><strong>Refer &amp; earn:</strong> teachers get 2 months free when two teachers they refer buy any plan. Institutes get 40% off their next plan for every referral who buys. Find your referral link in your dashboard.</p>
       </div>
-      <div style="margin-top: 16px; padding: 18px 22px; border-radius: 12px; border: 1px solid var(--line); display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
-        <span style="font-size: 22px;">⚡</span>
-        <p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;"><strong>How AI credits work:</strong> an MCQ set of up to 10 questions uses <%= featureCredits.mcq %> credits, notes or slides <%= featureCredits.notes %>, a student practice set <%= featureCredits.practice %>, an AI grading suggestion <%= featureCredits.grade %>, AI-written questions in a printed question paper <%= featureCredits.paper %> (+1 per 10), and OMR scanning <%= featureCredits.omr %> per 10 sheets. Tests, question papers built from your bank, auto-grading, Live Quiz, reports and the question bank don't use credits. Need more? Top-ups start at 100 credits for ₹99.</p>
-      </div>
+      <details style="margin-top: 16px; padding: 14px 22px; border-radius: 12px; border: 1px solid var(--line);">
+        <summary style="font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer;">⚡ What are AI credits? (only AI features use them)</summary>
+        <div style="margin-top: 10px;"><p style="font-size: 14px; color: var(--ink); margin: 0; line-height: 1.5; flex: 1; min-width: 240px;">an MCQ set of up to 10 questions uses <%= featureCredits.mcq %> credits, notes or slides <%= featureCredits.notes %>, a student practice set <%= featureCredits.practice %>, an AI grading suggestion <%= featureCredits.grade %>, AI-written questions in a printed question paper <%= featureCredits.paper %> (+1 per 10), and OMR scanning <%= featureCredits.omr %> per 10 sheets. Tests, question papers built from your bank, auto-grading, Live Quiz, reports and the question bank don't use credits. Need more? Top-ups start at 100 credits for ₹99.</p></div>
+      </details>
       <p style="font-size: 12px; color: var(--faint); margin-top: 20px;">Start with the free trial, then upgrade anytime from your dashboard — pay by UPI, card or netbanking.</p>
     </div>
   </div>

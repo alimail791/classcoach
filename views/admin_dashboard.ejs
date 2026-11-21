@@ -119,6 +119,25 @@
       </div>
       <p style="font-size: 12px; color: var(--faint); margin: 0;">An institute's plan applies to every teacher in it. Teacher seats don't count the institute admin.</p>
 
+      <h2 id="testimonials" style="font-size: 20px;">Homepage reviews</h2>
+      <% if (testimonialSaved) { %><div class="flash flash-ok"><%= testimonialSaved %></div><% } %>
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+        <form method="POST" action="/admin/testimonials" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+          <div class="field"><label>Teacher name</label><input name="name" required maxlength="80" placeholder="e.g. Priya S."></div>
+          <div class="field"><label>Role / place</label><input name="role" maxlength="120" placeholder="e.g. Maths tutor, Coimbatore"></div>
+          <div class="field" style="flex: 1; min-width: 260px;"><label>Their words</label><input name="quote" required maxlength="400" placeholder="Paste exactly what they said"></div>
+          <button type="submit" class="btn btn-primary">Add review</button>
+        </form>
+        <p style="font-size: 12px; color: var(--faint); margin: 0;">Only real quotes, with the teacher's OK. The reviews block appears on the homepage once at least one is visible.</p>
+        <% testimonials.forEach(function (t) { %>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 10px; font-size: 14px;">
+            <span style="flex: 1; min-width: 240px;"><strong><%= t.name %></strong><% if (t.role) { %> · <%= t.role %><% } %> — “<%= t.quote %>” <% if (!t.visible) { %><em style="color: var(--faint);">(hidden)</em><% } %></span>
+            <form method="POST" action="/admin/testimonials/<%= t.id %>/toggle"><button class="btn" type="submit"><%= t.visible ? 'Hide' : 'Show' %></button></form>
+            <form method="POST" action="/admin/testimonials/<%= t.id %>/delete"><button class="btn" type="submit">Delete</button></form>
+          </div>
+        <% }) %>
+      </div>
+
       <h2 id="career" style="font-size: 20px;">Career test seats</h2>
       <% if (careerSaved) { %><div class="flash flash-ok"><%= careerSaved %></div><% } %>
       <% if (careerError) { %><div class="flash flash-error"><%= careerError %></div><% } %>

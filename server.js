@@ -90,6 +90,7 @@ app.get('/', (req, res) => {
   if (req.session.parentStudentId) return res.redirect('/parent/dashboard');
   const canonicalUrl = `${SITE_ORIGIN}/`;
   res.render('home', {
+    proof: require('./lib/socialProof').getSocialProof(),
     indexable: true,
     canonicalUrl,
     description:
