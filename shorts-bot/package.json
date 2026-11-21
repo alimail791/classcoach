@@ -1,0 +1,14 @@
+{
+  "name": "classcoach-promo-bot",
+  "private": true,
+  "type": "module",
+  "description": "Daily ClassCoach promo video: renders a 1080x1920 clip, uploads it to YouTube Shorts and queues it as an Instagram Reel on classcoach.in.",
+  "scripts": {
+    "daily": "node daily.mjs",
+    "sample": "node daily.mjs --no-upload"
+  },
+  "dependencies": {
+    "playwright-core": "^1.48.0"
+  },
+  "engines": { "node": ">=20" }
+}

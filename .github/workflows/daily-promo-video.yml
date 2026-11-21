@@ -1,0 +1,72 @@
+# Daily ClassCoach promo video (shorts-bot/): one 23-second 1080x1920 clip a day,
+# rotating through the 30 scripts in shorts-bot/scripts.mjs. The same video goes to
+#   • YouTube Shorts (ClassCoach's channel) — uploaded private, goes public at PUBLISH_TIME_IST
+#   • Instagram Reels — queued on classcoach.in, which posts it at the same time
+# The video is also kept as a run artifact for 7 days.
+#
+# One-time setup (repo Settings → Secrets and variables → Actions):
+#   secrets:   PROMO_UPLOAD_KEY (same value as the Railway variable of that name)
+#              YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN (ClassCoach channel owner, scope youtube.upload)
+#   variables: PUBLISH_TIME_IST (optional, default 18:30), CLASSCOACH_URL (optional)
+# Railway (classcoach service): PROMO_UPLOAD_KEY, IG_ACCESS_TOKEN (+ IG_USER_ID for "EAA…" tokens).
+name: Daily ClassCoach promo video
+
+on:
+  # GitHub often starts scheduled jobs late, so tomorrow's video is made the evening
+  # before. The later runs are backups; nothing is posted twice for one day.
+  schedule:
+    - cron: "41 14 * * *" # 20:11 IST → tomorrow's video
+    - cron: "53 18 * * *" # 00:23 IST backup
+    - cron: "11 1 * * *"  # 06:41 IST backup
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Date (YYYY-MM-DD, IST). Empty = today"
+        required: false
+      upload:
+        description: "Post to YouTube and Instagram"
+        type: boolean
+        default: true
+
+concurrency:
+  group: daily-promo-video
+  cancel-in-progress: false
+
+jobs:
+  promo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: shorts-bot
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install ffmpeg and fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-core >/dev/null
+      - run: npm install --no-audit --no-fund
+      - name: Render and post
+        env:
+          PUBLISH_TIME_IST: ${{ vars.PUBLISH_TIME_IST }}
+          CLASSCOACH_URL: ${{ vars.CLASSCOACH_URL }}
+          PROMO_UPLOAD_KEY: ${{ secrets.PROMO_UPLOAD_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          CHROME_PATH: /usr/bin/google-chrome
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.date }}" ]; then ARGS="$ARGS --date ${{ inputs.date }}"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then ARGS="$ARGS --date $(TZ=Asia/Kolkata date -d '+6 hours' +%F)"; fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.upload }}" != "true" ]; then ARGS="$ARGS --no-upload"; fi
+          node daily.mjs $ARGS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: classcoach-promo-${{ github.run_number }}
+          path: shorts-bot/out/
+          retention-days: 7
