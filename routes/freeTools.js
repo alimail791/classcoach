@@ -186,6 +186,14 @@ router.get('/vs/:slug', (req, res, next) => {
   });
 });
 
+// ---- Privacy Policy and Terms (lib/legal_pages.js) ----
+const LEGAL = require('../lib/legal_pages');
+for (const page of Object.values(LEGAL.PAGES)) {
+  router.get(`/${page.slug}`, (req, res) => {
+    res.render('legal', { page, updated: LEGAL.UPDATED, indexable: true, canonicalUrl: `${SITE_ORIGIN}/${page.slug}`, description: page.description });
+  });
+}
+
 // ---- OMR sheet generator ----------------------------------------------
 
 router.get('/free-omr-sheet-generator', (req, res) => {
