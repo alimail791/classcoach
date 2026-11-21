@@ -171,6 +171,21 @@ router.get('/question-paper-generator/:slug', (req, res, next) => {
   });
 });
 
+// ---- Comparison pages: /vs/:slug (lib/compare_pages.js)
+const VS = require('../lib/compare_pages');
+router.get('/vs/:slug', (req, res, next) => {
+  const page = VS.PAGES[req.params.slug];
+  if (!page) return next();
+  res.render('vs_page', {
+    page,
+    others: Object.values(VS.PAGES).filter((p) => p.slug !== page.slug),
+    checked: VS.CHECKED,
+    indexable: true,
+    canonicalUrl: `${SITE_ORIGIN}/vs/${page.slug}`,
+    description: page.description
+  });
+});
+
 // ---- OMR sheet generator ----------------------------------------------
 
 router.get('/free-omr-sheet-generator', (req, res) => {
@@ -195,4 +210,4 @@ router.get('/free-omr-sheet-generator/sheet', async (req, res) => {
 
 module.exports = router;
 module.exports.TOOLS = TOOLS;
-module.exports.seoSlugs = () => Object.keys(SEO.PAGES).map((s) => `question-paper-generator/${s}`);
+module.exports.seoSlugs = () => [...Object.keys(SEO.PAGES).map((s) => `question-paper-generator/${s}`), ...Object.keys(VS.PAGES).map((s) => `vs/${s}`)];
