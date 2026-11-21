@@ -8,6 +8,7 @@
       <span style="font-family: 'Newsreader', serif; font-size: 18px;">ClassCoach Admin</span>
     </div>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="#traffic" class="btn btn-ghost">📈 Traffic &amp; signups</a>
       <a href="#revenue" class="btn btn-ghost">₹ Revenue</a>
       <a href="#institutes" class="btn btn-ghost">🏢 Institutes</a>
       <a href="#teachers" class="btn btn-ghost">👥 Teachers</a>
@@ -28,6 +29,67 @@
       <% } %>
       <% if (deleteError === 'owner') { %><div class="flash flash-error">That teacher is an institute admin with teachers under them. Deactivate the account instead, or remove the institute's teachers first.</div>
       <% } else if (deleteError) { %><div class="flash flash-error">Name didn't match — account not deleted.</div><% } %>
+
+      <!-- TRAFFIC & SIGNUPS (lib/tracking.js) -->
+      <% var tr = traffic; var pct = function (a, b) { return b ? Math.round(a * 100 / b) + '%' : '–'; }; %>
+      <div id="traffic" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+        <h2 style="font-size: 20px;">Traffic &amp; signups · last <%= tr.days %> days</h2>
+        <div style="display: flex; gap: 6px;"><% [7, 30, 90].forEach(function (d) { %><a href="/admin?days=<%= d %>#traffic" class="btn <%= d === tr.days ? 'btn-dark' : 'btn-ghost' %>" style="padding: 6px 12px; font-size: 13px;"><%= d %> days</a><% }) %></div>
+      </div>
+      <div class="grid-4">
+        <div class="card stat-card"><span class="label">New visitors</span><span class="value"><%= tr.totals.visitors %></span><span class="sub">people, bots filtered out</span></div>
+        <div class="card stat-card"><span class="label">Opened signup page</span><span class="value"><%= tr.totals.signupViews %></span><span class="sub"><%= pct(tr.totals.signupViews, tr.totals.visitors) %> of visitors</span></div>
+        <div class="card stat-card"><span class="label">Started signup</span><span class="value"><%= tr.totals.started %></span><span class="sub"><%= pct(tr.totals.started, tr.totals.signupViews) %> of signup page views</span></div>
+        <div class="card stat-card"><span class="label">Completed (OTP verified)</span><span class="value"><%= tr.totals.verified %></span><span class="sub"><%= tr.totals.started - tr.totals.verified %> incomplete · <%= tr.totals.paid %> paid</span></div>
+      </div>
+      <div class="card" style="overflow-x: auto;">
+        <table class="plain">
+          <thead><tr><th>Where they came from</th><th>Visitors</th><th>Signup page</th><th>Started</th><th>Completed</th><th>Visitor → signup</th><th>Paid</th></tr></thead>
+          <tbody>
+            <% if (!tr.sources.length) { %><tr><td colspan="7" style="color: var(--faint);">No visits recorded yet. Data starts from this update.</td></tr><% } %>
+            <% tr.sources.forEach(function (r) { %>
+              <tr><td style="font-weight: 600;"><%= r.source %></td><td><%= r.visitors %></td><td><%= r.signupViews %></td><td><%= r.started %></td><td><strong><%= r.verified %></strong></td><td><%= pct(r.verified, r.visitors) %></td><td><%= r.paid %></td></tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+        <div class="card" style="overflow-x: auto;">
+          <table class="plain">
+            <thead><tr><th>Day</th><th>Visitors</th><th>Signup page</th><th>Started</th><th>Completed</th></tr></thead>
+            <tbody><% tr.daily.forEach(function (d) { %><tr><td><%= d.day %></td><td><%= d.visitors %></td><td><%= d.signupViews %></td><td><%= d.started %></td><td><strong><%= d.verified %></strong></td></tr><% }) %></tbody>
+          </table>
+        </div>
+        <div class="card" style="overflow-x: auto;">
+          <table class="plain">
+            <thead><tr><th>Top landing pages</th><th>Visitors</th></tr></thead>
+            <tbody>
+              <% tr.landings.forEach(function (l) { %><tr><td><a href="<%= l.landing %>" target="_blank"><%= l.landing %></a></td><td><%= l.n %></td></tr><% }) %>
+              <% if (tr.devices.length) { %><tr><td colspan="2" style="font-size: 12px; color: var(--faint);"><%= tr.devices.map(function (d) { return d.n + ' ' + d.device; }).join(' · ') %></td></tr><% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <h3 style="font-size: 17px;">Incomplete signups (<%= tr.incomplete.length %>)</h3>
+      <p style="font-size: 13px; color: var(--faint); margin: 0;">People who filled the signup form but never verified the OTP, or hit an error. Each one is also emailed to you about 15 minutes after they stop.</p>
+      <div class="card" style="overflow-x: auto;">
+        <table class="plain">
+          <thead><tr><th>When</th><th>Name</th><th>Contact</th><th>What happened</th><th>Came from</th><th></th></tr></thead>
+          <tbody>
+            <% if (!tr.incomplete.length) { %><tr><td colspan="6" style="color: var(--faint);">None in this period.</td></tr><% } %>
+            <% tr.incomplete.forEach(function (a) { var digits = String(a.phone || '').replace(/\D/g, ''); if (digits.length === 10) digits = '91' + digits; %>
+              <tr>
+                <td style="font-size: 12px; white-space: nowrap;"><%= shortDate(a.created_at) %></td>
+                <td><%= a.name || '—' %><%= a.account_type === 'institute' ? ' 🏢' : '' %></td>
+                <td style="font-size: 13px;"><%= a.email %><br><%= a.phone %></td>
+                <td style="font-size: 13px;"><%= a.status === 'failed' ? 'Error: ' + a.error : 'Did not enter OTP' %></td>
+                <td style="font-size: 12px;"><%= a.source %></td>
+                <td><% if (digits.length >= 10) { %><a class="btn btn-ghost" style="padding: 5px 10px; font-size: 12px;" target="_blank" href="https://wa.me/<%= digits %>?text=<%= encodeURIComponent('Hi ' + (a.name || '') + ', this is Akbar from ClassCoach. I saw you started signing up but could not finish. Can I help you set it up? It is free for 1 month.') %>">WhatsApp</a><% } %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
       <% if (saved) { %><div class="flash flash-ok">Plan saved for <%= saved %>.</div><% } %>
 
       <% %>

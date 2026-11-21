@@ -6,6 +6,7 @@ const QRCode = require('qrcode');
 const F = require('../lib/freeTools');
 const P = require('../lib/papers');
 const T = require('../lib/omr/template');
+const SEO = require('../lib/seo_pages');
 
 const router = express.Router();
 const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.classcoach.in';
@@ -137,6 +138,48 @@ router.get('/free-question-paper-generator/p/:token', (req, res) => {
   });
 });
 
+// ---- SEO pages: /question-paper-generator and /question-paper-generator/:slug
+
+router.get('/question-paper-generator', (req, res) => {
+  const pages = Object.values(SEO.PAGES);
+  const classes = [...new Set(pages.filter((p) => p.kind === 'class').map((p) => p.cls))].map((cls) => ({ cls, pages: pages.filter((p) => p.cls === cls) }));
+  res.render('seo_hub', {
+    classes,
+    languages: pages.filter((p) => p.kind === 'language'),
+    indexable: true,
+    canonicalUrl: `${SITE_ORIGIN}/question-paper-generator`,
+    title: 'Question Paper Generator for Class 6 to 12 — Free, All Subjects | ClassCoach',
+    description: 'Free AI question paper generator for Class 6 to 12: Maths, Science, Social Science, English, Physics, Chemistry and Biology, with answer keys, in English and 8 Indian languages.'
+  });
+});
+
+router.get('/question-paper-generator/:slug', (req, res, next) => {
+  const page = SEO.PAGES[req.params.slug];
+  if (!page) return next();
+  const who = page.kind === 'class' ? `Class ${page.cls} ${page.subject}` : `${page.language} medium`;
+  const faqs = [
+    { q: `Is this ${who} question paper generator free?`, a: `Yes. No login and no card. You can make ${F.PER_VISITOR_PER_DAY} papers a day with up to ${F.LIMITS.mcq} MCQs, ${F.LIMITS.short} short and ${F.LIMITS.long} long answer questions each.` },
+    { q: 'Does it give an answer key?', a: 'Yes. Every paper has a separate answer key with the correct MCQ options and the key points a full-marks written answer should contain.' },
+    page.kind === 'class'
+      ? { q: `Which syllabus does it follow for Class ${page.cls} ${page.subject}?`, a: `You type the chapters, so it works for CBSE (NCERT), ICSE and state board syllabi alike. The questions are written in the style of board exam papers for Class ${page.cls}.` }
+      : { q: `Will the questions really be in ${page.language}?`, a: `Yes. Choose ${page.language} and every question, option and answer is written in ${page.language} script. Formulas, numbers and standard terms are kept the way ${page.language}-medium textbooks write them.` },
+    { q: 'Should I check the questions before using them?', a: 'Yes. AI-written questions are a strong first draft, but always read the paper and the answer key before giving it to students.' }
+  ];
+  res.render('seo_paper', {
+    page,
+    related: SEO.related(page),
+    faqs,
+    indexable: true,
+    canonicalUrl: `${SITE_ORIGIN}/question-paper-generator/${page.slug}`,
+    description: page.description,
+    languages: F.LANGUAGES,
+    limits: F.LIMITS,
+    perDay: F.PER_VISITOR_PER_DAY,
+    formToken: F.issueToken(),
+    form: { ...page.prefill }
+  });
+});
+
 // ---- OMR sheet generator ----------------------------------------------
 
 router.get('/free-omr-sheet-generator', (req, res) => {
@@ -161,3 +204,4 @@ router.get('/free-omr-sheet-generator/sheet', async (req, res) => {
 
 module.exports = router;
 module.exports.TOOLS = TOOLS;
+module.exports.seoSlugs = () => Object.keys(SEO.PAGES).map((s) => `question-paper-generator/${s}`);

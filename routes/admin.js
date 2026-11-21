@@ -239,6 +239,7 @@ router.get('/admin', requireAdminSession, (req, res) => {
     careerSaved: req.query.careerSaved || null,
     testimonials: all('SELECT * FROM testimonials ORDER BY id DESC'),
     freeToolStats: require('../lib/freeTools').stats(),
+    traffic: require('../lib/tracking').report([7, 30, 90].includes(parseInt(req.query.days, 10)) ? parseInt(req.query.days, 10) : 30),
     testimonialSaved: req.query.testimonialSaved || null,
     careerError: req.query.careerError || null,
     payments,

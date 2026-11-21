@@ -1,0 +1,25 @@
+<%# Free AI question paper form. Needs: form, formToken, languages, limits, perDay. %>
+    <form method="POST" action="/free-question-paper-generator" class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;" id="fp-form">
+      <input type="hidden" name="ft" value="<%= formToken %>">
+      <div style="position: absolute; left: -9999px;" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+        <div class="field"><label>Class</label><input name="className" maxlength="40" placeholder="e.g. 10" value="<%= form.className || '' %>"></div>
+        <div class="field"><label>Subject *</label><input name="subject" required maxlength="60" placeholder="e.g. Science" value="<%= form.subject || '' %>"></div>
+        <div class="field"><label>Language</label><select name="language"><% languages.forEach(function (l) { %><option <%= (form.language || 'English') === l ? 'selected' : '' %>><%= l %></option><% }) %></select></div>
+      </div>
+      <div class="field"><label>Chapters / topics *</label><input name="topics" required maxlength="600" placeholder="e.g. Light — reflection and refraction; Human eye" value="<%= form.topics || '' %>"></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px;">
+        <div class="field"><label>MCQs (1 mark)</label><input name="mcq" type="number" min="0" max="<%= limits.mcq %>" value="<%= form.mcq !== undefined ? form.mcq : 10 %>"></div>
+        <div class="field"><label>Short answer (2 marks)</label><input name="short" type="number" min="0" max="<%= limits.short %>" value="<%= form.short !== undefined ? form.short : 3 %>"></div>
+        <div class="field"><label>Long answer (5 marks)</label><input name="long" type="number" min="0" max="<%= limits.long %>" value="<%= form.long !== undefined ? form.long : 1 %>"></div>
+        <div class="field"><label>Time (minutes)</label><input name="duration" type="number" min="10" max="240" value="<%= form.duration || 60 %>"></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+        <div class="field"><label>School / institute name (optional)</label><input name="school" maxlength="120" value="<%= form.school || '' %>"></div>
+        <div class="field"><label>Exam name (optional)</label><input name="exam" maxlength="120" placeholder="Unit test" value="<%= form.exam || '' %>"></div>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+        <button type="submit" class="btn btn-primary" id="fp-go">Make my question paper</button>
+        <span style="font-size: 13px; color: var(--faint);">Free: up to <%= limits.mcq %> MCQs, <%= limits.short %> short, <%= limits.long %> long · <%= perDay %> papers a day</span>
+      </div>
+    </form>
