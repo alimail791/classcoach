@@ -182,6 +182,8 @@ function publicUrls() {
       pri: '0.9'
     })),
     { loc: `${base}/blog`, freq: 'weekly', pri: '0.7' },
+    { loc: `${base}/privacy`, freq: 'yearly', pri: '0.3' },
+    { loc: `${base}/terms`, freq: 'yearly', pri: '0.3' },
     ...blogRoutes.publishedPosts().map((p) => ({ loc: `${base}/blog/${p.slug}`, lastmod: String(p.updated_at || p.published_at).slice(0, 10), pri: '0.7' }))
   ];
   return pages;

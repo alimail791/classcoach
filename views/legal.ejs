@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: page.title }) %></head>
+<body>
+  <%- include('partials/public_nav') %>
+  <main style="max-width: 760px; margin: 0 auto; padding: 48px 24px 56px; display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <h1 style="font-size: 34px; line-height: 1.15; color: var(--ink);"><%= page.h1 %></h1>
+      <p style="margin: 0; font-size: 13px; color: var(--faint);">Last updated <%= updated %></p>
+      <p style="margin: 0; font-size: 16px; line-height: 1.65; color: var(--muted);"><%= page.intro %></p>
+    </div>
+    <% page.sections.forEach(function (s) { %>
+      <section style="display: flex; flex-direction: column; gap: 8px;">
+        <h2 style="font-size: 21px; color: var(--ink);"><%= s[0] %></h2>
+        <ul style="margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.7; color: var(--muted);">
+          <% s[1].forEach(function (p) { %><li><%= p %></li><% }) %>
+        </ul>
+      </section>
+    <% }) %>
+    <p style="margin: 8px 0 0; font-size: 14px; color: var(--muted);">See also: <% if (page.slug === 'privacy') { %><a href="/terms">Terms of Service</a><% } else { %><a href="/privacy">Privacy Policy</a><% } %></p>
+  </main>
+  <%- include('partials/public_footer') %>
+</body>
+</html>
