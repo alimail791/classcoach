@@ -140,7 +140,7 @@ router.post('/admin/blog/bulk', requireAdminSession, bulkJson, (req, res) => {
   const first = Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1], +t[2]) - 330 * 60 * 1000;
   const insert = db.prepare(
     `INSERT INTO blog_posts (title, slug, meta_description, cover_image_url, body_html, status, published_at)
-     VALUES (?, ?, ?, '', ?, 'scheduled', ?)`
+     VALUES (?, ?, ?, ?, ?, 'scheduled', ?)`
   );
   const results = [];
   let n = 0;
@@ -148,11 +148,12 @@ router.post('/admin/blog/bulk', requireAdminSession, bulkJson, (req, res) => {
     const title = String(it.title || '').trim().slice(0, 200);
     const slug = slugify(it.slug || title);
     const meta = String(it.metaDescription || '').trim().slice(0, 300);
+    const cover = /^https?:\/\//i.test(String(it.coverImageUrl || '').trim()) ? String(it.coverImageUrl).trim() : '';
     const bodyHtml = sanitizeHtml(it.bodyHtml || '');
     if (!title || !bodyHtml.replace(/<[^>]+>/g, '').trim()) { results.push({ title: title || '(no title)', ok: false, message: 'No title or text' }); continue; }
     if (db.prepare('SELECT id FROM blog_posts WHERE slug = ?').get(slug)) { results.push({ title, ok: false, message: `/blog/${slug} already exists` }); continue; }
     const when = new Date(first + n * everyDays * 86400000).toISOString();
-    insert.run(title, slug, meta, bodyHtml, when);
+    insert.run(title, slug, meta, cover, bodyHtml, when);
     n += 1;
     results.push({ title, ok: true, slug, when });
   }

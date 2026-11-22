@@ -28,7 +28,7 @@
     var heading = h1 ? h1.textContent.trim() : "";
     if (h1) h1.parentNode.removeChild(h1);
     var title = settings["title"] || heading || doc.title;
-    return { title: title, slug: settings["url slug"] || slugify(title), metaDescription: settings["meta description"] || "", bodyHtml: root.innerHTML.trim() };
+    return { title: title, slug: settings["url slug"] || slugify(title), metaDescription: settings["meta description"] || "", coverImageUrl: settings["cover image"] || "", bodyHtml: root.innerHTML.trim() };
   }
   function read(file) {
     return new Promise(function (resolve, reject) {

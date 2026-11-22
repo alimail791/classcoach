@@ -105,6 +105,7 @@
     title.value = settings["title"] || heading || doc.title || title.value;
     if (slug) { slug.value = settings["url slug"] || slugify(title.value); slugTouched = true; }
     if (meta && settings["meta description"]) { meta.value = settings["meta description"]; updateCount(); }
+    if (cover && settings["cover image"]) cover.value = settings["cover image"];
     setBody(root.innerHTML.trim());
   }
   if (importInput) importInput.addEventListener("change", function () {
