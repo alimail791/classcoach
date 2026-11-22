@@ -125,6 +125,7 @@ Object.keys(LANDING_PAGES).forEach((slug) => {
       page,
       slug,
       seoPages: slug === 'question-paper-generator' ? Object.values(require('./lib/seo_pages').PAGES) : null,
+      guides: require('./lib/guides').guidesFor(slug),
       demoLink,
       indexable: true,
       canonicalUrl: `${SITE_ORIGIN}/${slug}`,
@@ -202,6 +203,16 @@ app.get('/sitemap.xml', (req, res) => {
 const indexNow = require('./lib/indexNow');
 app.get(`/${indexNow.KEY}.txt`, (req, res) => res.type('text/plain').send(indexNow.KEY));
 setTimeout(() => indexNow.ping(publicUrls().map((u) => u.loc), SITE_ORIGIN), 30 * 1000).unref();
+// Scheduled blog posts go live on their date; tell search engines when one does.
+function publishScheduledPosts() {
+  try {
+    if (blogRoutes.publishDue() > 0) indexNow.ping(publicUrls().map((u) => u.loc), SITE_ORIGIN);
+  } catch (err) {
+    console.error('[blog] scheduled publish failed:', err.message);
+  }
+}
+setTimeout(publishScheduledPosts, 20 * 1000).unref();
+setInterval(publishScheduledPosts, 5 * 60 * 1000).unref();
 
 app.get('/unsubscribe', (req, res) => {
   const email = (req.query.email || '').toLowerCase().trim();

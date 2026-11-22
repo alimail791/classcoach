@@ -3,11 +3,22 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireAdminSession } = require('../lib/auth');
-const { sanitizeHtml, slugify, excerptFrom, readingMinutes } = require('../lib/blogHtml');
+const { sanitizeHtml, slugify, excerptFrom, readingMinutes, faqFrom } = require('../lib/blogHtml');
 
 const router = express.Router();
 const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.classcoach.in';
 const bigForm = express.urlencoded({ extended: true, limit: '2mb' });
+const bulkJson = express.json({ limit: '20mb' });
+
+// Scheduled posts (status 'scheduled', published_at in the future) go live
+// on their own: server.js calls this every few minutes. Returns how many
+// posts it published, so the caller can tell search engines.
+function publishDue() {
+  const r = db
+    .prepare("UPDATE blog_posts SET status = 'published', updated_at = datetime('now') WHERE status = 'scheduled' AND published_at <= ?")
+    .run(new Date().toISOString());
+  return Number(r.changes || 0);
+}
 
 const fmtDate = (iso) =>
   iso ? new Date(iso.replace(' ', 'T') + (iso.endsWith('Z') ? '' : 'Z')).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
@@ -39,6 +50,7 @@ router.get('/blog/:slug', (req, res, next) => {
   const related = publishedPosts().filter((p) => p.id !== post.id).slice(0, 3);
   res.render('blog_post', {
     post: { ...post, date: fmtDate(post.published_at), minutes: readingMinutes(post.body_html) },
+    faq: faqFrom(post.body_html),
     related,
     isDraftPreview: post.status !== 'published',
     indexable: post.status === 'published',
@@ -52,8 +64,13 @@ router.get('/blog/:slug', (req, res, next) => {
 // ---------- Admin ----------
 
 router.get('/admin/blog', requireAdminSession, (req, res) => {
-  const posts = db.prepare('SELECT id, slug, title, status, published_at, updated_at FROM blog_posts ORDER BY updated_at DESC').all();
-  res.render('admin_blog', { posts: posts.map((p) => ({ ...p, date: fmtDate(p.published_at || p.updated_at) })), saved: req.query.saved || null, deleted: req.query.deleted || null });
+  const posts = db.prepare("SELECT id, slug, title, status, published_at, updated_at FROM blog_posts ORDER BY (status = 'draft') DESC, COALESCE(published_at, updated_at) DESC").all();
+  res.render('admin_blog', {
+    posts: posts.map((p) => ({ ...p, date: fmtDate(p.published_at || p.updated_at) })),
+    saved: req.query.saved || null,
+    deleted: req.query.deleted || null,
+    scheduled: req.query.scheduled || null
+  });
 });
 
 router.get('/admin/blog/new', requireAdminSession, (req, res) => {
@@ -89,7 +106,8 @@ function savePost(req, res) {
 
   let status = existing ? existing.status : 'draft';
   let publishedAt = existing ? existing.published_at : null;
-  if (publish) { status = 'published'; publishedAt = publishedAt || new Date().toISOString(); }
+  // A scheduled post published by hand goes live now, not on its future date.
+  if (publish) { status = 'published'; publishedAt = existing && existing.status === 'scheduled' ? new Date().toISOString() : publishedAt || new Date().toISOString(); }
   if (unpublish) status = 'draft';
 
   if (existing) {
@@ -107,6 +125,41 @@ function savePost(req, res) {
   res.redirect(`/admin/blog?saved=${encodeURIComponent(msg)}`);
 }
 
+// Bulk import: the admin picks many ready-made article files at once; the
+// browser reads them (public/blog-bulk.js) and sends title/slug/description/
+// body here. Each becomes a scheduled post, one every `everyDays` days from
+// `startDate` at `time` (India time), unless its slug is already taken.
+router.post('/admin/blog/bulk', requireAdminSession, bulkJson, (req, res) => {
+  const b = req.body || {};
+  const items = Array.isArray(b.posts) ? b.posts.slice(0, 100) : [];
+  const everyDays = Math.min(30, Math.max(1, parseInt(b.everyDays, 10) || 1));
+  const m = String(b.startDate || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const t = String(b.time || '09:00').match(/^(\d{2}):(\d{2})$/) || [null, '09', '00'];
+  if (!m) return res.status(400).json({ message: 'Pick a start date.' });
+  // India time (UTC+05:30) to UTC.
+  const first = Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1], +t[2]) - 330 * 60 * 1000;
+  const insert = db.prepare(
+    `INSERT INTO blog_posts (title, slug, meta_description, cover_image_url, body_html, status, published_at)
+     VALUES (?, ?, ?, '', ?, 'scheduled', ?)`
+  );
+  const results = [];
+  let n = 0;
+  for (const it of items) {
+    const title = String(it.title || '').trim().slice(0, 200);
+    const slug = slugify(it.slug || title);
+    const meta = String(it.metaDescription || '').trim().slice(0, 300);
+    const bodyHtml = sanitizeHtml(it.bodyHtml || '');
+    if (!title || !bodyHtml.replace(/<[^>]+>/g, '').trim()) { results.push({ title: title || '(no title)', ok: false, message: 'No title or text' }); continue; }
+    if (db.prepare('SELECT id FROM blog_posts WHERE slug = ?').get(slug)) { results.push({ title, ok: false, message: `/blog/${slug} already exists` }); continue; }
+    const when = new Date(first + n * everyDays * 86400000).toISOString();
+    insert.run(title, slug, meta, bodyHtml, when);
+    n += 1;
+    results.push({ title, ok: true, slug, when });
+  }
+  publishDue(); // a start date in the past publishes the due ones right away
+  res.json({ scheduled: n, results });
+});
+
 router.post('/admin/blog', requireAdminSession, bigForm, savePost);
 router.post('/admin/blog/:id', requireAdminSession, bigForm, savePost);
 
@@ -116,4 +169,5 @@ router.post('/admin/blog/:id/delete', requireAdminSession, (req, res) => {
 });
 
 router.publishedPosts = publishedPosts;
+router.publishDue = publishDue;
 module.exports = router;

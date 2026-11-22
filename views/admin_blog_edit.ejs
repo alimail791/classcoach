@@ -81,6 +81,11 @@
       <% if (post && post.status === 'published') { %>
         <button type="submit" name="action" value="publish" class="btn btn-primary">Update post</button>
         <button type="submit" name="action" value="unpublish" class="btn btn-ghost">Unpublish</button>
+      <% } else if (post && post.status === 'scheduled') { %>
+        <span style="width: 100%; font-size: 14px; color: var(--muted);">Scheduled: goes live on its own on <strong><%= new Date(post.published_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' }) %></strong>.</span>
+        <button type="submit" name="action" value="save" class="btn btn-primary">Save changes</button>
+        <button type="submit" name="action" value="publish" class="btn btn-ghost">Publish now</button>
+        <button type="submit" name="action" value="unpublish" class="btn btn-ghost">Unschedule (keep as draft)</button>
       <% } else { %>
         <button type="submit" name="action" value="publish" class="btn btn-primary">Publish</button>
         <button type="submit" name="action" value="save" class="btn btn-ghost">Save draft</button>

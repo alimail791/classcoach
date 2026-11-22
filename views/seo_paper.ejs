@@ -49,6 +49,7 @@
     <% } %>
   </div>
   <script type="application/ld+json"><%- JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map(function (f) { return { '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }; }) }).replace(/</g, '\\u003c') %></script>
+  <%- include('partials/guides') %>
   <%- include('partials/public_footer') %>
   <script>
     document.getElementById('fp-form').addEventListener('submit', function () {

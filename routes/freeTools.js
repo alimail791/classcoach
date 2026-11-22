@@ -7,6 +7,7 @@ const F = require('../lib/freeTools');
 const P = require('../lib/papers');
 const T = require('../lib/omr/template');
 const SEO = require('../lib/seo_pages');
+const { guidesFor } = require('../lib/guides');
 
 const router = express.Router();
 const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.classcoach.in';
@@ -34,6 +35,7 @@ const TOOLS = [
 router.get('/free-tools', (req, res) => {
   res.render('free_tools', {
     tools: TOOLS,
+    guides: guidesFor('free-tools'),
     indexable: true,
     canonicalUrl: `${SITE_ORIGIN}/free-tools`,
     title: 'Free Tools for Teachers & Tutors — Question Paper and OMR Sheet Generator | ClassCoach',
@@ -46,6 +48,7 @@ router.get('/free-tools', (req, res) => {
 function paperForm(req, res, extra) {
   res.status(extra && extra.error ? 400 : 200).render('free_paper', {
     indexable: true,
+    guides: guidesFor('free-question-paper-generator'),
     canonicalUrl: `${SITE_ORIGIN}/free-question-paper-generator`,
     title: 'Free AI Question Paper Generator with Answer Key (No Login) | ClassCoach',
     description:
@@ -158,6 +161,7 @@ router.get('/question-paper-generator/:slug', (req, res, next) => {
   ];
   res.render('seo_paper', {
     page,
+    guides: guidesFor(page.kind === 'language' ? 'paper-language' : 'paper-class'),
     related: SEO.related(page),
     faqs,
     indexable: true,
@@ -199,6 +203,7 @@ for (const page of Object.values(LEGAL.PAGES)) {
 router.get('/free-omr-sheet-generator', (req, res) => {
   res.render('free_omr', {
     indexable: true,
+    guides: guidesFor('free-omr-sheet-generator'),
     canonicalUrl: `${SITE_ORIGIN}/free-omr-sheet-generator`,
     title: 'Free OMR Sheet Generator — Printable A4 OMR Answer Sheet PDF | ClassCoach',
     description:

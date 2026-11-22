@@ -1,0 +1,8 @@
+<% if (typeof guides !== 'undefined' && guides && guides.length) { %>
+<section style="max-width: 1000px; margin: 0 auto; padding: 28px 24px;">
+  <h2 style="font-family: 'Newsreader', serif; font-size: 24px; margin: 0 0 12px;">Read the guide</h2>
+  <ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+    <% guides.forEach(function (g) { %><li><a href="/blog/<%= g.slug %>" style="color: var(--accent-deep); font-weight: 600;"><%= g.title %></a></li><% }) %>
+  </ul>
+</section>
+<% } %>

@@ -16,6 +16,22 @@
   <div class="content" style="max-width: 1000px; margin: 0 auto; width: 100%;">
     <% if (saved) { %><div class="flash flash-ok">Post <%= saved %>.</div><% } %>
     <% if (deleted) { %><div class="flash flash-ok">Post deleted.</div><% } %>
+    <% if (scheduled) { %><div class="flash flash-ok"><%= scheduled %> article(s) scheduled. Each goes live on its own date.</div><% } %>
+
+    <div class="card" style="padding: 18px 20px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 12px;">
+      <div>
+        <strong>Import many articles and publish one a day</strong>
+        <p style="margin: 4px 0 0; font-size: 14px; color: var(--muted);">Pick several ready-made .html article files (in the order you want them). Each is saved as a scheduled post and goes live by itself on its date.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+        <label style="font-size: 13px;">Article files<br><input type="file" id="bulk-files" accept=".html,.htm,text/html" multiple></label>
+        <label style="font-size: 13px;">First post on<br><input type="date" id="bulk-start" style="padding: 8px;"></label>
+        <label style="font-size: 13px;">at (India time)<br><input type="time" id="bulk-time" value="09:00" style="padding: 8px;"></label>
+        <label style="font-size: 13px;">then one every<br><select id="bulk-every" style="padding: 8px;"><option value="1">day</option><option value="2">2 days</option><option value="3">3 days</option><option value="7">week</option></select></label>
+        <button type="button" id="bulk-go" class="btn btn-primary">Schedule articles</button>
+      </div>
+      <div id="bulk-result" style="font-size: 14px;"></div>
+    </div>
 
     <% if (!posts.length) { %>
       <div class="card" style="padding: 28px; display: flex; flex-direction: column; gap: 10px;">
@@ -40,6 +56,8 @@
               <td style="padding: 12px 16px;">
                 <% if (p.status === 'published') { %>
                   <span style="padding: 3px 10px; border-radius: 100px; background: var(--good-tint); color: #34502E; font-size: 12px; font-weight: 600;">Published</span>
+                <% } else if (p.status === 'scheduled') { %>
+                  <span style="padding: 3px 10px; border-radius: 100px; background: #E3ECF5; color: #2F4A66; font-size: 12px; font-weight: 600;">Scheduled</span>
                 <% } else { %>
                   <span style="padding: 3px 10px; border-radius: 100px; background: #F0E6D6; color: var(--muted); font-size: 12px; font-weight: 600;">Draft</span>
                 <% } %>
@@ -57,5 +75,6 @@
     <% } %>
   </div>
 </div>
+<script src="/blog-bulk.js"></script>
 </body>
 </html>
