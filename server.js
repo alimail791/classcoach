@@ -214,6 +214,18 @@ function publishScheduledPosts() {
 setTimeout(publishScheduledPosts, 20 * 1000).unref();
 setInterval(publishScheduledPosts, 5 * 60 * 1000).unref();
 
+// One-click unsubscribe (List-Unsubscribe-Post): mail apps POST to the same
+// link, with the email and token in the query string.
+app.post('/unsubscribe', (req, res) => {
+  const email = (req.query.email || '').toLowerCase().trim();
+  const { verifyUnsubscribeToken } = require('./lib/unsubscribe');
+  if (!verifyUnsubscribeToken(email, req.query.token || '')) return res.status(400).send('Invalid link');
+  const db = require('./lib/db');
+  db.prepare("UPDATE email_leads SET status = 'unsubscribed' WHERE email = ?").run(email);
+  db.prepare('UPDATE teachers SET blog_emails_opt_out = 1 WHERE lower(email) = ?').run(email);
+  res.send('Unsubscribed');
+});
+
 app.get('/unsubscribe', (req, res) => {
   const email = (req.query.email || '').toLowerCase().trim();
   const token = req.query.token || '';
@@ -225,6 +237,7 @@ app.get('/unsubscribe', (req, res) => {
 
   const db = require('./lib/db');
   db.prepare("UPDATE email_leads SET status = 'unsubscribed' WHERE email = ?").run(email);
+  db.prepare('UPDATE teachers SET blog_emails_opt_out = 1 WHERE lower(email) = ?').run(email);
   res.send(`<!doctype html><html><head><title>Unsubscribed — ClassCoach</title></head><body style="font-family: sans-serif; max-width: 480px; margin: 80px auto; text-align: center;"><h1>You're unsubscribed</h1><p>${email} won't receive any further emails from ClassCoach.</p></body></html>`);
 });
 
@@ -260,6 +273,7 @@ const PORT = process.env.PORT || 3000;
 startInactivityScheduler();
 require('./lib/incompleteSignups').startIncompleteSignupAlerts();
 require('./lib/emailDrip').startDrip();
+require('./lib/blogRoundup').startBlogRoundup(); // weekly 'new on the blog' email to teachers
 require('./lib/instagramReels').startInstagramReelsJob(); // posts the daily promo Reel (needs IG_ACCESS_TOKEN)
 
 try { require('./lib/creditsMigration').migrateToCredits(); } catch (e) { console.error('Credits migration failed:', e.message); }
