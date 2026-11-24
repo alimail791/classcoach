@@ -90,3 +90,39 @@ table.plain td { padding: 14px 20px; border-bottom: 1px solid #F3ECDF; font-size
 .bar-track { flex: 1; height: 10px; background: #F0E6D6; border-radius: 6px; overflow: hidden; }
 .bar-fill { height: 100%; }
 .bar-row .pct { width: 40px; font-size: 12px; color: var(--faint); text-align: right; }
+
+/* ---- Android app (Play Store) ----
+   .cc-app is set on <html> when the page is open inside the ClassCoach app.
+   Plans are bought on the website only, so prices and buy links are hidden. */
+.cc-app a[href^="/upgrade"], .cc-app a[href^="/pricing"], .cc-app .web-only { display: none !important; }
+.app-only { display: none !important; }
+.cc-app .app-only { display: revert !important; }
+.cc-app-notice { max-width: 440px; margin: 60px auto; padding: 28px; text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.get-app-bar { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 50; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--ink); color: #FBF6EE; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.2); font-size: 14px; }
+.get-app-bar img { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; }
+.get-app-bar .txt { flex: 1; line-height: 1.35; }
+.get-app-bar .btn { padding: 8px 14px; font-size: 13px; }
+.get-app-bar .x { background: none; border: 0; color: #CFC4B4; font-size: 20px; cursor: pointer; padding: 0 2px; }
+.push-card { display: flex; align-items: center; gap: 14px; padding: 16px 18px; flex-wrap: wrap; }
+.push-card .txt { flex: 1; min-width: 200px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+.omr-camera { display: flex; flex-direction: column; gap: 8px; }
+.omr-thumbs { display: flex; gap: 6px; flex-wrap: wrap; }
+.omr-thumbs img { width: 52px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+
+/* ---- Phone layout (website on phones + Android app) ---- */
+.mob-tabs, .mob-backdrop { display: none; }
+@media (max-width: 900px) {
+  .content { padding: 18px 16px 96px; gap: 20px; }
+  .topbar { height: auto; min-height: 56px; padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+  .stack-mobile { flex-direction: column !important; align-items: stretch !important; }
+  .stack-mobile > * { width: auto !important; max-width: 100%; min-width: 0; }
+  .mob-tabs { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: #FFFFFF; border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  .mob-tabs a, .mob-tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--muted); text-decoration: none; background: none; border: 0; padding: 4px 2px; font-family: inherit; cursor: pointer; }
+  .mob-tabs span { font-size: 19px; line-height: 1.2; }
+  .mob-tabs .on { color: var(--accent); font-weight: 700; }
+  body.mob-menu-open .sidebar { display: flex; position: fixed; top: 0; left: 0; bottom: 0; width: 82%; max-width: 300px; z-index: 70; overflow-y: auto; padding-bottom: 24px; }
+  body.mob-menu-open .mob-backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 65; }
+  .get-app-bar { bottom: 74px; }
+  .grid-5 { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-5 .stat-card { padding: 16px; }
+}

@@ -1,4 +1,4 @@
-<div class="sidebar">
+<div class="sidebar" id="cc-sidebar">
   <div class="brand">
     <%- include('logo', { size: 30 }) %>
     <span class="word">ClassCoach</span>
@@ -34,3 +34,13 @@
     <button type="submit" style="width: 100%; padding: 9px; background: transparent; border: 1px solid #3D342A; color: #C9BEA9; border-radius: 6px; font-size: 12px;">Log out</button>
   </form>
 </div>
+
+<%# Phone navigation: the sidebar is hidden under 900px, so phones (and the Android app) get a bottom tab bar; "More" opens the full menu. %>
+<div class="mob-backdrop" id="cc-mob-backdrop" onclick="document.body.classList.remove('mob-menu-open')"></div>
+<nav class="mob-tabs" aria-label="Main">
+  <a href="/dashboard" class="<%= active === 'dashboard' ? 'on' : '' %>"><span>⌂</span>Home</a>
+  <a href="/tests" class="<%= active === 'tests' ? 'on' : '' %>"><span>📝</span>Tests</a>
+  <a href="/papers" class="<%= active === 'papers' ? 'on' : '' %>"><span>📷</span>Papers &amp; OMR</a>
+  <a href="/live" class="<%= active === 'live' ? 'on' : '' %>"><span>⚡</span>Live quiz</a>
+  <button type="button" onclick="document.body.classList.toggle('mob-menu-open')"><span>☰</span>More</button>
+</nav>

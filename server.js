@@ -47,6 +47,10 @@ app.locals.genTiers = genTiers();
 app.locals.topupPacks = Object.values(require('./lib/credits').TOPUPS);
 app.locals.featureCredits = require('./lib/credits').FEATURE_CREDITS;
 app.locals.instTiers = instTiers();
+// Android app (routes/app.js): Play Store link for 'Get the app' banners, and
+// whether push notifications are configured.
+app.locals.playStoreUrl = (process.env.PLAY_STORE_URL || '').trim();
+app.locals.pushEnabled = require('./lib/push').isEnabled();
 // Product facts for search engines and AI assistants (lib/seoData.js).
 const seoData = require('./lib/seoData');
 app.locals.productJsonLd = JSON.stringify(seoData.productJsonLd()).replace(/</g, '\\u003c');
@@ -166,6 +170,9 @@ app.get('/robots.txt', (req, res) => {
       'Disallow: /forgot-password',
       'Disallow: /reset-password',
       'Disallow: /verify-email',
+      'Disallow: /app$',
+      'Disallow: /offline',
+      'Disallow: /push',
       `Sitemap: ${base}/sitemap.xml`
     ].join('\n')
   );
@@ -241,6 +248,7 @@ app.get('/unsubscribe', (req, res) => {
   res.send(`<!doctype html><html><head><title>Unsubscribed — ClassCoach</title></head><body style="font-family: sans-serif; max-width: 480px; margin: 80px auto; text-align: center;"><h1>You're unsubscribed</h1><p>${email} won't receive any further emails from ClassCoach.</p></body></html>`);
 });
 
+app.use('/', require('./routes/app')); // Android app: assetlinks, /app start page, push
 app.use('/', authRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', testRoutes);

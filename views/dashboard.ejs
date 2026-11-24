@@ -26,6 +26,14 @@
 
       <%- include('partials/notifications', { notifications: notifications, unreadCount: unreadCount, markReadAction: '/notifications/mark-read' }) %>
 
+      <% if (typeof pushEnabled !== 'undefined' && pushEnabled) { %>
+        <div class="card push-card" id="push-card" style="display: none;">
+          <div style="font-size: 26px;">🔔</div>
+          <div class="txt"><strong style="color: var(--ink);">Get notified when students submit</strong><br>A phone notification when a test is submitted, answers are waiting to be graded, or your plan needs attention. <span data-push-msg style="color: var(--accent-deep);"></span></div>
+          <div style="display: flex; gap: 8px;"><button class="btn btn-primary" type="button" data-push-on style="padding: 9px 14px;">Turn on</button><button class="btn btn-ghost" type="button" data-push-later style="padding: 9px 14px;">Later</button></div>
+        </div>
+      <% } %>
+
       <div class="grid-5">
         <div class="card stat-card">
           <span class="label">Classes</span>

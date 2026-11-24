@@ -18,9 +18,9 @@
       <div class="grid-3">
         <% tiers.forEach(function (t) { %>
           <div class="card stat-card">
-            <span class="label"><%= t.name %> seats · ₹<%= t.price %>/student</span>
+            <span class="label"><%= t.name %> seats<span class="web-only"> · ₹<%= t.price %>/student</span></span>
             <span class="value"><%= seats[t.key] %></span>
-            <span class="sub"><%= t.blurb %><% if (t.bulk) { %><br><strong>School price:</strong> <% t.bulk.slice().reverse().forEach(function (b, i) { %><%= i ? ', ' : '' %>₹<%= b.price %> each for <%= b.min %>+<% }) %><% } %></span>
+            <span class="sub"><%= t.blurb %><% if (t.bulk) { %><span class="web-only"><br><strong>School price:</strong> <% t.bulk.slice().reverse().forEach(function (b, i) { %><%= i ? ', ' : '' %>₹<%= b.price %> each for <%= b.min %>+<% }) %></span><% } %></span>
           </div>
         <% }) %>
       </div>
@@ -44,7 +44,7 @@
           </form>
         </div>
 
-        <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="card web-only" style="padding: 22px; display: flex; flex-direction: column; gap: 14px;">
           <h2 style="font-size: 19px;">Buy seats</h2>
           <% if (!canBuy) { %>
             <p style="font-size: 14px; color: var(--muted); margin: 0;">Your institute admin buys seats for the institute. You can use the institute's seats.</p>

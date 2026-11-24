@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'ClassCoach' }) %></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card" style="text-align: center; align-items: center;">
+      <%- include('partials/logo', { size: 56 }) %>
+      <h1 style="margin-bottom: 0;">ClassCoach</h1>
+      <p style="margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6;">Tests in 1 minute, OMR scanning with your phone camera, AI grading and parent reports.</p>
+      <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px;">
+        <a class="btn btn-primary" href="/login">Teacher log in</a>
+        <a class="btn btn-ghost" href="/signup">Create a free teacher account</a>
+        <a class="btn btn-ghost" href="/institute/login">Coaching institute login</a>
+      </div>
+      <div style="display: flex; gap: 16px; justify-content: center; font-size: 13px; margin-top: 4px;">
+        <a href="/student/login">Student login</a>
+        <a href="/parent/login">Parent login</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

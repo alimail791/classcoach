@@ -58,6 +58,20 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="/style.css">
 <script>
+// App mode = this page is open inside the ClassCoach Android app (Play Store).
+// Kept in sessionStorage, not a cookie: the app shares Chrome's cookies with
+// the phone's browser, and prices must still show on the normal website.
+(function () {
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.get('source') === 'twa' || q.get('app') === '1' || (document.referrer || '').indexOf('android-app://') === 0) sessionStorage.setItem('cc_app', '1');
+    if (sessionStorage.getItem('cc_app') === '1') document.documentElement.classList.add('cc-app');
+  } catch (e) {}
+})();
+window.CC = { play: <%- JSON.stringify(typeof playStoreUrl !== 'undefined' ? playStoreUrl : '') %>, push: <%= typeof pushEnabled !== 'undefined' && pushEnabled ? 'true' : 'false' %> };
+</script>
+<script src="/app.js" defer></script>
+<script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('/sw.js').catch(function () {});

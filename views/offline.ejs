@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>ClassCoach — Offline</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card" style="text-align: center; align-items: center;">
+      <h1>You're offline</h1>
+      <p style="margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6;">ClassCoach needs the internet. Check your connection — this page reloads by itself when you're back online.</p>
+      <button class="btn btn-primary" onclick="location.reload()">Try again</button>
+    </div>
+  </div>
+  <script>addEventListener('online', function () { location.reload(); });</script>
+</body>
+</html>

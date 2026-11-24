@@ -31,13 +31,20 @@
 
         <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
           <h2 style="font-size:18px;">2. Scan filled sheets</h2>
-          <p style="font-size:13px;color:var(--muted);margin:0;">Photograph each sheet flat, in good light, with all 4 black corner squares in view. Select all the photos at once. Uses <%= perTen %> AI credit per 10 sheets.</p>
+          <p style="font-size:13px;color:var(--muted);margin:0;">Photograph each sheet flat, in good light, with all 4 black corner squares in view. Take a photo of each sheet, or select all the photos at once. Uses <%= perTen %> AI credit per 10 sheets.</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div class="field"><label>Match roll numbers to batch</label>
               <select id="omr-batch"><option value="">Don't match</option><% batches.forEach(function (b) { %><option value="<%= b.id %>"><%= b.name %></option><% }) %></select></div>
             <div class="field"><label>Set if QR can't be read</label>
               <select id="omr-set"><% letters.forEach(function (L) { %><option><%= L %></option><% }) %></select></div>
           </div>
+          <div class="omr-camera">
+            <label class="btn btn-dark" style="align-self:flex-start;padding:10px 16px;cursor:pointer;">📷 Take photo of a sheet
+              <input type="file" id="omr-camera" accept="image/*" capture="environment" style="display:none;"></label>
+            <div id="omr-shots" style="font-size:13px;color:var(--muted);display:none;"></div>
+            <div class="omr-thumbs" id="omr-thumbs"></div>
+          </div>
+          <div style="font-size:13px;color:var(--muted);">or choose photos from your gallery / computer:</div>
           <input type="file" id="omr-files" accept="image/jpeg,image/png" multiple style="font-size:14px;">
           <div><button class="btn btn-primary" id="omr-go" type="button">Scan sheets</button></div>
           <div id="omr-progress" style="font-size:13px;color:var(--muted);"></div>
@@ -117,9 +124,25 @@
     live.appendChild(d);
   }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  // Camera: one photo per tap, so a teacher can shoot a whole stack of sheets
+  // and then scan them all at once.
+  var shots = [], cam = document.getElementById('omr-camera');
+  var shotsMsg = document.getElementById('omr-shots'), thumbs = document.getElementById('omr-thumbs');
+  cam.addEventListener('change', function () {
+    var f = cam.files && cam.files[0];
+    if (!f) return;
+    var named = new File([f], 'sheet-' + (shots.length + 1) + '.jpg', { type: f.type || 'image/jpeg' });
+    shots.push(named);
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    thumbs.appendChild(img);
+    shotsMsg.style.display = '';
+    shotsMsg.innerHTML = '<strong>' + shots.length + '</strong> sheet' + (shots.length === 1 ? '' : 's') + ' photographed. Take the next one, or tap <strong>Scan sheets</strong>.';
+    cam.value = '';
+  });
   go.addEventListener('click', function () {
-    var files = Array.prototype.slice.call(document.getElementById('omr-files').files);
-    if (!files.length) { prog.textContent = 'Choose the photos first.'; return; }
+    var files = shots.concat(Array.prototype.slice.call(document.getElementById('omr-files').files));
+    if (!files.length) { prog.textContent = 'Take a photo or choose the photos first.'; return; }
     go.disabled = true; live.innerHTML = '';
     fetch('/papers/<%= paper.id %>/omr/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: files.length }) })
       .then(function (r) { return r.json(); })
@@ -128,8 +151,17 @@
         var i = 0, ok = 0;
         function next() {
           if (i >= files.length) {
-            prog.textContent = 'Done: ' + ok + ' of ' + files.length + ' sheets read. Refreshing…';
-            setTimeout(function () { location.reload(); }, 1500);
+            // Clear the photographed stack either way, so a retake starts fresh.
+            shots = []; thumbs.innerHTML = ''; shotsMsg.style.display = 'none';
+            document.getElementById('omr-files').value = '';
+            go.disabled = false;
+            if (ok === files.length) {
+              prog.textContent = 'Done: ' + ok + ' of ' + files.length + ' sheets read. Refreshing…';
+              setTimeout(function () { location.reload(); }, 1500);
+            } else {
+              // Keep the ✗ reasons on screen so the teacher knows which sheets to retake.
+              prog.innerHTML = 'Done: ' + ok + ' of ' + files.length + ' sheets read. Retake the sheets marked ✗' + (ok ? ', then <a href="">refresh the results</a>.' : '.');
+            }
             return;
           }
           var f = files[i++];

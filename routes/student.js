@@ -172,6 +172,7 @@ router.post('/student/tests/:id/submit', requireStudent, (req, res) => {
     updateAttempt.run(score, total, attemptInfo.lastInsertRowid);
   });
   tx();
+  require('../lib/push').notifySubmission(test.id, req.student.name);
 
   res.redirect(`/student/tests/${test.id}/result`);
 });

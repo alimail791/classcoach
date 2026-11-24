@@ -1,14 +1,130 @@
 {
-  "name": "ClassCoach",
+  "id": "/app",
+  "name": "ClassCoach — AI tests, OMR & grading for teachers",
   "short_name": "ClassCoach",
-  "description": "AI test creation, grading, and parent reporting for teachers.",
-  "start_url": "/",
+  "description": "Make tests and question papers in 1 minute, scan OMR sheets with your phone camera, grade answers with AI and send parents reports.",
+  "start_url": "/app?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#FBF6EE",
   "theme_color": "#B4501C",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "prefer_related_applications": false,
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-any-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-any-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scan OMR sheets",
+      "short_name": "Scan OMR",
+      "url": "/papers?app=1",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Make a test",
+      "short_name": "New test",
+      "url": "/tests?app=1",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Start a live quiz",
+      "short_name": "Live quiz",
+      "url": "/live?app=1",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screens/app-2-omr-scan.webp",
+      "sizes": "1082x1922",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Scan OMR sheets with your phone camera"
+    },
+    {
+      "src": "/screens/app-1-dashboard.webp",
+      "sizes": "1082x1922",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Teacher dashboard"
+    },
+    {
+      "src": "/screens/app-3-results.webp",
+      "sizes": "1082x1922",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Test results and parent reports"
+    },
+    {
+      "src": "/screens/dashboard.webp",
+      "sizes": "1280x820",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Teacher dashboard"
+    },
+    {
+      "src": "/screens/papers.webp",
+      "sizes": "1280x820",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Question papers"
+    },
+    {
+      "src": "/screens/grade.webp",
+      "sizes": "1280x820",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "AI grading"
+    }
   ]
 }
