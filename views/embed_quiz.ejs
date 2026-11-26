@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><%- include('partials/embed_style') %><title>Practice quiz</title></head><body>
+<div class="w">
+<% if (!ctx) { %>
+  <p>This practice quiz is no longer available.</p>
+<% } else { var L = 'ABCDEFGH'; %>
+  <span class="tag">Practice quiz · <%= ctx.questions.length %> questions</span>
+  <h1><%= ctx.test.title %></h1>
+  <% if (result) { %>
+    <p style="font-size:16px;color:#221D17;"><strong>You scored <%= result.score %> / <%= result.total %></strong></p>
+  <% } else { %>
+    <p>By <%= ctx.teacher.name %>. Tick your answers, then check your score.</p>
+  <% } %>
+  <form method="POST" target="_self" style="display:flex;flex-direction:column;gap:16px;">
+    <% ctx.questions.forEach(function (q, i) { %>
+      <div class="q"><b><%= i + 1 %>. <%= q.text %></b>
+        <% q.options.forEach(function (o, j) {
+             var cls = '';
+             if (result) { if (j === q.correct) cls = 'ok'; else if (result.answers[i] === j) cls = 'bad'; } %>
+          <label class="opt <%= cls %>"><input type="radio" name="q<%= q.id %>" value="<%= j %>" <%= result && result.answers[i] === j ? 'checked' : '' %> <%= result ? 'disabled' : '' %>> <span><%= L[j] %>. <%= o %></span></label>
+        <% }) %>
+      </div>
+    <% }) %>
+    <% if (!result) { %><button class="btn" type="submit">Check my score</button><% } %>
+  </form>
+  <% if (result) { %>
+    <% if (ctx.batch && ctx.batch.join_code) { %>
+      <p>Want full tests, marked instantly, with a report of your weak chapters?</p>
+      <a class="btn" href="<%= SITE %>/join/<%= ctx.batch.join_code %>">Join <%= ctx.teacher.name %>'s class →</a>
+    <% } %>
+    <a href="" target="_self" style="font-size:13px;color:#8C3C13;">Try again</a>
+  <% } %>
+<% } %>
+  <div class="pw">Powered by <a href="<%= powered %>">ClassCoach</a></div>
+</div>
+</body></html>

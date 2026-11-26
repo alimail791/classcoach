@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Website widgets — ClassCoach' }) %></head>
+<body>
+<%
+  var copyBtn = function (id) { return '<button type="button" class="btn btn-ghost" style="padding:8px 14px;" onclick="var i=document.getElementById(\'' + id + '\');i.select();navigator.clipboard&&navigator.clipboard.writeText(i.value);this.textContent=\'Copied\';">Copy code</button>'; };
+  var codeBox = function (id, code) { return '<div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="' + id + '" readonly value="' + code.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" style="flex:1;min-width:220px;font-size:12px;font-family:monospace;">' + copyBtn(id) + '</div>'; };
+%>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'widgets' }) %>
+  <div class="main">
+    <div class="topbar"><h1 style="font-size: 17px;">Website widgets</h1></div>
+    <div class="content" style="display:flex;flex-direction:column;gap:20px;max-width:860px;">
+      <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.6;">Put these on your website, blog, Google Sites page or Linktree. Copy the code and paste it where you want the box to appear (in WordPress use a "Custom HTML" block). Each one updates by itself — nothing to maintain.</p>
+      <% if (notice === 'on') { %><div class="flash flash-ok">Practice quiz is on. Copy its code below.</div><% } %>
+      <% if (notice === 'off') { %><div class="flash flash-ok">Practice quiz is off. Anywhere it was embedded now shows "no longer available".</div><% } %>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:14px;">
+        <h2 style="font-size:16px;margin:0;">1 · "Join my class" button</h2>
+        <p style="margin:0;font-size:14px;color:var(--muted);">Visitors tap it and join your batch straight away — new students without phone calls.</p>
+        <% if (!batches.length) { %>
+          <div class="flash flash-error">Create a class first in <a href="/classes">Classes &amp; Batches</a>.</div>
+        <% } %>
+        <% batches.forEach(function (b) { var src = SITE + '/embed/join/' + b.join_code; %>
+          <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px;">
+            <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:14px;"><strong><%= b.name %></strong><span style="color:var(--muted);font-size:13px;"><%= views['join:' + b.id] || 0 %> views in 30 days · <a href="<%= src %>" target="_blank" rel="noopener">Preview</a></span></div>
+            <%- codeBox('j' + b.id, iframe(src, 230)) %>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:14px;">
+        <h2 style="font-size:16px;margin:0;">2 · Free practice quiz</h2>
+        <p style="margin:0;font-size:14px;color:var(--muted);">Turn one of your published tests into a public practice quiz (first <%= maxQuiz %> MCQs). Visitors get their score, then a "Join your class" button. <strong>Anyone can see these questions</strong>, so pick a practice test, not an exam you still plan to give.</p>
+        <% var usable = tests.filter(function (x) { return x.mcq_count > 0; }); %>
+        <% if (!usable.length) { %>
+          <p style="margin:0;font-size:13px;color:var(--faint);">Publish a test with MCQ questions first — it will show up here.</p>
+        <% } %>
+        <% usable.forEach(function (x) { var src = SITE + '/embed/quiz/' + x.embed_token; %>
+          <div id="quiz-<%= x.id %>" style="display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px;">
+            <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px;">
+              <span><strong><%= x.title %></strong> <span style="color:var(--muted);font-size:13px;">· <%= x.batch_name %> · <%= Math.min(x.mcq_count, maxQuiz) %> MCQs<% if (x.embed_token) { %> · <%= views['quiz:' + x.id] || 0 %> views in 30 days · <a href="<%= src %>" target="_blank" rel="noopener">Preview</a><% } %></span></span>
+              <form method="POST" action="/widgets/quiz/<%= x.id %>/<%= x.embed_token ? 'off' : 'on' %>" style="margin:0;">
+                <button type="submit" class="btn <%= x.embed_token ? 'btn-ghost' : 'btn-primary' %>" style="padding:8px 14px;"><%= x.embed_token ? 'Turn off' : 'Make it a widget' %></button>
+              </form>
+            </div>
+            <% if (x.embed_token) { %><%- codeBox('q' + x.id, iframe(src, 640)) %><% } %>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:14px;">
+        <h2 style="font-size:16px;margin:0;">3 · Question of the day (Physics, Chemistry, Biology)</h2>
+        <p style="margin:0;font-size:14px;color:var(--muted);">A new NEET-level question every day, with the answer shown when a visitor taps an option. Keeps students coming back to your site.</p>
+        <% ['', 'Physics', 'Chemistry', 'Biology'].forEach(function (s) { var src = SITE + '/embed/qotd' + (s ? '?subject=' + s : ''); %>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <span style="font-size:13px;"><strong><%= s || 'Mixed (subject changes daily)' %></strong> · <a href="<%= src %>" target="_blank" rel="noopener">Preview</a></span>
+            <%- codeBox('d' + (s || 'mix'), iframe(src, 470)) %>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

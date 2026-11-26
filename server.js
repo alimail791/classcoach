@@ -86,7 +86,7 @@ app.use(
 // for students, parents and tokenised links (reports, join, password reset,
 // magic links) are excluded so children's activity and secret URLs are never
 // sent to Google.
-const NO_ANALYTICS = /^\/(student|parent|r|join|reset-password|report|m|magic|unsubscribe|play|live|c|career-report)(\/|$)/;
+const NO_ANALYTICS = /^\/(student|parent|r|join|reset-password|report|m|magic|unsubscribe|play|live|c|career-report|embed)(\/|$)/;
 app.use((req, res, next) => {
   res.locals.gaId = NO_ANALYTICS.test(req.path) ? '' : 'G-XVCD3VF3BY';
   next();
@@ -184,7 +184,7 @@ function publicUrls() {
   const pages = [
     { loc: `${base}/`, freq: 'weekly', pri: '1.0' },
     ...Object.keys(LANDING_PAGES).map((slug) => ({ loc: `${base}/${slug}`, freq: 'monthly', pri: '0.8' })),
-    ...['pricing', 'free-tools', 'free-question-paper-generator', 'free-omr-sheet-generator', ...require('./routes/freeTools').seoSlugs()].map((slug) => ({
+    ...['pricing', 'free-tools', 'free-tools/widgets', 'free-question-paper-generator', 'free-omr-sheet-generator', ...require('./routes/freeTools').seoSlugs()].map((slug) => ({
       loc: `${base}/${slug}`,
       freq: 'monthly',
       pri: '0.9'
@@ -264,6 +264,7 @@ app.use('/', joinRoutes);
 app.use('/', reportPublicRoutes);
 app.use('/', reportsHubRoutes);
 app.use('/', neetBankRoutes);
+app.use('/', require('./routes/widgets')); // website widgets: join button, practice quiz, question of the day
 app.use('/', require('./routes/yneet')); // YNeet for your students + YNeet partner program
 app.use('/', internalRoutes);
 app.use('/', require('./routes/instagramReels')); // daily promo Reels (shorts-bot/)
