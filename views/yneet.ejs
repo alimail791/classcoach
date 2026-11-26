@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'YNeet for your students — ClassCoach' }) %></head>
+<body>
+<%
+  var inr = function (n) { return '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN'); };
+  var pct = function (r) { return Math.round((Number(r) || 0) * 100) + '%'; };
+  var waText = 'Practise NEET for free on YNeet — chapter tests, previous-year questions and a free All-India mock every Sunday. Sign up here: ' + studentLink;
+  var first = terms ? pct(terms.firstRate) : '20%';
+  var renew = terms ? pct(terms.renewalRate) : '10%';
+  var bonus = terms ? inr(terms.bonusAmount) : '₹5,000';
+%>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'yneet' }) %>
+  <div class="main">
+    <div class="topbar"><h1 style="font-size: 17px;">YNeet for your students</h1></div>
+    <div class="content" style="display:flex;flex-direction:column;gap:20px;max-width:820px;">
+      <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.6;">YNeet (yneet.in) is our NEET practice app for students: 70,000+ questions, chapter tests, previous-year papers and a free All-India mock every Sunday. Use it alongside your ClassCoach tests — and earn from it.</p>
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <% if (notice) { %><div class="flash flash-ok"><%= notice %></div><% } %>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:12px;">
+        <span class="badge badge-warm" style="align-self:flex-start;">1 · Free</span>
+        <h2 style="font-size:16px;margin:0;">Send your students free NEET practice</h2>
+        <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.6;">Students get a 30-day free trial, then one free daily test for good. Share this link on your batch WhatsApp group.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input id="yn-link" value="<%= studentLink %>" readonly style="flex:1;min-width:220px;font-size:13px;">
+          <button type="button" class="btn btn-ghost" onclick="var i=document.getElementById('yn-link');i.select();navigator.clipboard&&navigator.clipboard.writeText(i.value);this.textContent='Copied';">Copy</button>
+          <a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/?text=<%= encodeURIComponent(waText) %>">Share on WhatsApp</a>
+        </div>
+      </div>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:12px;">
+        <span class="badge badge-warm" style="align-self:flex-start;">2 · For your batch</span>
+        <h2 style="font-size:16px;margin:0;">Give your students full YNeet access</h2>
+        <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.6;">Buy YNeet student logins for your whole batch from <strong>₹1,200 per student per year</strong>, or monthly. You add and swap your own students, and see their YNeet results in your institute panel. Start with a free 14-day pilot for 5 students.</p>
+        <div><a class="btn btn-dark" target="_blank" rel="noopener" href="<%= packLink %>">See YNeet plans for my batch →</a></div>
+      </div>
+
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:12px;">
+        <span class="badge badge-warm" style="align-self:flex-start;">3 · Earn</span>
+        <h2 style="font-size:16px;margin:0;">Become a YNeet partner and earn commission</h2>
+        <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.6;">Know other coaching centres or schools? Introduce them to YNeet. You earn <strong><%= first %></strong> of their first payment, <strong><%= renew %></strong> of every renewal, and a <strong><%= bonus %></strong> bonus when your 3rd centre pays. We do the demo and setup; you're paid by UPI.</p>
+
+        <% if (code) { %>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
+            <div class="card" style="padding:14px;"><div style="font-size:12px;color:var(--muted);">Your code</div><div style="font-size:18px;font-weight:700;"><%= code %></div></div>
+            <% if (stats) { %>
+            <div class="card" style="padding:14px;"><div style="font-size:12px;color:var(--muted);">Centres joined</div><div style="font-size:18px;font-weight:700;"><%= stats.institutes %></div></div>
+            <div class="card" style="padding:14px;"><div style="font-size:12px;color:var(--muted);">Earned</div><div style="font-size:18px;font-weight:700;"><%= inr(stats.earned) %></div></div>
+            <div class="card" style="padding:14px;"><div style="font-size:12px;color:var(--muted);">To be paid</div><div style="font-size:18px;font-weight:700;"><%= inr(stats.pending) %></div></div>
+            <% } %>
+          </div>
+          <p style="margin:0;font-size:13px;color:var(--muted);">Share this link with centres — anyone who starts a pilot or buys through it is tagged to you:</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input id="yn-plink" value="<%= packLink %>" readonly style="flex:1;min-width:220px;font-size:13px;">
+            <button type="button" class="btn btn-ghost" onclick="var i=document.getElementById('yn-plink');i.select();navigator.clipboard&&navigator.clipboard.writeText(i.value);this.textContent='Copied';">Copy</button>
+            <a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/?text=<%= encodeURIComponent('Try YNeet for your NEET students — 70,000+ questions, chapter tests and a weekly All-India mock with rank lists. Free 14-day pilot: ' + packLink) %>">Share on WhatsApp</a>
+          </div>
+          <div><a href="https://www.yneet.in/partner/login" target="_blank" rel="noopener" style="font-size:13px;">Open my YNeet partner dashboard (add UPI, see centres) →</a></div>
+        <% } else if (partnerOn) { %>
+          <form method="POST" action="/yneet/join">
+            <button type="submit" class="btn btn-primary">Get my partner code — free</button>
+          </form>
+          <p style="margin:0;font-size:12px;color:var(--muted);">Uses your ClassCoach name, email and WhatsApp number (<%= teacher.phone || 'add it in Settings' %>). Your dashboard login is emailed to you.</p>
+        <% } else { %>
+          <div><a class="btn btn-ghost" target="_blank" rel="noopener" href="https://www.yneet.in/partner">Join on yneet.in/partner →</a></div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
