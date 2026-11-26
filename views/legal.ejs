@@ -17,7 +17,7 @@
         </ul>
       </section>
     <% }) %>
-    <p style="margin: 8px 0 0; font-size: 14px; color: var(--muted);">See also: <% if (page.slug === 'privacy') { %><a href="/terms">Terms of Service</a><% } else { %><a href="/privacy">Privacy Policy</a><% } %></p>
+    <p style="margin: 8px 0 0; font-size: 14px; color: var(--muted);">See also: <% if (page.slug !== 'privacy') { %><a href="/privacy">Privacy Policy</a><% } %><% if (page.slug === 'delete-account') { %> · <% } %><% if (page.slug !== 'terms') { %><a href="/terms">Terms of Service</a><% } %></p>
   </main>
   <%- include('partials/public_footer') %>
 </body>
