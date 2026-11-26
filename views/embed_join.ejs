@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><%- include('partials/embed_style') %><title>Join class</title></head><body>
+<div class="w">
+<% if (!batch) { %>
+  <p>This class link is no longer active.</p>
+<% } else { %>
+  <span class="tag"><%= batch.subject || 'Class' %><%= students >= 5 ? ' · ' + students + ' students' : '' %></span>
+  <h1><%= batch.name %></h1>
+  <p>Taught by <strong><%= teacher.name %></strong>. Online tests marked instantly, weak-chapter reports, and results for parents on WhatsApp.</p>
+  <a class="btn" href="<%= SITE %>/join/<%= batch.join_code %>">Join this class →</a>
+<% } %>
+  <div class="pw">Powered by <a href="<%= powered %>">ClassCoach</a></div>
+</div>
+</body></html>

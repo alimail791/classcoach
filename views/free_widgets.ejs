@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: title }) %></head>
+<body>
+  <%- include('partials/public_nav') %>
+  <div style="max-width: 980px; margin: 0 auto; padding: 64px 32px 48px; display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; flex-direction: column; gap: 14px; max-width: 720px;">
+      <div style="display: inline-flex; align-self: flex-start; padding: 6px 14px; border: 1px solid #D8A87C; border-radius: 100px; font-size: 13px; color: var(--accent-deep); background: var(--accent-tint);">Free · No login needed</div>
+      <h1 style="font-size: 38px; line-height: 1.15; color: var(--ink);">Free question-of-the-day widget for your website</h1>
+      <p style="font-size: 17px; line-height: 1.6; color: var(--muted); margin: 0;">Show a new Physics, Chemistry or Biology MCQ on your coaching centre, school or blog website every day. Visitors tap an answer and see if they're right. Copy one line of code — it updates by itself.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; align-items: start;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <strong style="font-size: 15px;">Live preview</strong>
+        <iframe src="/embed/qotd" width="100%" height="470" style="border:0;border-radius:12px;" title="Question of the day preview"></iframe>
+      </div>
+      <div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 14px;">
+        <strong style="font-size: 15px;">Copy the code</strong>
+        <% [''].concat(SUBJECTS).forEach(function (s) { var code = iframe(SITE + '/embed/qotd' + (s ? '?subject=' + s : ''), 470); var id = 'c' + (s || 'mix'); %>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-size: 13px; font-weight: 600;"><%= s || 'Mixed (subject changes daily)' %></span>
+            <div style="display: flex; gap: 8px;">
+              <input id="<%= id %>" readonly value="<%= code %>" style="flex: 1; font-size: 12px; font-family: monospace;">
+              <button type="button" class="btn btn-ghost" style="padding: 8px 14px;" onclick="var i=document.getElementById('<%= id %>');i.select();navigator.clipboard&&navigator.clipboard.writeText(i.value);this.textContent='Copied';">Copy</button>
+            </div>
+          </div>
+        <% }) %>
+        <p style="font-size: 13px; color: var(--muted); margin: 0; line-height: 1.55;">WordPress: add a "Custom HTML" block and paste. Google Sites: Insert → Embed → Embed code. Blogger: Layout → Add a gadget → HTML/JavaScript.</p>
+      </div>
+    </div>
+    <div class="card" style="padding: 24px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; background: var(--accent-tint); border-color: #D8A87C;">
+      <div style="flex: 1; min-width: 260px;">
+        <strong style="font-size: 16px;">Tutors: get a "Join my class" button and your own practice-quiz widget</strong>
+        <p style="font-size: 14px; color: var(--muted); margin: 6px 0 0; line-height: 1.55;">With a free ClassCoach account, website visitors can join your batch in one tap or try a quiz from your own tests — then you see every student's weak chapters.</p>
+      </div>
+      <a href="/signup?src=widgets" class="btn btn-primary">Start free for 1 month</a>
+    </div>
+  </div>
+  <%- include('partials/public_footer') %>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><%- include('partials/embed_style') %><title>Question of the day</title></head><body>
+<div class="w">
+<% if (!q) { %>
+  <p>Today's question is on its way. Please check back soon.</p>
+<% } else { var L = 'ABCDEFGH'; %>
+  <span class="tag">Question of the day · <%= q.subject %><%= q.pyq ? ' · Previous-year' : '' %></span>
+  <div class="q"><b><%= q.text %></b>
+    <% q.options.forEach(function (o, j) { %>
+      <label class="opt" data-j="<%= j %>"><input type="radio" name="a" value="<%= j %>"> <span><%= L[j] %>. <%= o %></span></label>
+    <% }) %>
+  </div>
+  <p id="res" style="display:none;"></p>
+  <p style="font-size:12px;">Chapter: <%= q.chapter %> · New question every day</p>
+  <script>
+    (function () {
+      var correct = <%= Number(q.correct) %>, done = false, exp = <%- JSON.stringify(q.explanation || '').replace(/</g, '\\u003c') %>;
+      document.querySelectorAll('.opt').forEach(function (el) {
+        el.addEventListener('click', function () {
+          if (done) return; done = true;
+          var j = +el.getAttribute('data-j');
+          document.querySelectorAll('.opt').forEach(function (o) {
+            var k = +o.getAttribute('data-j');
+            if (k === correct) o.classList.add('ok'); else if (k === j) o.classList.add('bad');
+            o.querySelector('input').disabled = true;
+          });
+          var r = document.getElementById('res');
+          r.textContent = (j === correct ? '✅ Correct! ' : '❌ Not quite — the answer is ' + 'ABCDEFGH'[correct] + '. ') + exp;
+          r.style.display = 'block';
+        });
+      });
+    })();
+  </script>
+<% } %>
+  <div class="pw">Daily questions by <a href="<%= powered %>">ClassCoach</a> · free for teachers</div>
+</div>
+</body></html>

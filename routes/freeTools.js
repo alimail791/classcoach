@@ -19,6 +19,12 @@ const str = (v, n) => String(v || '').trim().slice(0, n);
 
 const TOOLS = [
   {
+    href: '/free-tools/widgets',
+    icon: '🧩',
+    name: 'Free question-of-the-day widget',
+    blurb: 'Put a new Physics, Chemistry or Biology question on your website or blog every day. Copy one line of code, nothing to update.'
+  },
+  {
     href: '/free-question-paper-generator',
     icon: '📝',
     name: 'Free AI question paper generator',
