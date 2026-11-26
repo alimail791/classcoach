@@ -285,6 +285,7 @@ const PORT = process.env.PORT || 3000;
 startInactivityScheduler();
 require('./lib/incompleteSignups').startIncompleteSignupAlerts();
 require('./lib/emailDrip').startDrip();
+require('./lib/announcements').startAnnouncements(); // one-time product announcement emails to teachers
 require('./lib/blogRoundup').startBlogRoundup(); // weekly 'new on the blog' email to teachers
 require('./lib/instagramReels').startInstagramReelsJob(); // posts the daily promo Reel (needs IG_ACCESS_TOKEN)
 
