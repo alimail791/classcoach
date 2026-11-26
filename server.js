@@ -190,6 +190,7 @@ function publicUrls() {
       pri: '0.9'
     })),
     { loc: `${base}/blog`, freq: 'weekly', pri: '0.7' },
+    ...require('./lib/directory').sitemapUrls(),
     { loc: `${base}/privacy`, freq: 'yearly', pri: '0.3' },
     { loc: `${base}/terms`, freq: 'yearly', pri: '0.3' },
     ...blogRoutes.publishedPosts().map((p) => ({ loc: `${base}/blog/${p.slug}`, lastmod: String(p.updated_at || p.published_at).slice(0, 10), pri: '0.7' }))
@@ -264,6 +265,7 @@ app.use('/', joinRoutes);
 app.use('/', reportPublicRoutes);
 app.use('/', reportsHubRoutes);
 app.use('/', neetBankRoutes);
+app.use('/', require('./routes/tutors')); // tutor directory /tutors + Get listed form
 app.use('/', require('./routes/widgets')); // website widgets: join button, practice quiz, question of the day
 app.use('/', require('./routes/yneet')); // YNeet for your students + YNeet partner program
 app.use('/', internalRoutes);

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: title }) %></head>
+<body>
+  <%- include('partials/public_nav') %>
+  <div style="max-width: 980px; margin: 0 auto; padding: 56px 24px 48px; display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 12px; max-width: 720px;">
+      <div style="align-self: flex-start; padding: 6px 14px; border: 1px solid #D8A87C; border-radius: 100px; font-size: 13px; color: var(--accent-deep); background: var(--accent-tint);">Directory</div>
+      <h1 style="font-size: 36px; line-height: 1.15;">Find a tutor or coaching centre near you</h1>
+      <p style="font-size: 17px; line-height: 1.6; color: var(--muted); margin: 0;">Teachers who give their students online tests, marked instantly, and progress reports for parents. Pick your city and join a class.</p>
+    </div>
+    <% if (!cities.length) { %>
+      <p style="color: var(--muted);">No tutors listed yet — be the first in your city.</p>
+    <% } else { %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+        <% cities.forEach(function (c) { %>
+          <a href="/tutors/<%= c.slug %>" class="card" style="padding: 16px 18px; text-decoration: none; color: var(--ink); display: flex; justify-content: space-between; gap: 8px;"><strong><%= c.city %></strong><span style="color: var(--muted);"><%= c.n %></span></a>
+        <% }) %>
+      </div>
+    <% } %>
+    <%- include('partials/get_listed') %>
+  </div>
+  <%- include('partials/public_footer') %>
+</body>
+</html>

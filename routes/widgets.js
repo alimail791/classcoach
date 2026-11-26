@@ -36,7 +36,8 @@ router.get('/widgets', requireTeacher, (req, res) => {
     )
     .all(t.id);
   const views = W.viewsFor([...batches.map((b) => `join:${b.id}`), ...tests.map((x) => `quiz:${x.id}`)]);
-  res.render('widgets', { teacher: t, batches, tests, views, SITE: W.SITE, iframe: W.iframe, maxQuiz: MAX_QUIZ, notice: req.query.done || null });
+  res.render('widgets', { teacher: t, batches, tests, views, SITE: W.SITE, iframe: W.iframe, maxQuiz: MAX_QUIZ, notice: req.query.done || null,
+    D: require('../lib/directory'), listingSaved: req.query.listing === 'saved', listingError: req.query.listing_error || '', yneetSync: req.query.yneet || '' });
 });
 
 router.post('/widgets/quiz/:id/:action(on|off)', requireTeacher, (req, res) => {
