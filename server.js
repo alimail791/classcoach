@@ -264,6 +264,7 @@ app.use('/', joinRoutes);
 app.use('/', reportPublicRoutes);
 app.use('/', reportsHubRoutes);
 app.use('/', neetBankRoutes);
+app.use('/', require('./routes/yneet')); // YNeet for your students + YNeet partner program
 app.use('/', internalRoutes);
 app.use('/', require('./routes/instagramReels')); // daily promo Reels (shorts-bot/)
 app.use('/', liveRoutes);
