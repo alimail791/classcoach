@@ -15,6 +15,27 @@
       <% if (notice === 'on') { %><div class="flash flash-ok">Practice quiz is on. Copy its code below.</div><% } %>
       <% if (notice === 'off') { %><div class="flash flash-ok">Practice quiz is off. Anywhere it was embedded now shows "no longer available".</div><% } %>
 
+      <div class="card" id="listing" style="padding:22px;display:flex;flex-direction:column;gap:14px;">
+        <h2 style="font-size:16px;margin:0;">📍 Get listed in the tutor directory — free</h2>
+        <p style="margin:0;font-size:14px;color:var(--muted);">Parents and students searching for tutors in your city find your profile on <a href="/tutors" target="_blank">classcoach.in/tutors</a> and join your class in one tap. Tick "I teach NEET" to also appear on YNeet's NEET coaching directory.</p>
+        <% if (listingError) { %><div class="flash flash-error"><%= listingError %></div><% } %>
+        <% if (listingSaved) { %><div class="flash flash-ok">Saved.<% if (teacher.dir_listed && teacher.dir_slug) { %> Your profile: <a href="<%= D.profileUrl(teacher) %>" target="_blank"><%= D.profileUrl(teacher).replace('https://', '') %></a><% } %><%= yneetSync === 'listed' ? ' Also listed on YNeet\'s NEET directory.' : yneetSync === 'unlisted' ? ' Removed from YNeet\'s NEET directory.' : yneetSync === 'failed' ? ' (YNeet listing will be retried next time you save.)' : '' %></div><% } %>
+        <form method="POST" action="/widgets/listing" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+          <label style="grid-column:1/-1;display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" name="dir_listed" value="1" <%= teacher.dir_listed ? 'checked' : '' %>> Show my profile in the directory</label>
+          <div class="field"><label>Name to show</label><input name="dir_display_name" maxlength="60" value="<%= teacher.dir_display_name || teacher.name %>"></div>
+          <div class="field"><label>I am a</label><select name="dir_kind"><% Object.keys(D.KINDS).forEach(function (k) { %><option value="<%= k %>" <%= teacher.dir_kind === k ? 'selected' : '' %>><%= D.KINDS[k] %></option><% }) %></select></div>
+          <div class="field"><label>City</label><input name="dir_city" maxlength="40" value="<%= teacher.dir_city %>" placeholder="e.g. Salem"></div>
+          <div class="field"><label>Area / locality (optional)</label><input name="dir_area" maxlength="60" value="<%= teacher.dir_area %>" placeholder="e.g. Fairlands"></div>
+          <div class="field"><label>Subjects</label><input name="dir_subjects" maxlength="120" value="<%= teacher.dir_subjects %>" placeholder="e.g. Maths, Physics"></div>
+          <div class="field"><label>Classes (optional)</label><input name="dir_classes" maxlength="80" value="<%= teacher.dir_classes %>" placeholder="e.g. Class 9–12, CBSE & State Board"></div>
+          <div class="field"><label>Classes are</label><select name="dir_mode"><option value="">—</option><% Object.keys(D.MODES).forEach(function (k) { %><option value="<%= k %>" <%= teacher.dir_mode === k ? 'selected' : '' %>><%= D.MODES[k] %></option><% }) %></select></div>
+          <div class="field" style="grid-column:1/-1;"><label>About you (optional, shows on your profile)</label><textarea name="dir_about" maxlength="600" rows="3" placeholder="Experience, results, batch timings, fees range…"><%= teacher.dir_about %></textarea></div>
+          <label style="display:flex;gap:8px;align-items:center;font-size:14px;"><input type="checkbox" name="dir_neet" value="1" <%= teacher.dir_neet ? 'checked' : '' %>> I teach NEET (also list me on yneet.in)</label>
+          <label style="display:flex;gap:8px;align-items:center;font-size:14px;"><input type="checkbox" name="dir_whatsapp" value="1" <%= teacher.dir_whatsapp ? 'checked' : '' %>> Show a WhatsApp button (<%= teacher.phone || 'add number in Settings' %>)</label>
+          <div style="grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap;"><button type="submit" class="btn btn-primary">Save listing</button><% if (teacher.dir_listed && teacher.dir_slug) { %><a href="<%= D.profileUrl(teacher) %>" target="_blank" style="font-size:13px;">View my profile · <%= teacher.dir_views %> views</a><% } %></div>
+        </form>
+      </div>
+
       <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:14px;">
         <h2 style="font-size:16px;margin:0;">1 · "Join my class" button</h2>
         <p style="margin:0;font-size:14px;color:var(--muted);">Visitors tap it and join your batch straight away — new students without phone calls.</p>

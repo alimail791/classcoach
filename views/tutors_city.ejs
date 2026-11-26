@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: title }) %></head>
+<body>
+  <%- include('partials/public_nav') %>
+  <div style="max-width: 980px; margin: 0 auto; padding: 48px 24px; display: flex; flex-direction: column; gap: 22px;">
+    <a href="/tutors" style="font-size: 13px;">← All cities</a>
+    <h1 style="font-size: 34px; line-height: 1.15;">Tutors &amp; coaching centres in <%= city %></h1>
+    <% if (!list.length) { %>
+      <p style="color: var(--muted); margin: 0;">No one is listed in <%= city %> yet.</p>
+    <% } else { %>
+      <p style="font-size: 16px; color: var(--muted); margin: 0; line-height: 1.6;"><%= list.length %> listed. Each one gives students online tests marked instantly and sends parents progress reports.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+        <% list.forEach(function (t) { %>
+          <a href="/tutors/<%= t.dir_city_slug %>/<%= t.dir_slug %>" class="card" style="padding: 20px; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted);"><%= D.KINDS[t.dir_kind] || 'Tutor' %><%= t.dir_area ? ' · ' + t.dir_area : '' %></span>
+            <strong style="font-size: 18px;"><%= D.displayName(t) %></strong>
+            <span style="font-size: 14px;"><%= t.dir_subjects %><%= t.dir_classes ? ' · ' + t.dir_classes : '' %></span>
+            <span style="font-size: 13px; color: var(--muted);"><%= D.MODES[t.dir_mode] || '' %><%= t.dir_neet ? (t.dir_mode ? ' · ' : '') + 'NEET' : '' %></span>
+            <span style="font-size: 14px; font-weight: 700; color: var(--accent); margin-top: 4px;">View &amp; join class →</span>
+          </a>
+        <% }) %>
+      </div>
+      <p style="font-size: 12px; color: var(--faint); margin: 0;">Tutors list themselves here. ClassCoach doesn't rank or endorse them.</p>
+    <% } %>
+    <p style="font-size: 14px; margin: 0;"><a href="https://www.yneet.in/neet-coaching/<%= citySlug %>?utm_source=classcoach&amp;utm_medium=directory" target="_blank" rel="noopener">NEET coaching in <%= city %> on YNeet ↗</a></p>
+    <%- include('partials/get_listed') %>
+  </div>
+  <%- include('partials/public_footer') %>
+</body>
+</html>
