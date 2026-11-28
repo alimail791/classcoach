@@ -18,6 +18,7 @@
         <% if (questions.length > 0) { %>
           <a href="/tests/<%= test.id %>/download" class="btn btn-ghost">⬇ Question paper</a>
           <a href="/tests/<%= test.id %>/download?answers=1" class="btn btn-ghost">⬇ Answer key</a>
+          <a href="/tests/<%= test.id %>/sell" class="btn btn-ghost" title="List this test on testmandi.in and keep 80% of each sale">🛒 Sell on TestMandi</a>
         <% } %>
         <% if (test.status === 'draft' && questions.length > 0) { %>
           <% if (test.scheduled_at) { %>

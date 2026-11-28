@@ -164,6 +164,18 @@
         <span class="btn btn-ghost" style="padding: 9px 16px;">Open →</span>
       </a>
 
+      <!-- RAISE NETWORK: fees via VasulBook, sell on TestMandi (see routes/network.js) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+        <a href="/fees" class="card" style="padding: 18px 22px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit;">
+          <strong style="font-size: 15px;">💰 <%= teacher.vasulbook_linked ? 'Fees: see who has paid' : 'Collect fees without chasing' %></strong>
+          <span style="font-size: 13px; color: var(--muted);"><%= teacher.vasulbook_linked ? 'Add this month\'s fee for a class and send WhatsApp reminders.' : 'Add monthly fees for a class in one click; parents get WhatsApp reminders with a UPI link. Free for 3 months.' %></span>
+        </a>
+        <a href="/testmandi" class="card" style="padding: 18px 22px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit;">
+          <strong style="font-size: 15px;">🛒 Earn from your tests</strong>
+          <span style="font-size: 13px; color: var(--muted);">Sell your tests on TestMandi (you keep 80%) and find ready worksheets and notes for your classes.</span>
+        </a>
+      </div>
+
       <!-- REFER & EARN -->
       <div class="card" id="refer" style="padding: 24px;">
         <h2 style="font-size: 16px; margin-bottom: 6px;">Refer &amp; earn</h2>
