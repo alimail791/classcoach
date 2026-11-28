@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Sell on TestMandi — ' + test.title }) %></head>
+<body>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'testmandi' }) %>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <a href="/tests/<%= test.id %>/edit" style="font-size:14px;color:var(--faint);">← <%= test.title %></a>
+        <div class="divider-v"></div>
+        <h1 style="font-size:17px;"><%= listing ? 'Update on TestMandi' : 'Sell on TestMandi' %></h1>
+      </div>
+    </div>
+    <div class="content" style="max-width:640px;display:flex;flex-direction:column;gap:16px;">
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:14px;">
+        <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.6;">
+          <strong><%= mcqCount %> multiple-choice questions</strong> from this test will be listed on testmandi.in, where students across India can buy and attempt it.
+          You keep <strong>80% of every sale</strong>, paid to your bank account. Your students' results stay private.
+          <% if (listing) { %><br>Already live: <a href="<%= listing.url %>" target="_blank" rel="noopener">view on TestMandi</a>. Saving again updates it.<% } %>
+        </p>
+        <% if (!on) { %>
+          <div class="flash flash-error">Selling on TestMandi is not switched on yet.</div>
+        <% } else if (mcqCount < 5) { %>
+          <div class="flash flash-error">Add at least 5 multiple-choice questions first (written questions aren't sold).</div>
+        <% } else { %>
+        <form method="POST" action="/tests/<%= test.id %>/sell" style="display:flex;flex-direction:column;gap:12px;">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">Exam / category
+            <select name="category" required>
+              <option value="">Choose…</option>
+              <% categories.forEach(function (c) { %><option value="<%= c %>" <%= form.category === c ? 'selected' : '' %>><%= c %></option><% }) %>
+            </select>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">Price (₹9 – ₹9,999)
+            <input name="price" type="number" min="9" max="9999" value="<%= form.price %>" required style="width:160px;">
+            <span style="font-size:12px;color:var(--faint);">Most practice tests sell well at ₹29–₹99.</span>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">Short description (optional)
+            <textarea name="description" rows="3" maxlength="2000" placeholder="Who is it for, what it covers"><%= form.description %></textarea>
+          </label>
+          <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;">
+            <input type="checkbox" name="own_work" value="1" style="margin-top:3px;">
+            <span>These questions are my own work or made with ClassCoach — not copied from a textbook, coaching material or another website.</span>
+          </label>
+          <button type="submit" class="btn btn-primary" style="align-self:flex-start;"><%= listing ? 'Update listing' : 'Publish on TestMandi' %></button>
+          <p style="margin:0;font-size:12px;color:var(--muted);">Uses your ClassCoach email (<%= teacher.email %>) as your TestMandi seller account. First time? We email you a link to set your TestMandi password.</p>
+        </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

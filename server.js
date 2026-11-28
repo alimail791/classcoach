@@ -269,6 +269,7 @@ app.use('/', neetBankRoutes);
 app.use('/', require('./routes/tutors')); // tutor directory /tutors + Get listed form
 app.use('/', require('./routes/widgets')); // website widgets: join button, practice quiz, question of the day
 app.use('/', require('./routes/yneet')); // YNeet for your students + YNeet partner program
+app.use('/', require('./routes/network')); // Fees via VasulBook + sell tests / find resources on TestMandi
 app.use('/', internalRoutes);
 app.use('/', require('./routes/instagramReels')); // daily promo Reels (shorts-bot/)
 app.use('/', liveRoutes);

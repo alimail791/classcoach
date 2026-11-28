@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('partials/head', { title: 'Fees — ClassCoach' }) %></head>
+<body>
+<%
+  var statusLabel = { clear: 'Paid', open: 'Not due yet', due: 'Due soon', overdue: 'Overdue' };
+  var statusBadge = { clear: 'badge-good', open: 'badge-neutral', due: 'badge-warm', overdue: 'badge-warm' };
+%>
+<div class="layout">
+  <%- include('partials/sidebar', { active: 'fees' }) %>
+  <div class="main">
+    <div class="topbar">
+      <h1 style="font-size: 17px;">Fees</h1>
+      <% if (linked && on) { %>
+        <form method="POST" action="/fees/open"><button type="submit" class="btn btn-dark">Open VasulBook — send reminders →</button></form>
+      <% } %>
+    </div>
+    <div class="content" style="display:flex;flex-direction:column;gap:20px;max-width:900px;">
+      <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+      <% if (notice) { %><div class="flash flash-ok"><%= notice %></div><% } %>
+
+      <% if (!linked) { %>
+        <div class="card" style="padding:24px;display:flex;flex-direction:column;gap:12px;">
+          <span class="badge badge-warm" style="align-self:flex-start;">Free for 3 months</span>
+          <h2 style="font-size:18px;margin:0;">Stop chasing fees. Let reminders do it.</h2>
+          <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.6;">
+            ClassCoach works with <strong>VasulBook</strong>, our fee and dues app. Your students are added automatically.
+            Add a monthly fee for a class in one click, see who has paid and who is overdue right here, and send polite WhatsApp reminders with a UPI pay link to parents.
+          </p>
+          <ul style="margin:0;padding-left:18px;font-size:14px;color:var(--muted);line-height:1.8;">
+            <li>Same email as ClassCoach — no new sign-up or password</li>
+            <li>Parents' numbers come from your student list</li>
+            <li>3 months free, then ₹1,000 for the next 10 months</li>
+          </ul>
+          <% if (on) { %>
+            <form method="POST" action="/fees/link"><button type="submit" class="btn btn-primary">Turn on fee collection — free</button></form>
+          <% } else { %>
+            <div><a class="btn btn-ghost" target="_blank" rel="noopener" href="<%= vbSite %>">Open vasulbook.com →</a></div>
+          <% } %>
+        </div>
+      <% } else { %>
+        <% if (balances) { %>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+            <div class="card" style="padding:16px;"><div style="font-size:12px;color:var(--muted);">To collect</div><div style="font-size:20px;font-weight:700;"><%= inr(balances.totals.due) %></div></div>
+            <div class="card" style="padding:16px;"><div style="font-size:12px;color:var(--muted);">Overdue</div><div style="font-size:20px;font-weight:700;color:#B4532A;"><%= inr(balances.totals.overdue) %></div></div>
+            <div class="card" style="padding:16px;"><div style="font-size:12px;color:var(--muted);">Collected so far</div><div style="font-size:20px;font-weight:700;"><%= inr(balances.totals.collected) %></div></div>
+          </div>
+          <% if (plan && !plan.active) { %><div class="flash flash-error">Your VasulBook plan has ended — renew inside VasulBook to add new fees and send reminders. Your records are safe.</div><% } %>
+        <% } %>
+
+        <% if (!batches.length) { %>
+          <div class="card" style="padding:22px;">Create a class and add students first — they'll appear here for fees.</div>
+        <% } else { %>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <% batches.forEach(function (b) { %>
+              <a href="/fees?batch=<%= b.id %>" class="btn <%= selected && selected.id === b.id ? 'btn-dark' : 'btn-ghost' %>" style="font-size:13px;"><%= b.name %> (<%= b.students %>)</a>
+            <% }) %>
+          </div>
+
+          <% if (selected) { %>
+          <div class="card" style="padding:22px;display:flex;flex-direction:column;gap:12px;">
+            <h2 style="font-size:16px;margin:0;">Add a fee for <%= selected.name %></h2>
+            <form method="POST" action="/fees/charge" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+              <input type="hidden" name="batch_id" value="<%= selected.id %>">
+              <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">Fee name<input name="label" placeholder="December fees" required maxlength="60"></label>
+              <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">Amount per student (₹)<input name="amount" type="number" min="1" max="1000000" required style="width:140px;"></label>
+              <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">Due date<input name="due" type="date"></label>
+              <button type="submit" class="btn btn-primary">Add for <%= students.length %> students</button>
+            </form>
+            <% if (runs.length) { %>
+              <p style="margin:0;font-size:12px;color:var(--muted);">Added before: <%= runs.map(function (r) { return r.label + ' (' + inr(r.amount) + ')'; }).join(' · ') %></p>
+            <% } %>
+          </div>
+
+          <div class="card" style="padding:0;overflow:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;">
+              <strong style="font-size:14px;">Students in <%= selected.name %></strong>
+              <form method="POST" action="/fees/sync"><input type="hidden" name="batch_id" value="<%= selected.id %>"><button type="submit" class="btn btn-ghost" style="font-size:12px;padding:6px 12px;">↻ Update student list</button></form>
+            </div>
+            <table class="plain">
+              <thead><tr><th>Student</th><th>Parent / phone</th><th>Balance</th><th>Status</th></tr></thead>
+              <tbody>
+              <% students.forEach(function (s) { var b = balances && balances.byRef[studentRef(s)]; %>
+                <tr>
+                  <td><%= s.name %></td>
+                  <td style="color:var(--muted);"><%= contactPhone(s) || '— add in student details' %></td>
+                  <td><%= b ? inr(b.balance) : '—' %></td>
+                  <td><% if (b) { %><span class="badge <%= statusBadge[b.status] || 'badge-neutral' %>"><%= statusLabel[b.status] || b.status %></span><% } else { %><span style="color:var(--faint);font-size:12px;">Not added yet</span><% } %></td>
+                </tr>
+              <% }) %>
+              </tbody>
+            </table>
+          </div>
+          <p style="margin:0;font-size:12px;color:var(--muted);">Mark payments and send WhatsApp reminders in VasulBook — balances here update automatically.</p>
+          <% } %>
+        <% } %>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>
