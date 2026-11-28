@@ -189,7 +189,7 @@ router.get('/vs/:slug', (req, res, next) => {
   res.render('vs_page', {
     page,
     others: Object.values(VS.PAGES).filter((p) => p.slug !== page.slug),
-    checked: VS.CHECKED,
+    checked: page.checked || VS.CHECKED,
     indexable: true,
     canonicalUrl: `${SITE_ORIGIN}/vs/${page.slug}`,
     description: page.description
