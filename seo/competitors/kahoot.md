@@ -10,4 +10,4 @@ Checked: 2026-11-21
 | Slide importer for Google Slides, PowerPoint and Keynote on paid plans | https://kahoot.com/register/pricing-schools |
 
 Not claimed: exact USD prices (the page showed a Black Friday discount on the check date) and the free-plan player limit (the page states two different numbers).
-Not shipped: Wayground (formerly Quizizz). Its pricing page could not be loaded on the check date, so its limits could not be verified.
+Wayground (formerly Quizizz): shipped 2026-11-28, see wayground.md.
